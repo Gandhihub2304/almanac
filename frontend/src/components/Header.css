@@ -1,0 +1,159 @@
+.header {
+  max-width: 1320px;
+  margin: 18px auto;
+  display: grid;
+  grid-template-columns: auto auto auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(120deg, #11344d, #0b5a73 65%, #0b7a75);
+  color: #ffffff;
+  padding: 14px 18px;
+  border-radius: 16px;
+  box-shadow: 0 12px 26px rgba(17, 52, 77, 0.28);
+}
+
+.headerTitle {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.1rem, 0.95rem + 0.8vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.addBtn,
+.editBtn,
+.viewBtn,
+.dropdownToggle {
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #ffffff;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.addBtn {
+  background: linear-gradient(135deg, #19a463, #149653);
+}
+
+.editBtn {
+  background: linear-gradient(135deg, #ef8a17, #e37e0f);
+}
+
+.viewBtn {
+  background: linear-gradient(135deg, #485f76, #3d5265);
+}
+
+.dropdownToggle {
+  background: linear-gradient(135deg, #2f9ecf, #258db9);
+}
+
+.addBtn:hover,
+.editBtn:hover,
+.viewBtn:hover,
+.dropdownToggle:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.05);
+  box-shadow: 0 8px 18px rgba(7, 24, 36, 0.25);
+}
+
+.dropdown {
+  position: relative;
+}
+
+.dropdownContent {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 260px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #ffffff;
+  color: #1e3447;
+  border: 1px solid #d3e0ec;
+  border-radius: 12px;
+  box-shadow: 0 14px 28px rgba(10, 37, 56, 0.2);
+  animation: slideFade 0.25s ease forwards;
+  z-index: 10;
+}
+
+.dropdownItem {
+  padding: 11px 13px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  border-bottom: 1px solid #eef3f9;
+  transition: background 0.2s ease, padding-left 0.2s ease;
+}
+
+.dropdownItem:last-child {
+  border-bottom: 0;
+}
+
+.dropdownItem:hover {
+  background: #f2f8fd;
+  padding-left: 17px;
+}
+
+.dropdownEmpty {
+  padding: 12px;
+  color: #6f8092;
+  font-size: 0.9rem;
+}
+
+@keyframes slideFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 900px) {
+  .header {
+    margin: 12px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "title title"
+      "add edit"
+      "view view"
+      "school school";
+  }
+
+  .headerTitle {
+    grid-area: title;
+  }
+
+  .addBtn {
+    grid-area: add;
+  }
+
+  .editBtn {
+    grid-area: edit;
+  }
+
+  .dropdown {
+    width: 100%;
+  }
+
+  .viewDropdown {
+    grid-area: view;
+  }
+
+  .schoolDropdown {
+    grid-area: school;
+  }
+
+  .viewBtn,
+  .dropdownToggle {
+    width: 100%;
+  }
+
+  .dropdownContent {
+    width: 100%;
+  }
+}

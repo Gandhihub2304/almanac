@@ -1,0 +1,162 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(8, 26, 40, 0.42);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px;
+  z-index: 30;
+}
+
+.modalCard {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 16px;
+  border: 1px solid #d7e4ef;
+  text-align: left;
+  box-shadow: 0 18px 38px rgba(11, 34, 50, 0.24);
+}
+
+.modalCard h2,
+.modalCard h4 {
+  margin: 0 0 12px;
+  color: #193447;
+}
+
+.modalCard input,
+.modalCard select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #bed2e3;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  color: #1f3548;
+  margin: 8px 0;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modalCard input:focus,
+.modalCard select:focus {
+  border-color: #2f8ecb;
+  box-shadow: 0 0 0 3px rgba(47, 142, 203, 0.15);
+}
+
+.modalBtn {
+  display: inline-block;
+  width: 100%;
+  margin: 10px 0 0;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #0b7a75, #1b8f89);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.15s ease, filter 0.2s ease;
+}
+
+.modalBtn:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.05);
+}
+
+.closeBtn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #d94c45, #cb3d36);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.closeBtn:hover {
+  filter: brightness(0.98);
+}
+
+.editRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  gap: 10px;
+}
+
+.editRow input {
+  flex: 1;
+  margin: 0;
+}
+
+.programRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.programRow input {
+  margin: 0;
+}
+
+.inlineBtn {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 0;
+  cursor: pointer;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  transition: transform 0.15s ease;
+}
+
+.inlineBtn:hover {
+  transform: translateY(-1px);
+}
+
+.inlineBtn.edit {
+  background: #2f8ecb;
+}
+
+.inlineBtn.delete {
+  background: #d94c45;
+}
+
+.inlineBtn.add {
+  background: #0f8a62;
+}
+
+.programChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 2px;
+}
+
+.programChip {
+  background: #edf5fc;
+  border: 1px solid #cfe1f1;
+  color: #234055;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .programRow,
+  .editRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

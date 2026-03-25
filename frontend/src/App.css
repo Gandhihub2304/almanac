@@ -1,0 +1,11 @@
+.container {
+  text-align: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.title {
+  margin-top: 40px;
+  font-size: 40px;
+  color: #1e293b;
+}
