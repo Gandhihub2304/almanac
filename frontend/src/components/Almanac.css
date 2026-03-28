@@ -7,9 +7,9 @@
   --surface-alt: #f8fbff;
   --ink-main: #12263a;
   --ink-muted: #526579;
-  --primary: #0b7a75;
-  --primary-hover: #086a66;
-  --accent: #ffb703;
+  --primary: #145d99;
+  --primary-hover: #124f82;
+  --accent: #7cb5e0;
   --line: #d5e2ef;
   --shadow-soft: 0 12px 32px rgba(18, 38, 58, 0.08);
 }
@@ -31,26 +31,36 @@
 .headerRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 14px;
   margin-bottom: 18px;
+  position: relative;
 }
 
 .pageTitle {
   margin: 0;
   font-size: clamp(1.45rem, 1.1rem + 1.6vw, 2.1rem);
   letter-spacing: 0.02em;
+  text-align: center;
+  animation: headingGlow 0.9s ease-out;
 }
 
-.batchText {
-  background: rgba(11, 122, 117, 0.09);
-  color: var(--primary);
-  padding: 8px 14px;
-  border: 1px solid rgba(11, 122, 117, 0.2);
-  border-radius: 999px;
+.backLink {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #111111;
   font-weight: 700;
-  font-size: 0.95rem;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.backLink:hover {
+  color: #000000;
+  border-color: #000000;
 }
 
 .batchControls {
@@ -63,16 +73,16 @@
 .yearSection {
   margin-top: 24px;
   border-radius: 18px;
-  padding: 16px;
+  padding: 14px;
   background: var(--surface);
   border: 1px solid var(--line);
   box-shadow: 0 8px 22px rgba(18, 38, 58, 0.05);
 }
 
 .yearTitle {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   color: #0e496f;
-  font-size: 1.2rem;
+  font-size: 1.12rem;
 }
 
 .tableWrap {
@@ -82,33 +92,50 @@
 
 .almanacTable {
   width: 100%;
-  min-width: 980px;
+  min-width: 840px;
   border-collapse: collapse;
-  background: var(--surface-alt);
+  background: #ffffff;
   border-radius: 14px;
   overflow: hidden;
 }
 
 .almanacTable th {
-  padding: 12px 10px;
+  padding: 10px 8px;
   text-align: center;
-  color: #f8fdff;
-  background: linear-gradient(90deg, #145374 0%, #0b7a75 100%);
-  font-size: 0.88rem;
+  color: #ffffff;
+  background: linear-gradient(90deg, #0f6db6 0%, #2d88cf 100%);
+  font-size: 0.84rem;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
 
 .almanacTable td {
   vertical-align: top;
-  border: 1px solid var(--line);
-  padding: 10px;
+  border: 1px solid #c9dcef;
+  padding: 8px;
+  background: #ffffff;
+}
+
+.almanacTable tbody tr:nth-child(even) td {
+  background: #f4f9ff;
 }
 
 .termLabel {
   font-weight: 700;
   color: #1b344b;
   white-space: nowrap;
+}
+
+.noBreakText {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #eef4fa;
+  color: #4a5d70;
+  font-weight: 700;
 }
 
 .holidayRow {
@@ -119,14 +146,14 @@
 
 .almanacContainer input[type="number"],
 .almanacContainer input[type="date"] {
-  width: 148px;
+  width: 128px;
   max-width: 100%;
-  padding: 8px 10px;
+  padding: 7px 9px;
   border-radius: 10px;
   border: 1px solid #bfd1e2;
   background: #ffffff;
   color: #20384d;
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -141,66 +168,120 @@
   color: #4a5d70;
 }
 
-.plusBtn {
+.addHolidayLink {
   margin-top: 4px;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 10px;
-  color: #153048;
-  background: linear-gradient(135deg, #ffd166, var(--accent));
-  font-weight: 700;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #7aaed7;
+  border-radius: 6px;
+  color: #0b5d99;
+  background: #eaf4ff;
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s ease, filter 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.plusBtn:hover {
-  transform: translateY(-1px);
-  filter: saturate(1.05);
+.addHolidayLink:hover {
+  background: #d7ebfb;
+  border-color: #0f5f9e;
 }
 
 .saveBtn {
-  margin-top: 24px;
-  padding: 12px 22px;
-  border: 0;
+  margin-top: 0;
+  padding: 10px 18px;
+  border: 1px solid #0f63a5;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--primary), #1a8f89);
+  background: linear-gradient(135deg, #0f6db6, #2b87cd);
   color: #ffffff;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 10px 22px rgba(11, 122, 117, 0.25);
+  box-shadow: 0 8px 18px rgba(15, 96, 165, 0.26);
   transition: transform 0.15s ease, background 0.2s ease;
 }
 
 .saveBtn:hover {
   transform: translateY(-1px);
-  background: linear-gradient(135deg, var(--primary-hover), #16807a);
+  background: linear-gradient(135deg, #0c5b98, #226fa9);
 }
 
 .actionRow {
   margin-top: 20px;
   display: flex;
+  justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
 .previewBtn {
-  margin-top: 24px;
-  padding: 12px 22px;
-  border: 0;
+  margin-top: 0;
+  padding: 10px 18px;
+  border: 1px solid #0f63a5;
   border-radius: 12px;
-  background: linear-gradient(135deg, #145374, #1f6c93);
-  color: #ffffff;
-  font-size: 0.95rem;
+  background: #ffffff;
+  color: #0f63a5;
+  font-size: 0.9rem;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 10px 22px rgba(20, 83, 116, 0.25);
-  transition: transform 0.15s ease;
+  box-shadow: 0 8px 18px rgba(15, 96, 165, 0.16);
+  transition: transform 0.15s ease, background 0.2s ease;
 }
 
 .previewBtn:hover {
   transform: translateY(-1px);
+  background: #eaf4ff;
+}
+
+.batchDetailContainer {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.batchDetailTitle {
+  margin: 0 0 16px;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  color: #0d4e82;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.programLinksContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.programLink {
+  padding: 10px 18px;
+  border: 2px solid #145d99;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #145d99;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.programLink:hover {
+  background-color: #e6f0f8;
+  border-color: #0d3d6b;
+  color: #0d3d6b;
+  transform: translateY(-2px);
+}
+
+.programLink.active {
+  background: linear-gradient(135deg, #145d99, #1e73b2);
+  color: #ffffff;
+  border-color: #145d99;
+  box-shadow: 0 6px 16px rgba(20, 93, 153, 0.3);
 }
 
 .previewOverlay {
@@ -253,6 +334,7 @@
   margin: 16px;
   background: #ffffff;
   border: 1px solid #cedceb;
+  padding: 10px 10px 8px;
 }
 
 .viewPageShell {
@@ -279,65 +361,157 @@
 }
 
 .previewBanner {
-  background: #4d4d4d;
+  background: #595f66;
   color: #ffffff;
   text-align: center;
   font-weight: 800;
-  font-size: 1.08rem;
-  letter-spacing: 0.03em;
-  padding: 12px 10px;
+  font-size: 1.02rem;
+  letter-spacing: 0.02em;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.previewHeaderBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.previewHeaderLeft {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex: 1;
+  text-align: left;
+  margin-top: 8px;
+}
+
+.previewUniversityText {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #1f2b36;
+  line-height: 1.15;
+  max-width: 320px;
+}
+
+.previewTextLogo {
+  width: 130px;
+  height: auto;
+  margin-right:auto ;
+  margin-top: 6px;
+}
+
+.previewTopLogo {
+  width: 72px;
+  height: auto;
+  object-fit: contain;
+}
+
+.previewTopLogoRight {
+  width: 64px;
+  margin-left: auto;
+  margin-top: 6px;
+  flex: 0 0 auto;
 }
 
 .previewTableWrap {
   overflow-x: auto;
+  margin-bottom: 50px;
+}
+
+.previewTableWrapWithGap {
+  margin-bottom: 16px;
 }
 
 .previewTable {
   width: 100%;
-  min-width: 1150px;
-  border-collapse: collapse;
-  font-size: 0.83rem;
+  min-width: 940px;
+  border-collapse: separate;
+  border-spacing: 0 1px;
+  font-size: 0.74rem;
+  table-layout: fixed;
 }
 
 .previewTable th,
 .previewTable td {
-  border: 1px solid #dae3ed;
-  padding: 8px;
+  border: 1px solid #c9dcef;
+  padding: 7px 5px;
   text-align: center;
+  word-break: break-word;
 }
 
 .previewTable th {
-  background: #f1f1f1;
-  color: #222f3e;
+  background: #eef2f5;
+  color: #21384b;
   font-weight: 800;
 }
 
 .previewYearCell {
   font-weight: 800;
-  color: #1f3345;
+  color: #16314d;
   min-width: 90px;
 }
 
-.yearBand0 {
-  background: #f3df8c;
+.yearBand0 td,
+.yearBand0 .previewYearCell {
+  background: #e6c44c;
 }
 
-.yearBand1 {
-  background: #e7cfe9;
+.yearBand1 td,
+.yearBand1 .previewYearCell {
+  background: #d8b6d6;
 }
 
-.yearBand2 {
-  background: #bfe2d2;
+.yearBand2 td,
+.yearBand2 .previewYearCell {
+  background: #b8dfc9;
 }
 
-.yearBand3 {
-  background: #c5d7eb;
+.yearBand3 td,
+.yearBand3 .previewYearCell {
+  background: #b7cdeb;
+}
+
+.previewSignoffRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding: 0 10px;
+}
+
+.previewSignoffLabel {
+  font-size: 0.9rem;
+  color: #1e2e3f;
+  font-weight: 700;
+}
+
+.previewFooterBar {
+  margin-top: 10px;
+  background: #d5d7da;
+  color: #233445;
+  text-align: center;
+  font-size: 0.82rem;
+  padding: 7px 10px;
 }
 
 @media print {
   @page {
     size: A4 landscape;
     margin: 8mm;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .previewPaper,
+  .previewPaper * {
+    visibility: visible !important;
   }
 
   body {
@@ -352,6 +526,8 @@
   .previewCloseBtn,
   .actionRow,
   .header,
+  .headerRow,
+  .batchDetailContainer,
   .batchControls,
   .yearSection,
   .saveBtn,
@@ -372,6 +548,12 @@
     background: #ffffff !important;
   }
 
+  .previewPaper {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
   .previewOverlay {
     position: static !important;
     inset: auto !important;
@@ -385,52 +567,119 @@
     padding: 3mm 2mm;
     font-size: 12pt;
     color: #ffffff !important;
-    background: #4d4d4d !important;
+    background: #595f66 !important;
+  }
+
+  .previewHeaderBar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-bottom: 2.5mm;
+    position: relative !important;
+    min-height: 17mm;
+  }
+
+  .previewHeaderLeft {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: auto !important;
+    flex: none !important;
+    display: block !important;
+    text-align: left !important;
+  }
+
+  .previewUniversityText {
+    font-size: 10pt;
+    color: #1f2b36 !important;
+  }
+
+  .previewTextLogo {
+    width: 34mm !important;
+    display: block !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: none !important;
+    transform-origin: left center !important;
+  }
+
+  .previewTopLogo {
+    width: 17mm;
+  }
+
+  .previewTopLogoRight {
+    position: absolute !important;
+    right: 0 !important;
+    top: 1.4mm !important;
+    margin: 0 !important;
+    display: block !important;
+    flex: 0 0 auto !important;
   }
 
   .previewTableWrap {
     overflow: visible !important;
+    margin-bottom: 50px !important;
   }
 
   .previewTable {
     width: 100% !important;
     min-width: 0 !important;
     table-layout: fixed;
-    font-size: 8.5pt;
-    border-collapse: collapse;
+    font-size: 7.8pt;
+    border-collapse: separate;
+    border-spacing: 0 0.3mm;
   }
 
   .previewTable th,
   .previewTable td {
     border: 1px solid #c5cfda !important;
-    padding: 2.4mm 1.8mm;
+    padding: 1.8mm 1.2mm;
     word-break: break-word;
   }
 
   .previewTable th {
-    background: #eceff2 !important;
-    color: #1f2d3a !important;
+    background: #eef2f5 !important;
+    color: #21384b !important;
     font-weight: 800;
   }
 
   .yearBand0 td,
   .yearBand0 .previewYearCell {
-    background: #f3df8c !important;
+    background: #e6c44c !important;
   }
 
   .yearBand1 td,
   .yearBand1 .previewYearCell {
-    background: #e7cfe9 !important;
+    background: #d8b6d6 !important;
   }
 
   .yearBand2 td,
   .yearBand2 .previewYearCell {
-    background: #bfe2d2 !important;
+    background: #b8dfc9 !important;
   }
 
   .yearBand3 td,
   .yearBand3 .previewYearCell {
-    background: #c5d7eb !important;
+    background: #b7cdeb !important;
+  }
+
+  .previewSignoffRow {
+    margin-top: 3.4mm;
+    padding: 0 2mm;
+  }
+
+  .previewSignoffLabel {
+    font-size: 9pt;
+  }
+
+  .previewFooterBar {
+    margin-top: 2.2mm;
+    padding: 2mm;
+    font-size: 8.5pt;
+    color: #233445 !important;
+    background: #d5d7da !important;
   }
 }
 
@@ -442,6 +691,19 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes headingGlow {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+    letter-spacing: 0.06em;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0.02em;
   }
 }
 
@@ -466,6 +728,13 @@
     width: 100%;
   }
 
+  .backLink {
+    position: static;
+    transform: none;
+    width: 100%;
+    text-align: left;
+  }
+
   .actionRow {
     flex-direction: column;
   }
@@ -481,6 +750,21 @@
 
   .previewPaper {
     margin: 8px;
+  }
+
+  .previewHeaderBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .previewUniversityText {
+    max-width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .previewSignoffRow {
+    padding: 0;
+    gap: 10px;
   }
 
   .viewActions {

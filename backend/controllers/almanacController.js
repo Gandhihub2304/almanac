@@ -1,5 +1,50 @@
 const Almanac = require("../models/Almanac");
 
+const parseDate = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const getDurationInDays = (start, end) => {
+  const startDate = parseDate(start);
+  const endDate = parseDate(end);
+  if (!startDate || !endDate) return 0;
+  return Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+};
+
+const validateBreakRules = (yearsData, totalYears) => {
+  for (let yearIndex = 0; yearIndex < yearsData.length; yearIndex += 1) {
+    const yearItem = yearsData[yearIndex] || {};
+    const terms = Array.isArray(yearItem.terms) ? yearItem.terms : [];
+    const isFinalYear = yearIndex === totalYears - 1;
+
+    const termThree = terms[2] || {};
+    const termFour = terms[3] || {};
+
+    if (termThree.breakStart || termThree.breakEnd) {
+      return `Year ${yearIndex + 1} Term 3 must not have break`;
+    }
+
+    if (isFinalYear) {
+      if (termFour.breakStart || termFour.breakEnd) {
+        return "Final year Term 4 must not have break";
+      }
+      continue;
+    }
+
+    if (!termFour.breakStart || !termFour.breakEnd) {
+      return `Year ${yearIndex + 1} Term 4 break is required`;
+    }
+
+    const duration = getDurationInDays(termFour.breakStart, termFour.breakEnd);
+    if (duration <= 0 || duration > 21) {
+      return `Year ${yearIndex + 1} Term 4 break must be between 1 and 21 days`;
+    }
+  }
+
+  return "";
+};
+
 exports.saveAlmanac = async (req, res) => {
   try {
     const { program, year, batchStart, batchEnd, yearsData } = req.body;
@@ -18,6 +63,15 @@ exports.saveAlmanac = async (req, res) => {
 
     if (parsedBatchEnd < parsedBatchStart) {
       return res.status(400).json({ message: "Batch end cannot be smaller than batch start" });
+    }
+
+    if (yearsData.length !== parsedYear) {
+      return res.status(400).json({ message: "Years data does not match selected year count" });
+    }
+
+    const breakRuleMessage = validateBreakRules(yearsData, parsedYear);
+    if (breakRuleMessage) {
+      return res.status(400).json({ message: breakRuleMessage });
     }
 
     const filter = {

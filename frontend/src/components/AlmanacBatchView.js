@@ -13,6 +13,23 @@ function AlmanacBatchView() {
   const yearNames = ["FRESHMAN", "SOPHOMORE", "JUNIOR", "SENIOR"];
   const romanTerms = ["I", "II", "III", "IV"];
 
+  const isPostgraduateProgram = (programName) => {
+    const normalized = (programName || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+    const postgraduatePrograms = [
+      "m.tech",
+      "mca",
+      "mba",
+      "m.sc (clinical psychology)",
+      "m.arch",
+      "llm",
+      "llb",
+      "m.sc yoga"
+    ];
+
+    return postgraduatePrograms.includes(normalized);
+  };
+
   useEffect(() => {
     const fetchAlmanac = async () => {
       try {
@@ -72,22 +89,36 @@ function AlmanacBatchView() {
       </div>
 
       <div className="previewPaper batchViewPaper">
-        <div className="previewBanner">
-          {almanac.batchStart}-{almanac.batchEnd} Batch Undergraduate {almanac.program} Programme Almanac
+        <div className="previewHeaderBar">
+          <div className="previewHeaderLeft">
+            <img src="/text.jpeg" alt="Aurora University text" className="previewTextLogo" />
+          </div>
+
+          <img src="/Aurora Logo.png" alt="Aurora emblem" className="previewTopLogo previewTopLogoRight" />
         </div>
 
-        <div className="previewTableWrap">
+        <div className="previewBanner">
+          {almanac.batchStart}-{almanac.batchEnd} Batch {isPostgraduateProgram(almanac.program) ? "Postgraduate" : "Undergraduate"} {almanac.program} Programme Almanac
+        </div>
+
+        <div className="previewTableWrap previewTableWrapWithGap">
           <table className="previewTable">
             <thead>
               <tr>
-                <th>Year</th>
-                <th>Term</th>
-                <th>Self Registration</th>
-                <th>Term Duration</th>
-                <th>Student Led Activities</th>
-                <th>Festival Holidays</th>
-                <th>Comprehensive Assessment</th>
-                <th>Break</th>
+                <th rowSpan="2">Year</th>
+                <th rowSpan="2">Term</th>
+                <th colSpan="2">Self Registration</th>
+                <th colSpan="2">Term Duration</th>
+                <th rowSpan="2">Student Led Activities</th>
+                <th rowSpan="2">Festival Holidays</th>
+                <th rowSpan="2">Comprehensive Assessment</th>
+                <th rowSpan="2">Break</th>
+              </tr>
+              <tr>
+                <th>Start</th>
+                <th>End</th>
+                <th>Commencement</th>
+                <th>Completion</th>
               </tr>
             </thead>
 
@@ -102,8 +133,10 @@ function AlmanacBatchView() {
                     )}
 
                     <td>{romanTerms[tIndex] || term.termNumber}</td>
-                    <td>{toRange(term.selfStart, term.selfEnd)}</td>
-                    <td>{toRange(term.termStart, term.termEnd)}</td>
+                    <td>{toDisplayDate(term.selfStart)}</td>
+                    <td>{toDisplayDate(term.selfEnd)}</td>
+                    <td>{toDisplayDate(term.termStart)}</td>
+                    <td>{toDisplayDate(term.termEnd)}</td>
                     <td>{toRange(term.activityStart, term.activityEnd)}</td>
                     <td>{getHolidayRange(term.holidays)}</td>
                     <td>{toRange(term.assessmentStart, term.assessmentEnd)}</td>
@@ -114,6 +147,13 @@ function AlmanacBatchView() {
             </tbody>
           </table>
         </div>
+
+        <div className="previewSignoffRow">
+          <div className="previewSignoffLabel">Dean</div>
+          <div className="previewSignoffLabel">Director Academics and Planning</div>
+        </div>
+
+        <div className="previewFooterBar">Uppal, Hyderabad - 500098. Telangana, aurora.edu.in</div>
       </div>
     </div>
   );

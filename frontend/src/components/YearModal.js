@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { YEAR_OPTIONS } from "../utils/yearLabels";
 import "./Modal.css";
 
 function YearModal({ program, closeProgramModal }) {
@@ -29,7 +30,7 @@ function YearModal({ program, closeProgramModal }) {
 
         <select value={year} onChange={(e) => setYear(e.target.value)}>
           <option value="">Select Year</option>
-          {[1,2,3,4].map(y => (
+          {YEAR_OPTIONS.map((y) => (
             <option key={y} value={y}>{y}</option>
           ))}
         </select>

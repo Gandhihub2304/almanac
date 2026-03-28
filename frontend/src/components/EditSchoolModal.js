@@ -86,11 +86,24 @@ function EditSchoolModal({ schools, close, refresh }) {
               <div key={s._id} className="editRow">
                 <span>{s.name}</span>
 
-                <div>
-                  {/* 🔥 IMPORTANT FIX */}
-                  <button className="inlineBtn edit" onClick={() => setSelected({ ...s })}>Edit</button>
+                <div className="iconActions">
+                  <button
+                    className="inlineBtn iconBtn edit"
+                    onClick={() => setSelected({ ...s })}
+                    aria-label="Edit school"
+                    title="Edit"
+                  >
+                    ✏
+                  </button>
 
-                  <button className="inlineBtn delete" onClick={() => deleteSchool(s._id)}>Delete</button>
+                  <button
+                    className="inlineBtn iconBtn delete"
+                    onClick={() => deleteSchool(s._id)}
+                    aria-label="Delete school"
+                    title="Delete"
+                  >
+                    🗑
+                  </button>
                 </div>
               </div>
             ))}
@@ -135,20 +148,24 @@ function EditSchoolModal({ schools, close, refresh }) {
               <button className="inlineBtn add" onClick={addProgram}>Add</button>
             </div>
 
-            {/* ACTION BUTTONS */}
-            <button className="modalBtn" onClick={updateSchool}>
-              Save Changes
-            </button>
-
-            <button className="closeBtn" onClick={() => setSelected(null)}>
-              Back
-            </button>
+            <div className="actionLinksRow">
+              <button className="textActionLink textOk" onClick={updateSchool}>
+                Save Changes
+              </button>
+              <button className="textActionLink textCancel" onClick={close}>
+                Close
+              </button>
+            </div>
           </>
         )}
 
-        <button className="closeBtn" onClick={close}>
-          Close
-        </button>
+        {!selected && (
+          <div className="actionLinksRow">
+            <button className="textActionLink textCancel" onClick={close}>
+              Close
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

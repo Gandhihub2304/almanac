@@ -8,11 +8,17 @@ function AddSchoolModal({ close, refresh }) {
   const [programs, setPrograms] = useState([]);
 
   const add = () => {
+    if (!program.trim()) return;
     setPrograms([...programs, program]);
     setProgram("");
   };
 
   const save = async () => {
+    if (!name.trim() || programs.length === 0) {
+      alert("Enter school name and add at least one programme");
+      return;
+    }
+
     await axios.post("http://localhost:5000/api/schools", { name, programs });
     refresh();
     close();
@@ -20,17 +26,25 @@ function AddSchoolModal({ close, refresh }) {
 
   return (
     <div className="modalOverlay">
-      <div className="modalCard">
-        <h2>Add School</h2>
+      <div className="modalCard addSchoolCard">
+        <h2 className="modalCenterTitle">Add School</h2>
 
-        <input placeholder="School name" onChange={(e)=>setName(e.target.value)} />
-
+        <label className="modalLabel">School Name</label>
         <input
-          placeholder="Program name"
-          value={program}
-          onChange={(e)=>setProgram(e.target.value)}
+          placeholder="Enter school name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
-        <button className="inlineBtn add" onClick={add}>Add Program</button>
+
+        <label className="modalLabel">Programmes</label>
+        <div className="programInputRow">
+          <input
+            placeholder="Add one programme"
+            value={program}
+            onChange={(e) => setProgram(e.target.value)}
+          />
+          <button className="textActionLink textAdd" onClick={add}>Add</button>
+        </div>
 
         {programs.length > 0 && (
           <div className="programChips">
@@ -40,8 +54,10 @@ function AddSchoolModal({ close, refresh }) {
           </div>
         )}
 
-        <button className="modalBtn" onClick={save}>OK</button>
-        <button className="closeBtn" onClick={close}>Cancel</button>
+        <div className="actionLinksRow">
+          <button className="textActionLink textOk" onClick={save}>OK</button>
+          <button className="textActionLink textCancel" onClick={close}>Cancel</button>
+        </div>
       </div>
     </div>
   );

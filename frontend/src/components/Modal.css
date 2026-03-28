@@ -4,8 +4,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(8, 26, 40, 0.42);
-  backdrop-filter: blur(3px);
+  background: rgba(7, 38, 64, 0.42);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -17,18 +17,36 @@
   width: min(520px, 100%);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
-  background: #ffffff;
+  background:
+    radial-gradient(circle at 8% 0%, #f8fcff 0%, transparent 36%),
+    radial-gradient(circle at 90% 100%, #edf6ff 0%, transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
   padding: 22px;
-  border-radius: 16px;
-  border: 1px solid #d7e4ef;
+  border-radius: 22px;
+  border: 1px solid #cde0f2;
   text-align: left;
-  box-shadow: 0 18px 38px rgba(11, 34, 50, 0.24);
+  box-shadow: 0 20px 42px rgba(11, 48, 78, 0.25);
+  animation: modalIn 0.25s ease;
 }
 
 .modalCard h2,
 .modalCard h4 {
   margin: 0 0 12px;
   color: #193447;
+}
+
+.modalCenterTitle {
+  text-align: center;
+  font-size: 1.55rem;
+  color: #13558a;
+}
+
+.modalLabel {
+  display: inline-block;
+  margin-top: 6px;
+  color: #2c5b81;
+  font-weight: 700;
+  font-size: 0.88rem;
 }
 
 .modalCard input,
@@ -56,7 +74,7 @@
   width: 100%;
   margin: 10px 0 0;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #0b7a75, #1b8f89);
+  background: linear-gradient(135deg, #0f5d9b, #1a74bb);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -74,7 +92,7 @@
   margin-top: 10px;
   width: 100%;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #d94c45, #cb3d36);
+  background: linear-gradient(135deg, #c64343, #b63636);
   color: white;
   border: none;
   border-radius: 10px;
@@ -84,6 +102,52 @@
 
 .closeBtn:hover {
   filter: brightness(0.98);
+}
+
+.programInputRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.programInputRow input {
+  flex: 1;
+}
+
+.actionLinksRow {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.textActionLink {
+  border: 0;
+  background: transparent;
+  padding: 3px 4px;
+  font-size: 0.93rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.15s ease;
+}
+
+.textActionLink:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
+
+.textAdd {
+  color: #1f6fb0;
+}
+
+.textOk {
+  color: #1e8b4b;
+}
+
+.textCancel {
+  color: #c23f3f;
 }
 
 .editRow {
@@ -124,8 +188,24 @@
   transform: translateY(-1px);
 }
 
+.iconActions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.iconBtn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  border-radius: 999px;
+}
+
 .inlineBtn.edit {
-  background: #2f8ecb;
+  background: #216ca8;
 }
 
 .inlineBtn.delete {
@@ -133,7 +213,7 @@
 }
 
 .inlineBtn.add {
-  background: #0f8a62;
+  background: #1b6ea9;
 }
 
 .programChips {
@@ -144,13 +224,159 @@
 }
 
 .programChip {
-  background: #edf5fc;
-  border: 1px solid #cfe1f1;
-  color: #234055;
+  background: #ebf4ff;
+  border: 1px solid #bfd8ef;
+  color: #1d4d73;
   border-radius: 999px;
   padding: 5px 10px;
   font-size: 0.82rem;
   font-weight: 600;
+}
+
+.selectionFlowCard {
+  width: min(700px, 100%);
+}
+
+.selectionGrid,
+.yearGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.selectionCard,
+.yearCard {
+  border: 1px solid #c3d9ec;
+  background: linear-gradient(165deg, #ffffff 0%, #edf6ff 100%);
+  color: #154a73;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.86rem;
+  transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.selectionCard:hover,
+.yearCard:hover,
+.selectionCard.active {
+  transform: translateY(-2px);
+  border-color: #2b84c3;
+  box-shadow: 0 10px 18px rgba(20, 83, 130, 0.16);
+}
+
+.selectionCard.active {
+  background: linear-gradient(165deg, #eaf5ff 0%, #d8edff 100%);
+  color: #0f4b79;
+}
+
+.yearBlockTitle {
+  margin-top: 18px;
+}
+
+.selectedProgramRow {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.selectedProgramLabel {
+  color: #15507d;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.yearSelectWrap {
+  margin-top: 8px;
+}
+
+.yearSelectDropdown {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f8ff 100%);
+  border: 1px solid #9fc7e6;
+  color: #174f7b;
+  font-weight: 600;
+}
+
+.compactActionRow {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.compactBtn {
+  min-width: 86px;
+  padding: 7px 12px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.compactBtn:hover {
+  transform: translateY(-1px);
+}
+
+.compactBtnPrimary {
+  background: #0f6fb5;
+  color: #ffffff;
+  border-color: #0f6fb5;
+}
+
+.compactBtnPrimary:hover {
+  background: #0c5f9c;
+  border-color: #0c5f9c;
+}
+
+.compactBtnPrimary:disabled {
+  background: #c7dceb;
+  border-color: #c7dceb;
+  color: #7c95ab;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.compactBtnGhost {
+  background: #ffffff;
+  color: #0f6fb5;
+  border-color: #9fc7e6;
+}
+
+.compactBtnGhost:hover {
+  background: #eaf4fc;
+  border-color: #0f6fb5;
+}
+
+.compactBtnDanger {
+  background: #c23f3f;
+  color: #ffffff;
+  border-color: #c23f3f;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.compactBtnDanger:hover {
+  background: #a83535;
+  border-color: #a83535;
+}
+
+.addSchoolCard {
+  width: min(640px, 100%);
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 640px) {
@@ -159,4 +385,20 @@
     flex-direction: column;
     align-items: stretch;
   }
+
+  .programInputRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .actionLinksRow {
+    justify-content: space-between;
+  }
+}
+
+.compactBtnTiny {
+  min-width: auto;
+  padding: 6px 10px;
+  font-size: 0.8rem;
 }
