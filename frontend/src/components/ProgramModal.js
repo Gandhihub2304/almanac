@@ -63,7 +63,7 @@ function ProgramModal({ school, close }) {
                 Change
               </button>
             </div>
-            <h4 className="yearBlockTitle">Select Year</h4>
+            <h4 className="yearBlockTitle">Select Duration</h4>
             <div className="yearSelectWrap">
               <select
                 className="yearSelectDropdown"
@@ -73,7 +73,7 @@ function ProgramModal({ school, close }) {
                 <option value="">Choose year</option>
                 {YEAR_OPTIONS.map((yearValue) => (
                   <option key={yearValue} value={yearValue}>
-                    Year {yearValue}
+                    {`${yearValue} year${yearValue > 1 ? "s" : ""}`}
                   </option>
                 ))}
               </select>

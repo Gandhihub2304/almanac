@@ -12,6 +12,7 @@ function AlmanacBatchDetail() {
   const [programs, setPrograms] = useState([]);
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [selectedAlmanac, setSelectedAlmanac] = useState(null);
+  const [schools, setSchools] = useState([]);
 
   const yearNames = getYearLabels(selectedAlmanac?.yearsData?.length).map((item) => item.toUpperCase());
   const romanTerms = ["I", "II", "III", "IV"];
@@ -33,11 +34,37 @@ function AlmanacBatchDetail() {
     return postgraduatePrograms.includes(normalized);
   };
 
+  const normalize = (value) => (value || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+  const getSchoolForProgram = (programName) => {
+    const school = schools.find((item) =>
+      (item.programs || []).some((program) => normalize(program) === normalize(programName))
+    );
+
+    return school?.name || "";
+  };
+
+  const getProgramDisplayName = (programName) => {
+    const normalizedProgram = normalize(programName);
+
+    if (normalizedProgram === "b.tech" || normalizedProgram === "btech") {
+      return "B.Tech CSE & Allied";
+    }
+
+    return programName || "";
+  };
+
   useEffect(() => {
     const fetchBatchPrograms = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/almanac/batches");
-        const batchPrograms = (res.data || []).filter(
+        const [batchesRes, schoolsRes] = await Promise.all([
+          axios.get("http://localhost:5000/api/almanac/batches"),
+          axios.get("http://localhost:5000/api/schools")
+        ]);
+
+        setSchools(schoolsRes.data || []);
+
+        const batchPrograms = (batchesRes.data || []).filter(
           (item) => item.batchStart === Number(batchStart) && item.batchEnd === Number(batchEnd)
         );
 
@@ -99,6 +126,18 @@ function AlmanacBatchDetail() {
     return ranges.length ? ranges.join(", ") : "-";
   };
 
+  const getActivityRange = (term) => {
+    const activities = (term?.activities && term.activities.length > 0)
+      ? term.activities
+      : [{ start: term?.activityStart, end: term?.activityEnd }];
+
+    const ranges = activities
+      .filter((item) => item?.start && item?.end)
+      .map((item) => toRange(item.start, item.end));
+
+    return ranges.length ? ranges.join(", ") : "-";
+  };
+
   if (loading) {
     return <h3 className="previewStatus">Loading batch programs...</h3>;
   }
@@ -113,6 +152,14 @@ function AlmanacBatchDetail() {
       </div>
     );
   }
+
+  const schoolName = getSchoolForProgram(selectedAlmanac?.program);
+  const isEngineeringSchool = normalize(schoolName).includes("engineering");
+  const batchLabel = `${selectedAlmanac?.batchStart}-${selectedAlmanac?.batchEnd}`;
+  const programDisplayName = getProgramDisplayName(selectedAlmanac?.program);
+  const bannerTitle = isEngineeringSchool
+    ? `${batchLabel} Batch ${programDisplayName} Programme Almanac`
+    : `${batchLabel} Batch ${isPostgraduateProgram(selectedAlmanac?.program) ? "Postgraduate" : "Undergraduate"} ${programDisplayName} Programme Almanac`;
 
   return (
     <div className="viewPageShell">
@@ -155,9 +202,10 @@ function AlmanacBatchDetail() {
             <img src="/Aurora Logo.png" alt="Aurora emblem" className="previewTopLogo previewTopLogoRight" />
           </div>
 
-          <div className="previewBanner">
-            {selectedAlmanac.batchStart}-{selectedAlmanac.batchEnd} Batch {isPostgraduateProgram(selectedAlmanac.program) ? "Postgraduate" : "Undergraduate"}{" "}
-            {selectedAlmanac.program} Programme Almanac
+          <div className="previewSchoolTitle">{(schoolName || "School").toUpperCase()}</div>
+
+          <div className={`previewBanner ${isEngineeringSchool ? "engineeringTheme" : ""}`}>
+            {bannerTitle}
           </div>
 
           <div className="previewTableWrap">
@@ -195,7 +243,7 @@ function AlmanacBatchDetail() {
                       <td>{toDisplayDate(term.selfEnd)}</td>
                       <td>{toDisplayDate(term.termStart)}</td>
                       <td>{toDisplayDate(term.termEnd)}</td>
-                      <td>{toRange(term.activityStart, term.activityEnd)}</td>
+                      <td>{getActivityRange(term)}</td>
                       <td>{getHolidayRange(term.holidays)}</td>
                       <td>{toRange(term.assessmentStart, term.assessmentEnd)}</td>
                       <td>{toRange(term.breakStart, term.breakEnd)}</td>
@@ -211,7 +259,9 @@ function AlmanacBatchDetail() {
             <div className="previewSignoffLabel">Director Academics and Planning</div>
           </div>
 
-          <div className="previewFooterBar">Uppal, Hyderabad - 500098. Telangana, aurora.edu.in</div>
+          <div className={`previewFooterBar ${isEngineeringSchool ? "engineeringTheme" : ""}`}>
+            Uppal, Hyderabad - 500098. Telangana, aurora.edu.in
+          </div>
         </div>
       )}
     </div>

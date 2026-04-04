@@ -1,8 +1,42 @@
 const Almanac = require("../models/Almanac");
+const Calendar = require("../models/Calendar");
+const mongoose = require("mongoose");
 
 const parseDate = (value) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const isMonday = (value) => {
+  const date = parseDate(value);
+  return Boolean(date) && date.getDay() === 1;
+};
+
+const isSunday = (value) => {
+  const date = parseDate(value);
+  return Boolean(date) && date.getDay() === 0;
+};
+
+const getNextMondayIso = (value) => {
+  const date = parseDate(value);
+  if (!date) return "";
+
+  const next = new Date(date);
+  const day = next.getDay();
+  let diff = (8 - day) % 7;
+  if (diff === 0) diff = 7;
+  next.setDate(next.getDate() + diff);
+
+  return next.toISOString().split("T")[0];
+};
+
+const getLastWeekStartIso = (rangeEndIso) => {
+  const rangeEnd = parseDate(rangeEndIso);
+  if (!rangeEnd) return "";
+
+  const weekStart = new Date(rangeEnd);
+  weekStart.setDate(weekStart.getDate() - 6);
+  return weekStart.toISOString().split("T")[0];
 };
 
 const getDurationInDays = (start, end) => {
@@ -16,29 +50,100 @@ const validateBreakRules = (yearsData, totalYears) => {
   for (let yearIndex = 0; yearIndex < yearsData.length; yearIndex += 1) {
     const yearItem = yearsData[yearIndex] || {};
     const terms = Array.isArray(yearItem.terms) ? yearItem.terms : [];
-    const isFinalYear = yearIndex === totalYears - 1;
 
-    const termThree = terms[2] || {};
-    const termFour = terms[3] || {};
+    for (let termIndex = 0; termIndex < terms.length; termIndex += 1) {
+      const term = terms[termIndex] || {};
+      const isLastTerm = yearIndex === totalYears - 1 && termIndex === terms.length - 1;
+      const isNoBreakTerm = termIndex === 2;
 
-    if (termThree.breakStart || termThree.breakEnd) {
-      return `Year ${yearIndex + 1} Term 3 must not have break`;
-    }
-
-    if (isFinalYear) {
-      if (termFour.breakStart || termFour.breakEnd) {
-        return "Final year Term 4 must not have break";
+      if (!term.selfStart || !term.selfEnd || !term.termStart || !term.termEnd || !term.assessmentStart || !term.assessmentEnd) {
+        return `Year ${yearIndex + 1} Term ${termIndex + 1} has incomplete dates`;
       }
-      continue;
-    }
 
-    if (!termFour.breakStart || !termFour.breakEnd) {
-      return `Year ${yearIndex + 1} Term 4 break is required`;
-    }
+      if (isLastTerm) {
+        continue;
+      }
 
-    const duration = getDurationInDays(termFour.breakStart, termFour.breakEnd);
-    if (duration <= 0 || duration > 21) {
-      return `Year ${yearIndex + 1} Term 4 break must be between 1 and 21 days`;
+      if (isNoBreakTerm) {
+        if (term.breakStart || term.breakEnd || (term.breakMode && term.breakMode !== "none")) {
+          return `Year ${yearIndex + 1} Term 3 must not have break`;
+        }
+        continue;
+      }
+
+      const breakMode = term.breakMode || "auto";
+      const hasPartialBreak = (term.breakStart && !term.breakEnd) || (!term.breakStart && term.breakEnd);
+      if (hasPartialBreak) {
+        return `Year ${yearIndex + 1} Term ${termIndex + 1} break must include start and end`;
+      }
+
+      if (breakMode === "none") {
+        if (term.breakStart || term.breakEnd) {
+          return `Year ${yearIndex + 1} Term ${termIndex + 1} break should be empty when removed`;
+        }
+        continue;
+      }
+
+      if (!term.breakStart || !term.breakEnd) {
+        return `Year ${yearIndex + 1} Term ${termIndex + 1} break is required unless removed`;
+      }
+
+      if (!isMonday(term.breakStart) || !isSunday(term.breakEnd)) {
+        return `Year ${yearIndex + 1} Term ${termIndex + 1} break must start Monday and end Sunday`;
+      }
+
+      const minBreakStart = getNextMondayIso(term.assessmentEnd);
+      if (!minBreakStart || term.breakStart < minBreakStart) {
+        return `Year ${yearIndex + 1} Term ${termIndex + 1} break must start after assessment week`;
+      }
+
+      const duration = getDurationInDays(term.breakStart, term.breakEnd);
+      if (duration <= 0 || duration > 21) {
+        return `Year ${yearIndex + 1} Term ${termIndex + 1} break must be between 1 and 21 days`;
+      }
+    }
+  }
+
+  for (let yearIndex = 0; yearIndex < yearsData.length; yearIndex += 1) {
+    const terms = Array.isArray(yearsData[yearIndex]?.terms) ? yearsData[yearIndex].terms : [];
+
+    for (let termIndex = 0; termIndex < terms.length; termIndex += 1) {
+      const current = terms[termIndex] || {};
+
+      let nextYearIndex = yearIndex;
+      let nextTermIndex = termIndex + 1;
+      if (nextTermIndex >= terms.length) {
+        nextYearIndex = yearIndex + 1;
+        nextTermIndex = 0;
+      }
+
+      if (nextYearIndex >= yearsData.length) {
+        continue;
+      }
+
+      const nextTerm = yearsData[nextYearIndex]?.terms?.[nextTermIndex] || {};
+      if (!nextTerm.selfStart) {
+        return `Year ${nextYearIndex + 1} Term ${nextTermIndex + 1} self registration is missing`;
+      }
+
+      const breakMode = current.breakMode || "auto";
+      let expectedNextSelfStart = "";
+
+      if (termIndex === 2) {
+        expectedNextSelfStart = current.assessmentStart;
+      } else if (breakMode === "none") {
+        expectedNextSelfStart = current.assessmentStart;
+      } else if (termIndex === 3 && current.breakEnd) {
+        expectedNextSelfStart = getLastWeekStartIso(current.breakEnd);
+      } else if (current.breakStart) {
+        expectedNextSelfStart = current.breakStart;
+      } else {
+        expectedNextSelfStart = getNextMondayIso(current.assessmentEnd);
+      }
+
+      if (!expectedNextSelfStart || nextTerm.selfStart !== expectedNextSelfStart) {
+        return `Year ${nextYearIndex + 1} Term ${nextTermIndex + 1} self registration sequence is invalid`;
+      }
     }
   }
 
@@ -114,6 +219,7 @@ exports.getAlmanacBatches = async (req, res) => {
     const batches = await Almanac.find(
       {},
       {
+        _id: 1,
         program: 1,
         year: 1,
         batchStart: 1,
@@ -133,7 +239,24 @@ exports.getAlmanacBatches = async (req, res) => {
 
 exports.getAlmanacById = async (req, res) => {
   try {
-    const almanac = await Almanac.findById(req.params.id).lean();
+    const { id } = req.params;
+
+    console.log("GET ALMANAC REQUEST:", {
+      id,
+      params: req.params,
+      url: req.originalUrl,
+      method: req.method
+    });
+
+    if (!id) {
+      return res.status(400).json({ message: "Almanac id is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid almanac id format" });
+    }
+
+    const almanac = await Almanac.findById(id).lean();
 
     if (!almanac) {
       return res.status(404).json({ message: "Almanac not found" });
@@ -141,7 +264,269 @@ exports.getAlmanacById = async (req, res) => {
 
     res.json(almanac);
   } catch (error) {
-    console.error("GET ALMANAC ERROR:", error);
+    console.error("GET ALMANAC ERROR:", {
+      id: req.params?.id,
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.saveDayWiseTable = async (req, res) => {
+  try {
+    const { id, yearNumber } = req.params;
+    const {
+      rows,
+      schoolName,
+      program,
+      batchStart,
+      batchEnd,
+      totalYears,
+      yearHeading
+    } = req.body;
+
+    const parsedYearNumber = Number(yearNumber);
+    if (Number.isNaN(parsedYearNumber) || parsedYearNumber <= 0) {
+      return res.status(400).json({ message: "Invalid year number" });
+    }
+
+    if (!Array.isArray(rows)) {
+      return res.status(400).json({ message: "Rows must be an array" });
+    }
+
+    const sanitizedRows = rows.map((item) => ({
+      termLabel: String(item?.termLabel || "").trim(),
+      weekLabel: String(item?.weekLabel || "-").trim() || "-",
+      date: String(item?.date || "").trim(),
+      day: String(item?.day || "-").trim() || "-",
+      remarks: String(item?.remarks || "-").trim() || "-"
+    }));
+
+    await Calendar.findOneAndUpdate(
+      { almanacId: id, yearNumber: parsedYearNumber },
+      {
+        $set: {
+          almanacId: id,
+          schoolName: String(schoolName || "School").trim(),
+          program: String(program || "").trim(),
+          batchStart: Number(batchStart),
+          batchEnd: Number(batchEnd),
+          totalYears: Number(totalYears),
+          yearNumber: parsedYearNumber,
+          yearHeading: String(yearHeading || `Year ${parsedYearNumber}`).trim(),
+          rows: sanitizedRows
+        }
+      },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true,
+        setDefaultsOnInsert: true
+      }
+    );
+
+    res.json({
+      message: "Day-wise table saved for selected batch and year",
+      almanacId: id,
+      yearNumber: parsedYearNumber,
+      totalRows: sanitizedRows.length
+    });
+  } catch (error) {
+    console.error("SAVE DAY-WISE TABLE ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteSavedCalendar = async (req, res) => {
+  try {
+    const { id, yearNumber } = req.params;
+    const parsedYearNumber = Number(yearNumber);
+
+    if (Number.isNaN(parsedYearNumber) || parsedYearNumber <= 0) {
+      return res.status(400).json({ message: "Invalid year number" });
+    }
+
+    const deleted = await Calendar.findOneAndDelete({ almanacId: id, yearNumber: parsedYearNumber });
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Saved calendar not found" });
+    }
+
+    res.json({
+      message: "Saved calendar deleted successfully",
+      almanacId: id,
+      yearNumber: parsedYearNumber
+    });
+  } catch (error) {
+    console.error("DELETE SAVED CALENDAR ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteAlmanacBatchRange = async (req, res) => {
+  try {
+    const { batchStart, batchEnd } = req.params;
+    const parsedBatchStart = Number(batchStart);
+    const parsedBatchEnd = Number(batchEnd);
+
+    if (Number.isNaN(parsedBatchStart) || Number.isNaN(parsedBatchEnd)) {
+      return res.status(400).json({ message: "Batch values must be numbers" });
+    }
+
+    const result = await Almanac.deleteMany({
+      batchStart: parsedBatchStart,
+      batchEnd: parsedBatchEnd
+    });
+
+    const deletedCalendars = await Calendar.deleteMany({
+      batchStart: parsedBatchStart,
+      batchEnd: parsedBatchEnd
+    });
+
+    res.json({
+      message: "Saved almanac batch deleted successfully",
+      deletedCount: result.deletedCount || 0,
+      deletedCalendarCount: deletedCalendars.deletedCount || 0,
+      batchStart: parsedBatchStart,
+      batchEnd: parsedBatchEnd
+    });
+  } catch (error) {
+    console.error("DELETE BATCH RANGE ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteAlmanacById = async (req, res) => {
+  try {
+    const deleted = await Almanac.findByIdAndDelete(req.params.id);
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Almanac not found" });
+    }
+
+    const deletedCalendars = await Calendar.deleteMany({
+      almanacId: req.params.id
+    });
+
+    res.json({
+      message: "Saved almanac deleted successfully",
+      almanacId: req.params.id,
+      deletedCalendarCount: deletedCalendars.deletedCount || 0
+    });
+  } catch (error) {
+    console.error("DELETE ALMANAC ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getSavedCalendarByAlmanacYear = async (req, res) => {
+  try {
+    const { id, yearNumber } = req.params;
+    const parsedYearNumber = Number(yearNumber);
+
+    if (Number.isNaN(parsedYearNumber) || parsedYearNumber <= 0) {
+      return res.status(400).json({ message: "Invalid year number" });
+    }
+
+    const savedCalendar = await Calendar.findOne({ almanacId: id, yearNumber: parsedYearNumber }).lean();
+
+    if (!savedCalendar) {
+      return res.status(404).json({ message: "Saved calendar not found" });
+    }
+
+    res.json(savedCalendar);
+  } catch (error) {
+    console.error("GET SAVED CALENDAR ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getSavedCalendars = async (req, res) => {
+  try {
+    const calendars = await Calendar.find(
+      {},
+      {
+        schoolName: 1,
+        program: 1,
+        batchStart: 1,
+        batchEnd: 1,
+        totalYears: 1,
+        yearNumber: 1,
+        yearHeading: 1,
+        rows: 1,
+        updatedAt: 1
+      }
+    )
+      .sort({ updatedAt: -1, batchStart: -1 })
+      .lean();
+
+    const savedCalendars = [];
+
+    calendars.forEach((calendar) => {
+      if (!Array.isArray(calendar.rows) || !calendar.rows.length) return;
+
+      savedCalendars.push({
+        calendarId: calendar._id,
+        almanacId: calendar.almanacId,
+        schoolName: calendar.schoolName,
+        program: calendar.program,
+        totalYears: Number(calendar.totalYears || 0),
+        batchStart: calendar.batchStart,
+        batchEnd: calendar.batchEnd,
+        yearNumber: Number(calendar.yearNumber || 0),
+        yearHeading: calendar.yearHeading,
+        totalRows: calendar.rows.length,
+        updatedAt: calendar.updatedAt
+      });
+    });
+
+    res.json(savedCalendars);
+  } catch (error) {
+    console.error("SAVED CALENDARS ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteSavedCalendarById = async (req, res) => {
+  try {
+    const { calendarId } = req.params;
+
+    if (!calendarId || !mongoose.Types.ObjectId.isValid(calendarId)) {
+      return res.status(400).json({ message: "Invalid calendar id format" });
+    }
+
+    const deleted = await Calendar.findByIdAndDelete(calendarId);
+    if (!deleted) {
+      return res.status(404).json({ message: "Saved calendar not found" });
+    }
+
+    res.json({
+      message: "Saved calendar deleted successfully",
+      calendarId
+    });
+  } catch (error) {
+    console.error("DELETE SAVED CALENDAR BY ID ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getSavedCalendarById = async (req, res) => {
+  try {
+    const { calendarId } = req.params;
+
+    if (!calendarId || !mongoose.Types.ObjectId.isValid(calendarId)) {
+      return res.status(400).json({ message: "Invalid calendar id format" });
+    }
+
+    const calendar = await Calendar.findById(calendarId).lean();
+    if (!calendar) {
+      return res.status(404).json({ message: "Saved calendar not found" });
+    }
+
+    res.json(calendar);
+  } catch (error) {
+    console.error("GET SAVED CALENDAR BY ID ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };

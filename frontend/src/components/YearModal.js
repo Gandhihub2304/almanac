@@ -9,7 +9,7 @@ function YearModal({ program, closeProgramModal }) {
 
   const handle = () => {
     if (!year) {
-      alert("Please select year ❌");
+      alert("Please select duration ❌");
       return;
     }
 
@@ -29,9 +29,9 @@ function YearModal({ program, closeProgramModal }) {
         <h2>{program}</h2>
 
         <select value={year} onChange={(e) => setYear(e.target.value)}>
-          <option value="">Select Year</option>
+          <option value="">Select Duration</option>
           {YEAR_OPTIONS.map((y) => (
-            <option key={y} value={y}>{y}</option>
+            <option key={y} value={y}>{`${y} year${y > 1 ? "s" : ""}`}</option>
           ))}
         </select>
 

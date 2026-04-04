@@ -1,0 +1,559 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+.academicCalendarShell {
+  min-height: 100vh;
+  font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(104, 182, 250, 0.22) 0%, transparent 38%),
+    radial-gradient(circle at 90% 100%, rgba(103, 201, 135, 0.2) 0%, transparent 34%),
+    #f4f9ff;
+}
+
+.academicCalendarHeader {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 26px 24px 24px;
+  background: linear-gradient(120deg, #047cde 0%, #1388ed 50%, #0d8bf2 100%);
+  color: #f6fbff;
+}
+
+.academicCalendarLogo {
+  position: absolute;
+  top: 28px;
+  right: 70px;
+  height: 95px;
+  width: auto;
+  object-fit: contain;
+}
+
+.academicCalendarTitle {
+  margin: 28px 0 0;
+  text-align: center;
+  font-size: clamp(1.8rem, 1.1rem + 2vw, 3rem);
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.academicCalendarSubtitle {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 1rem;
+  color: rgba(239, 248, 255, 0.94);
+}
+
+.academicCalendarContent {
+  padding: 26px 24px 32px;
+}
+
+.academicSectionTitle {
+  margin: 0 0 18px;
+  color: #0c4f86;
+  font-size: clamp(1.2rem, 1rem + 1vw, 1.7rem);
+}
+
+.calendarSchoolGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.calendarSchoolCard {
+  border: 1px solid #b7d3ea;
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(237, 247, 255, 0.94) 75%),
+    #ffffff;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(12, 68, 112, 0.11);
+  opacity: 0;
+  animation: academicCardIn 0.42s ease forwards;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.calendarSchoolCard:hover {
+  transform: translateY(-3px);
+  border-color: #73add7;
+  box-shadow: 0 14px 24px rgba(14, 72, 120, 0.15);
+}
+
+.calendarSchoolCard.expanded {
+  border-color: #6ba7d5;
+}
+
+.calendarSchoolHeader {
+  width: 100%;
+  border: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  background:
+    linear-gradient(90deg, rgba(16, 120, 160, 0.1) 0, rgba(16, 120, 160, 0.1) 7px, transparent 7px),
+    transparent;
+}
+
+.calendarSchoolName {
+  color: #0a4a78;
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.calendarProgramCount {
+  color: #17628f;
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+
+.calendarProgrammeWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+
+.calendarProgrammePill {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid #9ec7d9;
+  background: #edf9f8;
+  color: #0d5c77;
+  padding: 5px 9px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.calendarProgrammePill:hover {
+  transform: translateY(-1px);
+  border-color: #66abbe;
+  background: #ddf2f0;
+}
+
+.dayWiseCalendarSection {
+  margin-top: 24px;
+  border: 1px solid #bdd8ef;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
+  box-shadow: 0 14px 28px rgba(14, 72, 120, 0.12);
+  overflow: hidden;
+}
+
+.dayWiseHeaderCard {
+  padding: 18px;
+  border-bottom: 1px solid #d3e6f6;
+  background: linear-gradient(110deg, #e8f4ff 0%, #f4fbff 100%);
+}
+
+.dayWiseHeaderCard h3 {
+  margin: 0;
+  color: #0f4f84;
+  font-size: 1.22rem;
+}
+
+.dayWiseHeaderCard h4 {
+  margin: 6px 0 0;
+  color: #16639d;
+  font-size: 1.05rem;
+}
+
+.dayWiseHeaderCard p {
+  margin: 6px 0 0;
+  color: #29597f;
+  font-weight: 600;
+}
+
+.formalCalendarHeading {
+  padding: 16px 14px 8px;
+  border-bottom: 1px solid #d3e6f6;
+  text-align: center;
+  background: linear-gradient(110deg, #e8f4ff 0%, #f4fbff 100%);
+}
+
+.formalCalendarHeading p {
+  margin: 4px 0;
+  color: #0f4f84;
+  font-weight: 700;
+}
+
+.formalCalendarHeading p:nth-child(1) {
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+
+.formalCalendarHeading p:nth-child(2) {
+  font-size: 0.92rem;
+}
+
+.formalCalendarHeading p:nth-child(3) {
+  font-size: 0.96rem;
+}
+
+.formalCalendarHeading p:nth-child(5) {
+  margin-top: 8px;
+  font-size: 0.98rem;
+}
+
+.dayWiseTableWrap {
+  overflow: auto;
+}
+
+.dayWiseTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+}
+
+.dayWiseTable th,
+.dayWiseTable td {
+  border: 1px solid #d5e6f5;
+  padding: 9px 10px;
+  text-align: left;
+  color: #1c4667;
+}
+
+.dayWiseTable th {
+  background: #edf6ff;
+  color: #0f4f84;
+  font-size: 0.88rem;
+}
+
+.dayWiseTable tbody tr:nth-child(even) {
+  background: #f9fcff;
+}
+
+.dayWiseEmpty {
+  text-align: center;
+  font-weight: 700;
+  color: #486681;
+}
+
+.tableActionRow {
+  margin: 14px 0 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tableActionRow .uploadPdfButton {
+  margin-left: auto;
+  border-color: #0f6fbf;
+  background: linear-gradient(180deg, #2f98ec 0%, #187ed5 100%);
+  color: #ffffff;
+}
+
+.tableActionRow .uploadPdfButton:hover {
+  background: linear-gradient(180deg, #268de0 0%, #1173c8 100%);
+}
+
+.tableActionRow .previewButton {
+  border-color: #e3b170;
+  background: linear-gradient(180deg, #ffe6c7 0%, #ffd8a7 100%);
+  color: #8a4f11;
+}
+
+.tableActionRow .previewButton:hover {
+  background: linear-gradient(180deg, #ffddb6 0%, #ffcf95 100%);
+}
+
+.tableActionRow .saveButton {
+  border-color: #5bad7c;
+  background: linear-gradient(180deg, #83d9a6 0%, #53c081 100%);
+  color: #0f4e2d;
+}
+
+.tableActionRow .saveButton:hover {
+  background: linear-gradient(180deg, #74d29b 0%, #45b674 100%);
+}
+
+.tableEditInput {
+  width: 100%;
+  border: 1px solid #b7d4ea;
+  border-radius: 7px;
+  padding: 7px 8px;
+  color: #1c4667;
+  background: #ffffff;
+}
+
+.tableEditInput.centered {
+  text-align: center;
+}
+
+.mergedWeekCell {
+  text-align: center;
+  vertical-align: middle;
+  background: #f6fbff;
+  min-width: 120px;
+}
+
+.previewCellCentered {
+  font-weight: 700;
+}
+
+.tablePreviewCard {
+  width: min(1120px, 98vw);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+}
+
+.calendarHiddenTemplateRender {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.calendarSuccessText {
+  margin: 14px 4px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid #a9ddbe;
+  background: linear-gradient(135deg, #effdf3 0%, #daf6e2 100%);
+  color: #14653d;
+  font-weight: 800;
+  box-shadow: 0 10px 18px rgba(20, 101, 61, 0.12);
+  animation: statusPop 0.22s ease;
+}
+
+.calendarErrorText {
+  margin: 14px 4px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid #efb0b0;
+  background: linear-gradient(135deg, #fff3f3 0%, #ffe0e0 100%);
+  color: #9f2f2f;
+  font-weight: 800;
+  box-shadow: 0 10px 18px rgba(159, 47, 47, 0.12);
+  animation: statusPop 0.22s ease;
+}
+
+.calendarBackRow {
+  margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.calendarBackButton {
+  border: 1px solid #9dbfda;
+  background: linear-gradient(180deg, #ffffff 0%, #eff6fd 100%);
+  color: #0f4f84;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+@keyframes statusPop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mergedTermCell {
+  text-align: center;
+  vertical-align: middle;
+  font-weight: 800;
+  background: #f2f8ff;
+}
+
+.academicSelectorCard {
+  width: min(460px, 100%);
+}
+
+.selectorSubText {
+  margin: 4px 0 14px;
+  text-align: center;
+  color: #17598f;
+  font-weight: 700;
+}
+
+.savedCalendarGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.savedFilterBar {
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px solid #bfd8e9;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ffffff 0%, #eef9ff 100%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr)) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.savedFilterItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.savedFilterItem label {
+  color: #155a83;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.savedFilterItem select {
+  border: 1px solid #a9cde4;
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-size: 0.84rem;
+  color: #1d4e72;
+  background: #ffffff;
+}
+
+.savedCalendarCard {
+  border: 1px solid #b9d8e8;
+  border-radius: 14px;
+  background: linear-gradient(150deg, #ffffff 0%, #eefbff 100%);
+  box-shadow: 0 8px 18px rgba(13, 78, 112, 0.12);
+  padding: 12px;
+}
+
+.savedCalendarCard h3 {
+  margin: 0;
+  color: #0c537e;
+  font-size: 0.96rem;
+}
+
+.savedCalendarCard h4 {
+  margin: 4px 0 8px;
+  color: #157083;
+  font-size: 0.88rem;
+}
+
+.savedCalendarCard p {
+  margin: 3px 0;
+  color: #2a627e;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.savedCalendarActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.savedIconButton {
+  border: 1px solid #a6c8e4;
+  background: #f1f8ff;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.savedIconButton svg {
+  width: 18px;
+  height: 18px;
+  fill: #0e4e83;
+}
+
+.savedIconButton.delete {
+  border-color: #e6b4b4;
+  background: #fff2f2;
+}
+
+.savedIconButton.delete svg {
+  fill: #b93d3d;
+}
+
+.savedIconButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tablePreviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.previewTopClose {
+  border: 1px solid #afcae2;
+  background: #f3f9ff;
+  color: #0f4f84;
+  border-radius: 999px;
+  width: 30px;
+  height: 30px;
+  line-height: 1;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+@keyframes academicCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .academicCalendarHeader {
+    padding: 20px 16px 22px;
+  }
+
+  .academicCalendarLogo {
+    top: 14px;
+    right: 14px;
+    height: 64px;
+  }
+
+  .academicCalendarTitle {
+    margin-top: 30px;
+    font-size: clamp(1.45rem, 1rem + 3vw, 2.1rem);
+  }
+
+  .academicCalendarContent {
+    padding: 18px 12px 24px;
+  }
+
+  .dayWiseCalendarSection {
+    margin-top: 18px;
+  }
+
+  .tableActionRow {
+    flex-direction: column;
+  }
+
+  .savedCalendarGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .savedFilterBar {
+    grid-template-columns: 1fr;
+  }
+}

@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
   isMonday,
+  isSunday,
   getNextMonday,
   addWeeks
 } from "../utils/dateUtils";
@@ -29,6 +30,8 @@ function AlmanacForm() {
     setShowWarning(true);
   };
 
+  const invalidDateMessage = "❌ This date is invalid";
+
   // 🔥 CREATE TERM
   const createTerm = (termNumber) => ({
     termNumber,
@@ -36,11 +39,13 @@ function AlmanacForm() {
     selfEnd: "",
     termStart: "",
     termEnd: "",
+    activities: [{ start: "", end: "" }],
     activityStart: "",
     activityEnd: "",
     holidays: [{ start: "", end: "" }],
     assessmentStart: "",
     assessmentEnd: "",
+    breakMode: "auto",
     breakStart: "",
     breakEnd: ""
   });
@@ -64,14 +69,15 @@ function AlmanacForm() {
     return <h2 style={{ textAlign: "center" }}>No Year Selected ❌</h2>;
   }
 
-  const isFinalYear = (yearIndex) => yearIndex === yearsData.length - 1;
-  const isNoBreakTerm = (yearIndex, termIndex) => (
-    termIndex === 2 || (isFinalYear(yearIndex) && termIndex === 3)
-  );
-  const isManualBreakTerm = (yearIndex, termIndex) => (
-    !isFinalYear(yearIndex) && termIndex === 3
-  );
-  const invalidDateMessage = "❌ This date is invalid";
+  const getNextTermRef = (yearIndex, termIndex) => {
+    if (termIndex < 3) {
+      return { yearIndex, termIndex: termIndex + 1 };
+    }
+    if (yearIndex < yearsData.length - 1) {
+      return { yearIndex: yearIndex + 1, termIndex: 0 };
+    }
+    return null;
+  };
 
   const getPreviousTermRef = (yearIndex, termIndex) => {
     if (termIndex > 0) {
@@ -83,14 +89,45 @@ function AlmanacForm() {
     return null;
   };
 
-  const getNextTermRef = (yearIndex, termIndex) => {
-    if (termIndex < 3) {
-      return { yearIndex, termIndex: termIndex + 1 };
+  const isLastTerm = (yearIndex, termIndex) => (
+    yearIndex === yearsData.length - 1 && termIndex === 3
+  );
+
+  const isNoBreakTerm = (termIndex) => termIndex === 2;
+
+  const getPreviewBreakValue = (term, yearIndex, termIndex) => {
+    if (isNoBreakTerm(termIndex) || isLastTerm(yearIndex, termIndex)) {
+      return "—";
     }
-    if (yearIndex < yearsData.length - 1) {
-      return { yearIndex: yearIndex + 1, termIndex: 0 };
+
+    if (!term.breakStart || !term.breakEnd) {
+      return "—";
     }
-    return null;
+
+    return toRange(term.breakStart, term.breakEnd);
+  };
+
+  const cloneYearsData = (data) => (
+    data.map((yearItem) => ({
+      ...yearItem,
+      terms: (yearItem.terms || []).map((termItem) => ({
+        ...termItem,
+        breakMode: termItem.breakMode || "auto",
+        activities: (termItem.activities && termItem.activities.length > 0
+          ? termItem.activities
+          : [{ start: termItem.activityStart || "", end: termItem.activityEnd || "" }
+          ]).map((activity) => ({ ...activity })),
+        holidays: (termItem.holidays || []).map((holiday) => ({ ...holiday }))
+      }))
+    }))
+  );
+
+  const getActivities = (term) => {
+    const activities = term.activities && term.activities.length > 0
+      ? term.activities
+      : [{ start: term.activityStart || "", end: term.activityEnd || "" }];
+
+    return activities;
   };
 
   const toIso = (dateValue) => new Date(dateValue).toISOString().split("T")[0];
@@ -106,30 +143,6 @@ function AlmanacForm() {
     return !(endA < startB || endB < startA);
   };
 
-  const isSelfStartInStrictSequence = (data, yearIndex, termIndex, selfStartDate) => {
-    const previousRef = getPreviousTermRef(yearIndex, termIndex);
-    if (!previousRef) return true;
-
-    const previousTerm = data[previousRef.yearIndex]?.terms?.[previousRef.termIndex];
-    if (!previousTerm) return true;
-
-    if (previousTerm.breakStart || previousTerm.breakEnd) {
-      if (!previousTerm.breakStart || !previousTerm.breakEnd) {
-        return false;
-      }
-
-      const expectedStartAfterBreak = toIso(getNextMonday(new Date(previousTerm.breakEnd)));
-      return selfStartDate === expectedStartAfterBreak;
-    }
-
-    if (previousTerm.assessmentEnd) {
-      const expectedStart = toIso(getNextMonday(new Date(previousTerm.assessmentEnd)));
-      return selfStartDate === expectedStart;
-    }
-
-    return true;
-  };
-
   const getDurationInDays = (start, end) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -138,6 +151,170 @@ function AlmanacForm() {
     }
     const diff = endDate.getTime() - startDate.getTime();
     return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  const getDefaultBreakRange = (assessmentEnd, weekCount = 1) => {
+    const breakStartDate = getNextMonday(new Date(assessmentEnd));
+    const breakEndDate = addWeeks(breakStartDate, weekCount);
+    breakEndDate.setDate(breakEndDate.getDate() - 1);
+
+    return {
+      breakStart: toIso(breakStartDate),
+      breakEnd: toIso(breakEndDate)
+    };
+  };
+
+  const getLastWeekStartFromRange = (rangeEndIso) => {
+    if (!rangeEndIso) return "";
+
+    const rangeEndDate = new Date(rangeEndIso);
+    if (Number.isNaN(rangeEndDate.getTime())) {
+      return "";
+    }
+
+    rangeEndDate.setDate(rangeEndDate.getDate() - 6);
+    return toIso(rangeEndDate);
+  };
+
+  const recalculateTerm = (term) => {
+    if (!term.termStart) {
+      term.termEnd = "";
+      term.assessmentStart = "";
+      term.assessmentEnd = "";
+      return;
+    }
+
+    let weeks = 10;
+
+    const activityCount = getActivities(term).filter((a) => a.start).length;
+    weeks += activityCount;
+
+    const firstFilledActivity = getActivities(term).find((a) => a.start && a.end);
+    term.activityStart = firstFilledActivity?.start || "";
+    term.activityEnd = firstFilledActivity?.end || "";
+
+    const holidayCount = (term.holidays || []).filter((h) => h.start).length;
+    weeks += holidayCount;
+
+    const termEndDate = addWeeks(new Date(term.termStart), weeks);
+    termEndDate.setDate(termEndDate.getDate() - 1);
+    term.termEnd = toIso(termEndDate);
+
+    const assessmentStartDate = getNextMonday(termEndDate);
+    const assessmentEndDate = addWeeks(assessmentStartDate, 1);
+    assessmentEndDate.setDate(assessmentEndDate.getDate() - 1);
+
+    term.assessmentStart = toIso(assessmentStartDate);
+    term.assessmentEnd = toIso(assessmentEndDate);
+  };
+
+  const syncBreakForTerm = (term, yearIndex, termIndex, data) => {
+    if (isNoBreakTerm(termIndex)) {
+      term.breakMode = "none";
+      term.breakStart = "";
+      term.breakEnd = "";
+      return;
+    }
+
+    if (isLastTerm(yearIndex, termIndex)) {
+      term.breakMode = "none";
+      term.breakStart = "";
+      term.breakEnd = "";
+      return;
+    }
+
+    if (!term.assessmentEnd) {
+      term.breakStart = "";
+      term.breakEnd = "";
+      return;
+    }
+
+    if (term.breakMode === "none") {
+      term.breakStart = "";
+      term.breakEnd = "";
+      return;
+    }
+
+    if (term.breakMode === "manual" && term.breakStart && term.breakEnd) {
+      const minBreakStart = toIso(getNextMonday(new Date(term.assessmentEnd)));
+      const duration = getDurationInDays(term.breakStart, term.breakEnd);
+
+      if (
+        term.breakStart < minBreakStart ||
+        !isMonday(term.breakStart) ||
+        !isSunday(term.breakEnd) ||
+        duration <= 0 ||
+        duration > 21
+      ) {
+        showWarningModal(`Invalid break in Year ${yearIndex + 1} Term ${termIndex + 1}. Auto break applied.`);
+        term.breakMode = "auto";
+      }
+    }
+
+    if (term.breakMode === "auto" || !term.breakStart || !term.breakEnd) {
+      const defaultBreakWeeks = termIndex === 3 ? 3 : 1;
+      const { breakStart, breakEnd } = getDefaultBreakRange(term.assessmentEnd, defaultBreakWeeks);
+      term.breakStart = breakStart;
+      term.breakEnd = breakEnd;
+    }
+  };
+
+  const regenerateTimeline = (data) => {
+    const firstTerm = data[0]?.terms?.[0];
+    if (!firstTerm?.selfStart) {
+      return;
+    }
+
+    for (let y = 0; y < data.length; y += 1) {
+      for (let t = 0; t < 4; t += 1) {
+        const term = data[y].terms[t];
+
+        if (y === 0 && t === 0) {
+          if (!term.selfStart) {
+            return;
+          }
+        } else {
+          const prevRef = getPreviousTermRef(y, t);
+          if (!prevRef) continue;
+          const prevTerm = data[prevRef.yearIndex].terms[prevRef.termIndex];
+
+          if (!prevTerm?.assessmentEnd) {
+            term.selfStart = "";
+            term.selfEnd = "";
+            term.termStart = "";
+            term.termEnd = "";
+            term.assessmentStart = "";
+            term.assessmentEnd = "";
+            term.breakStart = "";
+            term.breakEnd = "";
+            continue;
+          }
+
+          if (prevRef.termIndex === 2 && prevTerm.assessmentStart) {
+            term.selfStart = prevTerm.assessmentStart;
+          } else if (prevRef.termIndex === 3 && prevTerm.breakStart && prevTerm.breakEnd) {
+            term.selfStart = getLastWeekStartFromRange(prevTerm.breakEnd);
+          } else if (prevTerm.breakMode === "none" && prevTerm.assessmentStart) {
+            term.selfStart = prevTerm.assessmentStart;
+          } else if (prevTerm.breakStart && prevTerm.breakEnd) {
+            term.selfStart = prevTerm.breakStart;
+          } else {
+            term.selfStart = toIso(getNextMonday(new Date(prevTerm.assessmentEnd)));
+          }
+        }
+
+        if (term.selfStart) {
+          term.selfEnd = getWeekEndFromStart(term.selfStart);
+          term.termStart = toIso(getNextMonday(new Date(term.selfEnd)));
+        } else {
+          term.selfEnd = "";
+          term.termStart = "";
+        }
+
+        recalculateTerm(term);
+        syncBreakForTerm(term, y, t, data);
+      }
+    }
   };
 
   // ✅ BATCH DATE VALIDATION
@@ -166,10 +343,33 @@ function AlmanacForm() {
     }
   };
 
-  // ✅ SELF START
+  // ✅ SELF START (Year 1 Term 1 drives the full timeline)
   const handleSelfStart = (y, t, value) => {
+    if (!(y === 0 && t === 0)) {
+      showWarningModal("Only Year 1 Term 1 self registration is editable. Other terms are auto-generated.");
+      return;
+    }
+
     if (!batchStart || !batchEnd) {
       showWarningModal("❌ Please set Batch Start and End first");
+      return;
+    }
+
+    if (!value) {
+      const updated = cloneYearsData(yearsData);
+      updated.forEach((yearItem) => {
+        yearItem.terms.forEach((termItem) => {
+          termItem.selfStart = "";
+          termItem.selfEnd = "";
+          termItem.termStart = "";
+          termItem.termEnd = "";
+          termItem.assessmentStart = "";
+          termItem.assessmentEnd = "";
+          termItem.breakStart = "";
+          termItem.breakEnd = "";
+        });
+      });
+      setYearsData(updated);
       return;
     }
 
@@ -183,40 +383,14 @@ function AlmanacForm() {
       return;
     }
 
-    const duplicateSelfStart = yearsData.some((yearItem, yearIndex) =>
-      yearItem.terms.some((termItem, termIndex) =>
-        !(yearIndex === y && termIndex === t) && termItem.selfStart === value
-      )
-    );
-
-    if (duplicateSelfStart) {
-      showWarningModal("❌ This date is already declared");
-      return;
-    }
-
-    if (!isSelfStartInStrictSequence(yearsData, y, t, value)) {
-      showWarningModal(invalidDateMessage);
-      return;
-    }
-
-    let updated = [...yearsData];
-    let term = updated[y].terms[t];
-
-    term.selfStart = value;
-
-    let end = new Date(value);
-    end.setDate(end.getDate() + 6);
-    term.selfEnd = end.toISOString().split("T")[0];
-
-    const nextMon = getNextMonday(end);
-    term.termStart = nextMon.toISOString().split("T")[0];
-
-    calculateTerm(updated, y, t);
+    const updated = cloneYearsData(yearsData);
+    updated[y].terms[t].selfStart = value;
+    regenerateTimeline(updated);
     setYearsData(updated);
   };
 
   // ✅ ACTIVITY
-  const handleActivity = (y, t, value) => {
+  const handleActivity = (y, t, activityIndex, value) => {
     if (!batchStart || !batchEnd) {
       showWarningModal("❌ Please set Batch Start and End first");
       return;
@@ -232,11 +406,21 @@ function AlmanacForm() {
       return;
     }
 
-    let updated = [...yearsData];
-    let term = updated[y].terms[t];
+    const updated = cloneYearsData(yearsData);
+    const term = updated[y].terms[t];
+    const activities = getActivities(term);
+    const activity = activities[activityIndex];
 
     if (!term.selfStart || !term.termStart) {
       showWarningModal(invalidDateMessage);
+      return;
+    }
+
+    if (!value) {
+      activity.start = "";
+      activity.end = "";
+      regenerateTimeline(updated);
+      setYearsData(updated);
       return;
     }
 
@@ -260,13 +444,41 @@ function AlmanacForm() {
       return;
     }
 
-    term.activityStart = value;
+    const duplicateActivityWeek = activities.some((existing, index) => {
+      if (index === activityIndex || !existing.start || !existing.end) return false;
+      return isWeekOverlap(value, activityEnd, existing.start, existing.end);
+    });
 
-    let end = new Date(value);
-    end.setDate(end.getDate() + 6);
-    term.activityEnd = end.toISOString().split("T")[0];
+    if (duplicateActivityWeek) {
+      showWarningModal("❌ This week is already assigned");
+      return;
+    }
 
-    calculateTerm(updated, y, t);
+    activity.start = value;
+    activity.end = getWeekEndFromStart(value);
+
+    regenerateTimeline(updated);
+    setYearsData(updated);
+  };
+
+  const addActivity = (y, t) => {
+    const updated = cloneYearsData(yearsData);
+    const term = updated[y].terms[t];
+    const activities = getActivities(term);
+    activities.push({ start: "", end: "" });
+    term.activities = activities;
+    setYearsData(updated);
+  };
+
+  const removeActivity = (y, t, activityIndex) => {
+    const updated = cloneYearsData(yearsData);
+    const term = updated[y].terms[t];
+    const activities = getActivities(term);
+
+    activities.splice(activityIndex, 1);
+    term.activities = activities.length > 0 ? activities : [{ start: "", end: "" }];
+
+    regenerateTimeline(updated);
     setYearsData(updated);
   };
 
@@ -287,13 +499,21 @@ function AlmanacForm() {
       return;
     }
 
-    let updated = [...yearsData];
-    let term = updated[y].terms[t];
-    let holiday = term.holidays[h];
+    const updated = cloneYearsData(yearsData);
+    const term = updated[y].terms[t];
+    const holiday = term.holidays[h];
 
     // Strict sequence validation: holiday must belong to the active term window.
     if (!term.selfStart || !term.termStart) {
       showWarningModal(invalidDateMessage);
+      return;
+    }
+
+    if (!value) {
+      holiday.start = "";
+      holiday.end = "";
+      regenerateTimeline(updated);
+      setYearsData(updated);
       return;
     }
 
@@ -308,11 +528,11 @@ function AlmanacForm() {
     }
 
     const holidayEnd = getWeekEndFromStart(value);
-    if (
-      term.activityStart &&
-      term.activityEnd &&
-      isWeekOverlap(value, holidayEnd, term.activityStart, term.activityEnd)
-    ) {
+    const hasActivityOverlap = getActivities(term).some((activity) => (
+      activity.start && activity.end && isWeekOverlap(value, holidayEnd, activity.start, activity.end)
+    ));
+
+    if (hasActivityOverlap) {
       showWarningModal("❌ This week is already assigned");
       return;
     }
@@ -328,64 +548,63 @@ function AlmanacForm() {
     }
 
     holiday.start = value;
+    holiday.end = getWeekEndFromStart(value);
 
-    let end = new Date(value);
-    end.setDate(end.getDate() + 6);
-    holiday.end = end.toISOString().split("T")[0];
-
-    calculateTerm(updated, y, t);
+    regenerateTimeline(updated);
     setYearsData(updated);
   };
 
   const addHoliday = (y, t) => {
-    let updated = [...yearsData];
+    const updated = cloneYearsData(yearsData);
     updated[y].terms[t].holidays.push({ start: "", end: "" });
     setYearsData(updated);
   };
 
-  // 🔥 CALCULATION
-  const calculateTerm = (updatedData, yearIndex, termIndex) => {
-    const term = updatedData[yearIndex].terms[termIndex];
-    let weeks = 10;
-
-    if (term.activityStart) weeks += 1;
-
-    const holidayCount = term.holidays.filter(h => h.start).length;
-    weeks += holidayCount;
-
-    let end = addWeeks(term.termStart, weeks);
-    end.setDate(end.getDate() - 1);
-
-    term.termEnd = end.toISOString().split("T")[0];
-
-    const assessStart = getNextMonday(end);
-    const assessEnd = addWeeks(assessStart, 1);
-    assessEnd.setDate(assessEnd.getDate() - 1);
-
-    term.assessmentStart = assessStart.toISOString().split("T")[0];
-    term.assessmentEnd = assessEnd.toISOString().split("T")[0];
-
-    if (isNoBreakTerm(yearIndex, termIndex)) {
-      term.breakStart = "";
-      term.breakEnd = "";
-      return;
-    }
-
-    if (isManualBreakTerm(yearIndex, termIndex)) {
-      return;
-    }
-
-    const breakStart = getNextMonday(assessEnd);
-    const breakEnd = addWeeks(breakStart, 1);
-    breakEnd.setDate(breakEnd.getDate() - 1);
-
-    term.breakStart = breakStart.toISOString().split("T")[0];
-    term.breakEnd = breakEnd.toISOString().split("T")[0];
+  const removeHoliday = (y, t, h) => {
+    const updated = cloneYearsData(yearsData);
+    const holidays = updated[y].terms[t].holidays || [];
+    holidays.splice(h, 1);
+    updated[y].terms[t].holidays = holidays.length > 0 ? holidays : [{ start: "", end: "" }];
+    regenerateTimeline(updated);
+    setYearsData(updated);
   };
 
-  const handleManualBreak = (y, t, field, value) => {
+  const handleBreakModeChange = (y, t, mode) => {
+    if (isLastTerm(y, t) || isNoBreakTerm(t)) {
+      return;
+    }
+
+    const updated = cloneYearsData(yearsData);
+    const term = updated[y].terms[t];
+
+    term.breakMode = mode;
+    if (mode === "none" || mode === "auto") {
+      term.breakStart = "";
+      term.breakEnd = "";
+    }
+
+    regenerateTimeline(updated);
+    setYearsData(updated);
+  };
+
+  const handleBreakDate = (y, t, field, value) => {
+    if (isLastTerm(y, t) || isNoBreakTerm(t)) {
+      return;
+    }
+
     if (!batchStart || !batchEnd) {
       showWarningModal("❌ Please set Batch Start and End first");
+      return;
+    }
+
+    const updated = cloneYearsData(yearsData);
+    const term = updated[y].terms[t];
+
+    if (!value) {
+      term.breakMode = "manual";
+      term[field] = "";
+      regenerateTimeline(updated);
+      setYearsData(updated);
       return;
     }
 
@@ -394,142 +613,51 @@ function AlmanacForm() {
       return;
     }
 
-    let updated = [...yearsData];
-    let term = updated[y].terms[t];
+    if (field === "breakStart" && !isMonday(value)) {
+      showWarningModal("❌ Break must start on Monday");
+      return;
+    }
 
+    if (field === "breakEnd" && !isSunday(value)) {
+      showWarningModal("❌ Break must end on Sunday");
+      return;
+    }
+
+    if (!term.assessmentEnd) {
+      showWarningModal(invalidDateMessage);
+      return;
+    }
+
+    term.breakMode = "manual";
     term[field] = value;
 
-    if (!term.selfStart || !term.assessmentEnd) {
-      showWarningModal(invalidDateMessage);
-      term[field] = "";
-      setYearsData(updated);
-      return;
-    }
-
-    if (term.breakStart && term.breakStart < term.selfStart) {
-      showWarningModal(invalidDateMessage);
-      term[field] = "";
-      setYearsData(updated);
-      return;
-    }
-
-    if (term.breakEnd && term.breakEnd < term.selfStart) {
-      showWarningModal(invalidDateMessage);
-      term[field] = "";
-      setYearsData(updated);
-      return;
-    }
-
-    if (term.breakStart && term.assessmentEnd) {
+    if (term.breakStart && term.breakEnd) {
       const minBreakStart = toIso(getNextMonday(new Date(term.assessmentEnd)));
       if (term.breakStart < minBreakStart) {
         showWarningModal(invalidDateMessage);
-        term[field] = "";
-        setYearsData(updated);
-        return;
-      }
-    }
-
-    if (term.breakEnd && term.assessmentEnd && term.breakEnd <= term.assessmentEnd) {
-      showWarningModal(invalidDateMessage);
-      term[field] = "";
-      setYearsData(updated);
-      return;
-    }
-
-    if (term.breakStart && term.breakEnd) {
-      if (!isMonday(term.breakStart)) {
-        showWarningModal("❌ Break must start on Monday");
-        term[field] = "";
-        setYearsData(updated);
-        return;
-      }
-
-      const breakEndDate = new Date(term.breakEnd);
-      if (breakEndDate.getDay() !== 0) {
-        showWarningModal("❌ Break must end on Sunday");
-        term[field] = "";
-        setYearsData(updated);
         return;
       }
 
       const duration = getDurationInDays(term.breakStart, term.breakEnd);
-
       if (duration <= 0) {
         showWarningModal("❌ Break end cannot be before break start");
-        term[field] = "";
-        setYearsData(updated);
         return;
       }
 
       if (duration > 21) {
         showWarningModal("⚠️ Break cannot be more than 3 weeks");
-        term[field] = "";
-        setYearsData(updated);
         return;
-      }
-
-      const nextRef = getNextTermRef(y, t);
-      if (nextRef) {
-        const nextTerm = updated[nextRef.yearIndex]?.terms?.[nextRef.termIndex];
-        const expectedNextSelfStart = toIso(getNextMonday(new Date(term.breakEnd)));
-
-        if (nextTerm?.selfStart && nextTerm.selfStart !== expectedNextSelfStart) {
-          showWarningModal(invalidDateMessage);
-          term[field] = "";
-          setYearsData(updated);
-          return;
-        }
       }
     }
 
+    regenerateTimeline(updated);
     setYearsData(updated);
   };
 
   const validateBreakRules = () => {
-    for (let y = 0; y < yearsData.length; y += 1) {
-      const termThree = yearsData[y]?.terms?.[2];
-      const termFour = yearsData[y]?.terms?.[3];
-
-      if (termThree?.breakStart || termThree?.breakEnd) {
-        showWarningModal(`Year ${y + 1} Term 3 must not have break`);
-        return false;
-      }
-
-      if (isFinalYear(y)) {
-        if (termFour?.breakStart || termFour?.breakEnd) {
-          showWarningModal(`Final year Term 4 must not have break`);
-          return false;
-        }
-        continue;
-      }
-
-      if (!termFour?.breakStart || !termFour?.breakEnd) {
-        showWarningModal(`Set Year ${y + 1} Term 4 break manually`);
-        return false;
-      }
-
-      if (!termFour?.selfStart || !termFour?.assessmentEnd) {
-        showWarningModal(invalidDateMessage);
-        return false;
-      }
-
-      if (termFour.breakStart < termFour.selfStart || termFour.breakEnd < termFour.selfStart) {
-        showWarningModal(invalidDateMessage);
-        return false;
-      }
-
-      const termFourMinBreakStart = toIso(getNextMonday(new Date(termFour.assessmentEnd)));
-      if (termFour.breakStart < termFourMinBreakStart || termFour.breakEnd <= termFour.assessmentEnd) {
-        showWarningModal(invalidDateMessage);
-        return false;
-      }
-
-      const duration = getDurationInDays(termFour.breakStart, termFour.breakEnd);
-      if (duration <= 0 || duration > 21) {
-        showWarningModal(`Year ${y + 1} Term 4 break must be between 1 and 21 days`);
-        return false;
-      }
+    if (!yearsData[0]?.terms?.[0]?.selfStart) {
+      showWarningModal("Set Year 1 Term 1 self registration first");
+      return false;
     }
 
     for (let y = 0; y < yearsData.length; y += 1) {
@@ -537,7 +665,7 @@ function AlmanacForm() {
         const current = yearsData[y]?.terms?.[t];
         if (!current) continue;
 
-        if (current.selfStart && !isSelfStartInStrictSequence(yearsData, y, t, current.selfStart)) {
+        if (!current.selfStart || !current.selfEnd || !current.termStart || !current.termEnd || !current.assessmentStart || !current.assessmentEnd) {
           showWarningModal(invalidDateMessage);
           return false;
         }
@@ -550,14 +678,30 @@ function AlmanacForm() {
           }
         }
 
-        if (current.activityStart) {
-          if (!current.termStart || current.activityStart < current.termStart) {
+        const activities = getActivities(current);
+        for (let a = 0; a < activities.length; a += 1) {
+          const activityStart = activities[a]?.start;
+          if (!activityStart) continue;
+
+          if (!current.termStart || activityStart < current.termStart) {
             showWarningModal(invalidDateMessage);
             return false;
           }
-          if (current.assessmentStart && current.activityStart >= current.assessmentStart) {
+
+          if (current.assessmentStart && activityStart >= current.assessmentStart) {
             showWarningModal(invalidDateMessage);
             return false;
+          }
+
+          for (let compareIndex = a + 1; compareIndex < activities.length; compareIndex += 1) {
+            const otherStart = activities[compareIndex]?.start;
+            const otherEnd = activities[compareIndex]?.end;
+            if (!otherStart || !otherEnd) continue;
+
+            if (isWeekOverlap(activityStart, getWeekEndFromStart(activityStart), otherStart, otherEnd)) {
+              showWarningModal(invalidDateMessage);
+              return false;
+            }
           }
         }
 
@@ -575,31 +719,80 @@ function AlmanacForm() {
             showWarningModal(invalidDateMessage);
             return false;
           }
+
+          for (let a = 0; a < activities.length; a += 1) {
+            const activityStart = activities[a]?.start;
+            const activityEnd = activities[a]?.end;
+            if (!activityStart || !activityEnd) continue;
+
+            if (isWeekOverlap(holidayStart, getWeekEndFromStart(holidayStart), activityStart, activityEnd)) {
+              showWarningModal(invalidDateMessage);
+              return false;
+            }
+          }
         }
 
-        if (current.breakStart && current.assessmentEnd) {
+        if (isLastTerm(y, t)) {
+          continue;
+        }
+
+        if (isNoBreakTerm(t)) {
+          if (current.breakStart || current.breakEnd || current.breakMode !== "none") {
+            showWarningModal(`Year ${y + 1} Term 3 must not have break`);
+            return false;
+          }
+        }
+
+        if ((current.breakStart || current.breakEnd) && (!current.breakStart || !current.breakEnd)) {
+          showWarningModal(invalidDateMessage);
+          return false;
+        }
+
+        if (current.breakMode !== "none") {
+          if (!current.breakStart || !current.breakEnd) {
+            showWarningModal(invalidDateMessage);
+            return false;
+          }
+
           const minBreakStart = toIso(getNextMonday(new Date(current.assessmentEnd)));
-          if (current.breakStart < minBreakStart) {
+          if (
+            current.breakStart < minBreakStart ||
+            !isMonday(current.breakStart) ||
+            !isSunday(current.breakEnd)
+          ) {
+            showWarningModal(invalidDateMessage);
+            return false;
+          }
+
+          const duration = getDurationInDays(current.breakStart, current.breakEnd);
+          if (duration <= 0 || duration > 21) {
             showWarningModal(invalidDateMessage);
             return false;
           }
         }
 
         const nextRef = getNextTermRef(y, t);
-        if (nextRef) {
-          const nextTerm = yearsData[nextRef.yearIndex]?.terms?.[nextRef.termIndex];
-          if (current.breakStart && current.breakEnd && nextTerm?.selfStart) {
-            const expectedNextSelfStart = toIso(getNextMonday(new Date(current.breakEnd)));
-            if (expectedNextSelfStart !== nextTerm.selfStart) {
-              showWarningModal(invalidDateMessage);
-              return false;
-            }
-          }
+        if (!nextRef) continue;
 
-          if ((current.breakStart || current.breakEnd) && (!current.breakStart || !current.breakEnd) && nextTerm?.selfStart) {
-            showWarningModal(invalidDateMessage);
-            return false;
-          }
+        const nextTerm = yearsData[nextRef.yearIndex]?.terms?.[nextRef.termIndex];
+        if (!nextTerm?.selfStart) {
+          showWarningModal(invalidDateMessage);
+          return false;
+        }
+
+        const expectedNextSelfStart = t === 2
+          ? current.assessmentStart
+          : (current.breakMode === "none"
+            ? current.assessmentStart
+            : (t === 3 && current.breakEnd
+              ? getLastWeekStartFromRange(current.breakEnd)
+              : (current.breakStart
+                ? current.breakStart
+                : toIso(getNextMonday(new Date(current.assessmentEnd))))));
+
+        if (nextTerm.selfStart !== expectedNextSelfStart) {
+          showWarningModal(invalidDateMessage);
+          return false;
         }
       }
     }
@@ -672,6 +865,14 @@ function AlmanacForm() {
     return ranges.length ? ranges.join(", ") : "-";
   };
 
+  const getActivityRange = (term) => {
+    const ranges = getActivities(term)
+      .filter((item) => item.start && item.end)
+      .map((item) => toRange(item.start, item.end));
+
+    return ranges.length ? ranges.join(", ") : "-";
+  };
+
   const romanTerms = ["I", "II", "III", "IV"];
 
   return (
@@ -735,6 +936,8 @@ function AlmanacForm() {
 
                     <td>
                       <input type="date"
+                        value={t.selfStart}
+                        readOnly={!(yIndex === 0 && tIndex === 0)}
                         onChange={(e)=>handleSelfStart(yIndex,tIndex,e.target.value)}
                       />
                       <input type="date" value={t.selfEnd} readOnly />
@@ -746,19 +949,50 @@ function AlmanacForm() {
                     </td>
 
                     <td>
-                      <input type="date"
-                        onChange={(e)=>handleActivity(yIndex,tIndex,e.target.value)}
-                      />
-                      <input type="date" value={t.activityEnd} readOnly />
+                      {getActivities(t).map((activity, activityIndex) => (
+                        <div className="holidayRow" key={activityIndex}>
+                          <input
+                            type="date"
+                            value={activity.start}
+                            onChange={(e) => handleActivity(yIndex, tIndex, activityIndex, e.target.value)}
+                          />
+                          <input type="date" value={activity.end} readOnly />
+                          <button
+                            type="button"
+                            className="addHolidayLink"
+                            aria-label="Delete activity"
+                            onClick={() => removeActivity(yIndex, tIndex, activityIndex)}
+                          >
+                            x
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="addHolidayLink"
+                        aria-label="Add activity"
+                        onClick={() => addActivity(yIndex, tIndex)}
+                      >
+                        +
+                      </button>
                     </td>
 
                     <td>
                       {t.holidays.map((h, hi) => (
                         <div className="holidayRow" key={hi}>
                           <input type="date"
+                            value={h.start}
                             onChange={(e)=>handleHoliday(yIndex,tIndex,hi,e.target.value)}
                           />
                           <input type="date" value={h.end} readOnly />
+                          <button
+                            type="button"
+                            className="addHolidayLink"
+                            aria-label="Delete holiday"
+                            onClick={() => removeHoliday(yIndex, tIndex, hi)}
+                          >
+                            x
+                          </button>
                         </div>
                       ))}
                       <button
@@ -777,25 +1011,48 @@ function AlmanacForm() {
                     </td>
 
                     <td>
-                      {isNoBreakTerm(yIndex, tIndex) ? (
-                        <span className="noBreakText">No Break</span>
-                      ) : isManualBreakTerm(yIndex, tIndex) ? (
+                      {isNoBreakTerm(tIndex) ? (
+                        <span className="noBreakText" title="No break">—</span>
+                      ) : isLastTerm(yIndex, tIndex) ? (
+                        <span className="noBreakText" title="No next term break">—</span>
+                      ) : (
                         <>
                           <input
                             type="date"
                             value={t.breakStart}
-                            onChange={(e) => handleManualBreak(yIndex, tIndex, "breakStart", e.target.value)}
+                            onChange={(e) => handleBreakDate(yIndex, tIndex, "breakStart", e.target.value)}
                           />
                           <input
                             type="date"
                             value={t.breakEnd}
-                            onChange={(e) => handleManualBreak(yIndex, tIndex, "breakEnd", e.target.value)}
+                            onChange={(e) => handleBreakDate(yIndex, tIndex, "breakEnd", e.target.value)}
                           />
-                        </>
-                      ) : (
-                        <>
-                          <input type="date" value={t.breakStart} readOnly />
-                          <input type="date" value={t.breakEnd} readOnly />
+                          {t.breakMode === "none" ? (
+                            <button
+                              type="button"
+                              className="addHolidayLink"
+                              onClick={() => handleBreakModeChange(yIndex, tIndex, "auto")}
+                            >
+                              Auto Break
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="addHolidayLink"
+                              onClick={() => handleBreakModeChange(yIndex, tIndex, "none")}
+                            >
+                              Remove Break
+                            </button>
+                          )}
+                          {t.breakMode === "manual" && (
+                            <button
+                              type="button"
+                              className="addHolidayLink"
+                              onClick={() => handleBreakModeChange(yIndex, tIndex, "auto")}
+                            >
+                              Use Auto
+                            </button>
+                          )}
                         </>
                       )}
                     </td>
@@ -872,10 +1129,10 @@ function AlmanacForm() {
                           <td>{toDisplayDate(term.selfEnd)}</td>
                           <td>{toDisplayDate(term.termStart)}</td>
                           <td>{toDisplayDate(term.termEnd)}</td>
-                          <td>{toRange(term.activityStart, term.activityEnd)}</td>
+                          <td>{getActivityRange(term)}</td>
                           <td>{getHolidayRange(term.holidays)}</td>
                           <td>{toRange(term.assessmentStart, term.assessmentEnd)}</td>
-                          <td>{toRange(term.breakStart, term.breakEnd)}</td>
+                          <td>{getPreviewBreakValue(term, yIndex, tIndex)}</td>
                         </tr>
                       ))
                     ))}
