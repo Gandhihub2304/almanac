@@ -9,6 +9,13 @@ const termSchema = new mongoose.Schema({
   termStart: String,
   termEnd: String,
 
+  activities: [
+    {
+      start: String,
+      end: String
+    }
+  ],
+
   activityStart: String,
   activityEnd: String,
 
@@ -22,13 +29,28 @@ const termSchema = new mongoose.Schema({
   assessmentStart: String,
   assessmentEnd: String,
 
+  breakMode: {
+    type: String,
+    enum: ["auto", "manual", "none"],
+    default: "auto"
+  },
+
   breakStart: String,
   breakEnd: String
 });
 
 const yearSchema = new mongoose.Schema({
   yearNumber: Number,
-  terms: [termSchema]
+  terms: [termSchema],
+  dayWiseTable: [
+    {
+      termLabel: String,
+      weekLabel: String,
+      date: String,
+      day: String,
+      remarks: String
+    }
+  ]
 });
 
 const almanacSchema = new mongoose.Schema({

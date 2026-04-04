@@ -101,7 +101,7 @@
 
 .plainPanel {
   margin-top: 18px;
-  margin-left: 198px;
+  margin-left: 202px;
   padding: 8px 20px;
   animation: panelIn 0.35s ease;
 }
@@ -117,6 +117,36 @@
   color: #0d4e82;
 }
 
+.panelTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.panelTitleRow .panelTitle {
+  margin: 0;
+}
+
+.academicCalendarLaunch {
+  border: 1px solid #8ecf9d;
+  background: linear-gradient(180deg, #e7ffe9 0%, #ccf5d2 100%);
+  color: #1c6b2d;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(39, 131, 61, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.academicCalendarLaunch:hover {
+  transform: translateY(-1px);
+  border-color: #63b478;
+  box-shadow: 0 10px 22px rgba(39, 131, 61, 0.24);
+}
+
 .panelInfo {
   margin: 0 0 10px;
   color: #4f6378;
@@ -127,6 +157,40 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 14px;
+}
+
+.savedBatchFilterBar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr)) auto;
+  gap: 10px;
+  margin: 10px 0 16px;
+  padding: 12px;
+  border: 1px solid #c5ddf2;
+  border-radius: 14px;
+  background: linear-gradient(165deg, #ffffff 0%, #f3f9ff 100%);
+  box-shadow: 0 10px 18px rgba(10, 64, 109, 0.06);
+}
+
+.savedBatchFilterItem {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.savedBatchFilterItem label {
+  color: #0c4f86;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.savedBatchFilterItem select {
+  width: 100%;
+  border: 1px solid #b8d6ed;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 10px 12px;
+  color: #193f61;
+  font-size: 0.92rem;
 }
 
 .formPanel {
@@ -223,12 +287,12 @@
   left: 0;
   height: calc(100vh - var(--header-offset, 116px));
   overflow-y: auto;
-  width: min(150px, 80vw);
-  background: #ffffff;
-  border-right: 1px solid #d6e6f5;
-  box-shadow: 10px 0 26px rgba(16, 58, 96, 0.15);
-  padding: 16px;
-  border-radius: 0 12px 12px 0;
+  width: min(176px, 78vw);
+  background: linear-gradient(180deg, #0b1530 0%, #0f1c3c 48%, #111f43 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 10px 0 24px rgba(0, 0, 0, 0.24);
+  padding: 18px 12px;
+  border-radius: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -242,21 +306,60 @@
 }
 
 .drawerLink {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 12px;
   background: transparent;
-  color: #1d5f96;
+  color: rgba(245, 248, 255, 0.95);
   text-align: left;
-  font-size: 1rem;
+  font-size: 0.96rem;
   font-weight: 700;
   padding: 10px 12px;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
 }
 
 .drawerLink:hover {
-  color: #0b6fd1;
-  background: #eff6ff;
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateX(2px);
+}
+
+.drawerLink.active {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.drawerIcon {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 26px;
+  color: #d7e3f3;
+}
+
+.drawerIcon svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  fill: currentColor;
+}
+
+.drawerText {
+  flex: 1;
+  letter-spacing: 0.01em;
+}
+
+.drawerChevron {
+  color: rgba(245, 248, 255, 0.82);
+  font-size: 1.45rem;
+  line-height: 1;
+  margin-left: 2px;
 }
 
 .drawerBackdrop {
@@ -279,6 +382,46 @@
   opacity: 0;
   animation: cardIn 0.4s ease forwards;
   transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.batchCard {
+  position: relative;
+  padding-top: 42px;
+}
+
+.batchCardBody {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.batchCardDeleteBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid #e3b5b5;
+  background: #fff1f1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.batchCardDeleteBtn svg {
+  width: 16px;
+  height: 16px;
+  fill: #b93d3d;
+}
+
+.batchCardBody h3,
+.batchCardBody p {
+  pointer-events: none;
 }
 
 .schoolCard:hover,
@@ -329,6 +472,12 @@
   transform: translateY(-4px);
   border-color: #7cb3de;
   box-shadow: 0 16px 30px rgba(9, 70, 119, 0.15);
+}
+
+@media (max-width: 760px) {
+  .savedBatchFilterBar {
+    grid-template-columns: 1fr;
+  }
 }
 
 .batchGroupCard h3 {
@@ -445,5 +594,10 @@
   .formRow,
   .formActions {
     flex-direction: column;
+  }
+
+  .panelTitleRow {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
