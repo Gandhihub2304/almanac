@@ -1,10 +1,74 @@
 import "./AcademicCalendarTemplate.css";
 
-function AcademicCalendarTemplate({ headingLines = [], model, compact = false }) {
+const normalizeSchoolName = (value) =>
+  String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+const schoolBrandPalette = [
+  { matches: ["engineering"], color: "rgb(192, 34, 34)" },
+  { matches: ["informatics"], color: "rgb(229, 9, 127)" },
+  { matches: ["management studies", "management"], color: "rgb(12, 84, 160)" },
+  { matches: ["law"], color: "rgb(43, 42, 41)" },
+  { matches: ["architecture"], color: "rgb(247, 167, 7)" },
+  { matches: ["psychology"], color: "rgb(123, 62, 83)" },
+  { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "rgb(236, 105, 31)" },
+  { matches: ["liberal arts"], color: "rgb(137, 137, 137)" },
+  { matches: ["health sciences", "health science"], color: "rgb(0, 110, 54)" },
+  { matches: ["pharmacy"], color: "rgb(120, 184, 51)" },
+  { matches: ["school of sciences", "school of science", "sciences"], color: "rgb(243, 156, 163)" },
+  { matches: ["ph.d", "phd"], color: "rgb(50, 43, 106)" }
+];
+
+const getSchoolBrandColor = (schoolName) => {
+  const normalized = normalizeSchoolName(schoolName);
+  const matched = schoolBrandPalette.find((entry) =>
+    entry.matches.some((keyword) => normalized.includes(keyword))
+  );
+
+  return matched?.color || "#0f69aa";
+};
+
+const STATUS_COLORS = {
+  "student-led": "#8fd0ff",
+  event: "#c8f0cf",
+  weekend: "#f3f3f3",
+  compensatory: "#f6c8ab",
+  "self-registration": "#dfeeff",
+  "term-begin": "#ffb766",
+  "term-end": "#d9b100",
+  assessment: "#f8c7de",
+  break: "#fff0a8",
+  holiday: "#b98ad6",
+  "results-day": "#1a3a66",
+  "term-work": "#ffffff"
+};
+
+const getDayCellStyle = (dayCell) => {
+  const statuses = Array.isArray(dayCell?.statuses) ? dayCell.statuses.filter(Boolean) : [];
+
+  if (statuses.length >= 2) {
+    const firstColor = STATUS_COLORS[statuses[0]] || STATUS_COLORS[dayCell.status] || "#ffffff";
+    const secondColor = STATUS_COLORS[statuses[1]] || STATUS_COLORS[dayCell.status] || firstColor;
+    return {
+      background: `linear-gradient(135deg, ${firstColor} 0 50%, ${secondColor} 50% 100%)`
+    };
+  }
+
+  if (statuses.length === 1) {
+    return { background: STATUS_COLORS[statuses[0]] || STATUS_COLORS[dayCell.status] || "#ffffff" };
+  }
+
+  return {};
+};
+
+function AcademicCalendarTemplate({ headingLines = [], model, compact = false, schoolName = "" }) {
   const safeModel = model || { months: [], weekdayLabels: [], legend: [] };
+  const brandColor = getSchoolBrandColor(schoolName);
 
   return (
-    <section className={`calendarTemplateSheet ${compact ? "compact" : ""}`}>
+    <section
+      className={`calendarTemplateSheet ${compact ? "compact" : ""}`}
+      style={{ "--template-brand-color": brandColor }}
+    >
       <header className="calendarTemplateHead">
         <div className="calendarTemplateLogoBlock left">
           <img src="/text.jpeg" alt="Aurora University" className="calendarTemplateTextLogo" />
@@ -61,6 +125,7 @@ function AcademicCalendarTemplate({ headingLines = [], model, compact = false })
                           <td
                             key={`${month.key}-${weekIndex}-${dayIndex}`}
                             className={dayCell ? `status-${dayCell.status}` : "status-empty"}
+                            style={dayCell ? getDayCellStyle(dayCell) : undefined}
                           >
                             {dayCell ? dayCell.day : ""}
                           </td>

@@ -36,6 +36,46 @@ function AlmanacBatchDetail() {
 
   const normalize = (value) => (value || "").toLowerCase().replace(/\s+/g, " ").trim();
 
+  const schoolBrandPalette = [
+    { matches: ["engineering"], color: "rgb(192, 34, 34)" },
+    { matches: ["informatics"], color: "rgb(229, 9, 127)" },
+    { matches: ["management studies", "management"], color: "rgb(12, 84, 160)" },
+    { matches: ["law"], color: "rgb(43, 42, 41)" },
+    { matches: ["architecture"], color: "rgb(247, 167, 7)" },
+    { matches: ["psychology"], color: "rgb(123, 62, 83)" },
+    { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "rgb(236, 105, 31)" },
+    { matches: ["liberal arts"], color: "rgb(137, 137, 137)" },
+    { matches: ["health sciences", "health science"], color: "rgb(0, 110, 54)" },
+    { matches: ["pharmacy"], color: "rgb(120, 184, 51)" },
+    { matches: ["school of sciences", "school of science", "sciences"], color: "rgb(243, 156, 163)" },
+    { matches: ["ph.d", "phd"], color: "rgb(50, 43, 106)" }
+  ];
+
+  const getSchoolBrandColor = (name) => {
+    const normalized = normalize(name);
+    const matched = schoolBrandPalette.find((entry) =>
+      entry.matches.some((keyword) => normalized.includes(keyword))
+    );
+
+    return matched?.color || "#4d5660";
+  };
+
+  const getContrastTextColor = (rgbColor) => {
+    const values = String(rgbColor || "")
+      .replace(/[^0-9,]/g, "")
+      .split(",")
+      .map((item) => Number(item.trim()))
+      .filter((item) => Number.isFinite(item));
+
+    if (values.length < 3) {
+      return "#ffffff";
+    }
+
+    const [r, g, b] = values;
+    const luminance = (0.299 * r) + (0.587 * g) + (0.114 * b);
+    return luminance > 170 ? "#1b1b1b" : "#ffffff";
+  };
+
   const getSchoolForProgram = (programName) => {
     const school = schools.find((item) =>
       (item.programs || []).some((program) => normalize(program) === normalize(programName))
@@ -154,6 +194,8 @@ function AlmanacBatchDetail() {
   }
 
   const schoolName = getSchoolForProgram(selectedAlmanac?.program);
+  const brandColor = getSchoolBrandColor(schoolName);
+  const brandTextColor = getContrastTextColor(brandColor);
   const isEngineeringSchool = normalize(schoolName).includes("engineering");
   const batchLabel = `${selectedAlmanac?.batchStart}-${selectedAlmanac?.batchEnd}`;
   const programDisplayName = getProgramDisplayName(selectedAlmanac?.program);
@@ -193,7 +235,13 @@ function AlmanacBatchDetail() {
 
       {/* Almanac Table for Selected Program */}
       {selectedAlmanac && (
-        <div className="previewPaper batchViewPaper">
+        <div
+          className="previewPaper batchViewPaper"
+          style={{
+            "--preview-brand-color": brandColor,
+            "--preview-brand-text": brandTextColor
+          }}
+        >
           <div className="previewHeaderBar">
             <div className="previewHeaderLeft">
               <img src="/text.jpeg" alt="Aurora University text" className="previewTextLogo" />
@@ -204,7 +252,7 @@ function AlmanacBatchDetail() {
 
           <div className="previewSchoolTitle">{(schoolName || "School").toUpperCase()}</div>
 
-          <div className={`previewBanner ${isEngineeringSchool ? "engineeringTheme" : ""}`}>
+          <div className="previewBanner">
             {bannerTitle}
           </div>
 
@@ -259,7 +307,7 @@ function AlmanacBatchDetail() {
             <div className="previewSignoffLabel">Director Academics and Planning</div>
           </div>
 
-          <div className={`previewFooterBar ${isEngineeringSchool ? "engineeringTheme" : ""}`}>
+          <div className="previewFooterBar">
             Uppal, Hyderabad - 500098. Telangana, aurora.edu.in
           </div>
         </div>

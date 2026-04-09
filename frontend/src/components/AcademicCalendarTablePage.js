@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import "./AcademicCalendarPage.css";
 import AcademicCalendarTemplate from "./AcademicCalendarTemplate";
 import { buildAcademicCalendarTemplateModel } from "../utils/academicCalendarTemplate";
+import { getYearLabels } from "../utils/yearLabels";
 
 const normalize = (value) => (value || "").toLowerCase().replace(/\s+/g, " ").trim();
 
@@ -145,47 +146,75 @@ const parseDateToken = (dateValue, allowedDatesSet) => {
     || parseTextDate(dateText);
 };
 
-const extractDateRemarkPairsFromSheetRows = (rows, allowedDatesSet) => {
+const extractDateActivityColumnsFromSheetRows = (rows, allowedDatesSet, textRows = null) => {
   if (!Array.isArray(rows) || !rows.length) return [];
 
   const headerRow = rows[0] || [];
   let dateColumn = -1;
-  let remarksColumn = -1;
+  let compensatoryColumn = -1;
+  let holidaysColumn = -1;
+  let eventsColumn = -1;
 
   for (let index = 0; index < headerRow.length; index += 1) {
     const headerText = normalizeInlineText(String(headerRow[index] || "")).toLowerCase();
     if (dateColumn < 0 && headerText === "date") {
       dateColumn = index;
     }
-    if (remarksColumn < 0 && (headerText === "remarks" || headerText === "remark")) {
-      remarksColumn = index;
+    if (compensatoryColumn < 0 && /compensatory\s*working\s*day|compensatory/.test(headerText)) {
+      compensatoryColumn = index;
+    }
+    if (holidaysColumn < 0 && /holidays?|holiday/i.test(headerText)) {
+      holidaysColumn = index;
+    }
+    if (eventsColumn < 0 && /events?|event/i.test(headerText)) {
+      eventsColumn = index;
     }
   }
 
-  const hasHeader = dateColumn >= 0 && remarksColumn >= 0;
+  const hasHeader = dateColumn >= 0;
   const startRow = hasHeader ? 1 : 0;
 
-  if (!hasHeader) {
+  if (dateColumn < 0) {
     dateColumn = 0;
-    remarksColumn = 1;
+  }
+  if (compensatoryColumn < 0) {
+    compensatoryColumn = 1;
+  }
+  if (holidaysColumn < 0) {
+    holidaysColumn = 2;
+  }
+  if (eventsColumn < 0) {
+    eventsColumn = 3;
   }
 
   const pairs = [];
   for (let rowIndex = startRow; rowIndex < rows.length; rowIndex += 1) {
     const row = rows[rowIndex] || [];
     const dateValue = row[dateColumn];
-    const remarks = normalizeInlineText(String(row[remarksColumn] || ""));
-    if (dateValue === undefined || dateValue === null || !remarks) continue;
+    const textRow = Array.isArray(textRows) ? (textRows[rowIndex] || []) : null;
+    const displayDateValue = textRow ? textRow[dateColumn] : "";
+    const compensatory = normalizeInlineText(String(row[compensatoryColumn] || ""));
+    const holidays = normalizeInlineText(String(row[holidaysColumn] || ""));
+    const events = normalizeInlineText(String(row[eventsColumn] || ""));
 
-    const isoDate = parseDateToken(dateValue, allowedDatesSet);
+    if (dateValue === undefined || dateValue === null) continue;
+
+    // If Excel gives a JS Date object, parse from displayed text to avoid timezone day shift.
+    const sourceDateValue = dateValue instanceof Date && displayDateValue ? displayDateValue : dateValue;
+    const isoDate = parseDateToken(sourceDateValue, allowedDatesSet);
     if (!isoDate) continue;
-    pairs.push({ date: isoDate, remarks });
+    pairs.push({
+      date: isoDate,
+      compensatoryWorkingDay: compensatory,
+      holidays,
+      events
+    });
   }
 
   return pairs;
 };
 
-const extractDateRemarkPairsFromCsv = (text, allowedDatesSet) => {
+const extractDateActivityColumnsFromCsv = (text, allowedDatesSet) => {
   const lines = String(text || "")
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -221,11 +250,11 @@ const extractDateRemarkPairsFromCsv = (text, allowedDatesSet) => {
     return values;
   });
 
-  return extractDateRemarkPairsFromSheetRows(rows, allowedDatesSet);
+  return extractDateActivityColumnsFromSheetRows(rows, allowedDatesSet);
 };
 
-const extractDateRemarkPairsFromExcel = async (arrayBuffer, allowedDatesSet) => {
-  const workbook = XLSX.read(arrayBuffer, { type: "array", cellDates: true });
+const extractDateActivityColumnsFromExcel = async (arrayBuffer, allowedDatesSet) => {
+  const workbook = XLSX.read(arrayBuffer, { type: "array", cellDates: false });
   const firstSheetName = workbook.SheetNames?.[0];
   if (!firstSheetName) return [];
 
@@ -239,7 +268,14 @@ const extractDateRemarkPairsFromExcel = async (arrayBuffer, allowedDatesSet) => 
     defval: ""
   });
 
-  return extractDateRemarkPairsFromSheetRows(rows, allowedDatesSet);
+  const textRows = XLSX.utils.sheet_to_json(worksheet, {
+    header: 1,
+    raw: false,
+    blankrows: false,
+    defval: ""
+  });
+
+  return extractDateActivityColumnsFromSheetRows(rows, allowedDatesSet, textRows);
 };
 
 const getDateRange = (start, end) => {
@@ -254,7 +290,7 @@ const getDateRange = (start, end) => {
   const dates = [];
   const current = new Date(from);
   while (current <= to) {
-    dates.push(current.toISOString().split("T")[0]);
+    dates.push(formatDateAsIso(current));
     current.setDate(current.getDate() + 1);
   }
   return dates;
@@ -271,6 +307,58 @@ const getDayLabel = (isoDate) => {
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString("en-US", { weekday: "long" });
+};
+
+const toSafeText = (value) => String(value || "").trim();
+
+const deriveCalendarColumns = (row = {}) => {
+  const weekLabel = toSafeText(row.weekLabel);
+  const remarks = toSafeText(row.remarks);
+  const existingBreakColumn = toSafeText(row.breakColumn);
+  const combined = `${weekLabel} ${remarks} ${existingBreakColumn}`.toLowerCase();
+
+  const isCompensatoryWorkingDay = /compensatory\s*working\s*day|compensatory/.test(combined);
+  const isAssessmentWeek = /comprehensive\s*assessment|assessment\s*week|assessment|exam|test/.test(combined);
+  const isHoliday = /holiday|festival|jayanti/.test(combined);
+  const isStudentLedActivities = /student\s*led\s*activities?|student\s*activity/.test(combined)
+    || /student\s*led\s*activities?|student\s*activity/.test(toSafeText(row.events).toLowerCase())
+    || /student\s*led\s*activities?|student\s*activity/.test(toSafeText(row.studentLedActivities).toLowerCase());
+  const isEvent = /event/.test(combined) && !isStudentLedActivities;
+  const isSelfRegistration = /self\s*registration/.test(combined);
+  const isBreak = /term\s*break|\bbreak\b/.test(combined);
+  const isResultsDay = Boolean(row.isResultsDay) || /results?\s*day/.test(combined);
+  const isTermBegin = Boolean(row.isTermBegin) || /term\s*begins?/.test(combined);
+  const isTermEnd = Boolean(row.isTermEnd) || /term\s*ends?/.test(combined);
+
+  const legacyHolidayEvent = toSafeText(row.holidaysAndEvents);
+
+  return {
+    studentLedActivities: toSafeText(row.studentLedActivities) || (isStudentLedActivities ? "Student Led Activities" : ""),
+    compensatoryWorkingDay: toSafeText(row.compensatoryWorkingDay) || (isCompensatoryWorkingDay ? "Compensatory Working Day" : ""),
+    assessmentWeek: toSafeText(row.assessmentWeek) || (isAssessmentWeek ? "Comprehensive Assessment" : ""),
+    holidays: toSafeText(row.holidays) || (legacyHolidayEvent && /holiday/i.test(legacyHolidayEvent) ? legacyHolidayEvent : (isHoliday ? "Holiday" : "")),
+    events: toSafeText(row.events)
+      || (legacyHolidayEvent && /event/i.test(legacyHolidayEvent) ? legacyHolidayEvent : (isEvent ? "Event" : "")),
+    selfRegistration: toSafeText(row.selfRegistration) || (isSelfRegistration ? "Self Registration" : ""),
+    breakColumn: existingBreakColumn || (isResultsDay ? "Results Day" : (isBreak ? "Term Break" : "")),
+    isResultsDay,
+    isTermBegin,
+    isTermEnd
+  };
+};
+
+const buildRemarksFromColumns = (row = {}) => {
+  const values = [
+    toSafeText(row.studentLedActivities),
+    toSafeText(row.compensatoryWorkingDay),
+    toSafeText(row.assessmentWeek),
+    toSafeText(row.holidays),
+    toSafeText(row.events),
+    toSafeText(row.selfRegistration),
+    toSafeText(row.breakColumn)
+  ].filter(Boolean);
+
+  return values.length ? values.join(" and ") : "";
 };
 
 const buildRowsFromTerms = (terms) => {
@@ -320,17 +408,21 @@ const buildRowsFromTerms = (terms) => {
       .map((dateValue) => {
           const rowInfo = dayMap.get(dateValue) || { labels: [] };
           const labels = rowInfo.labels || [];
-          const visibleLabels = labels.filter((label) => label !== "Term Work");
-          const remarks = visibleLabels.length ? visibleLabels.join(" and ") : "-";
+          const visibleLabels = labels.filter((label) => label && label.trim() && label.trim() !== "-" && label !== "Term Work");
+          const remarks = visibleLabels.length ? visibleLabels.join(" and ") : "";
           const isSelfRegistration = labels.includes("Self Registration");
           const isBreak = labels.includes("Break");
           const isAssessment = labels.includes("Comprehensive Assessment");
           const isHoliday = labels.includes("Holiday");
           const isStudentActivity = labels.includes("Student Led Activities");
+          const isCompensatoryWorkingDay = labels.some((label) => /compensatory working day/i.test(label));
+          const isResultsDay = Boolean(term.breakStart) && getDayDiff(term.breakStart, dateValue) === 2;
 
-        let weekLabel = "-";
+        let weekLabel = "";
         if (isSelfRegistration) {
           weekLabel = "Self Registration";
+        } else if (isResultsDay) {
+          weekLabel = "Results Day";
         } else if (isBreak) {
           weekLabel = "Break";
           } else if (isAssessment) {
@@ -350,11 +442,23 @@ const buildRowsFromTerms = (terms) => {
           date: dateValue,
           day: getDayLabel(dateValue),
           weekLabel,
-          remarks
+          remarks,
+          studentLedActivities: isStudentActivity ? "Student Led Activities" : "",
+          compensatoryWorkingDay: isCompensatoryWorkingDay ? "Compensatory Working Day" : "",
+          assessmentWeek: isAssessment ? "Comprehensive Assessment" : "",
+          holidays: isHoliday ? "Holiday" : "",
+          events: "",
+          selfRegistration: isSelfRegistration ? "Self Registration" : "",
+          breakColumn: isResultsDay ? "Results Day" : (isBreak ? "Term Break" : ""),
+          isResultsDay,
+          isTermBegin: dateValue === term.termStart,
+          isTermEnd: dateValue === term.termEnd
         };
       });
   });
 };
+
+const isValidObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || "").trim());
 
 function AcademicCalendarTablePage() {
   const navigate = useNavigate();
@@ -373,26 +477,46 @@ function AcademicCalendarTablePage() {
   const pdfInputRef = useRef(null);
 
   const getAcademicYearHeading = (yearValue, totalYears) => {
-    const ugLabels = ["Freshman Year", "Sophomore Year", "Junior Year", "Senior Year"];
+    const labels = getYearLabels(totalYears);
+    return labels[Number(yearValue) - 1] || `Year ${yearValue}`;
+  };
 
-    if (totalYears >= 4 && ugLabels[yearValue - 1]) {
-      return ugLabels[yearValue - 1];
+  const getResolvedTotalYears = (totalYears, batchStart, batchEnd) => {
+    const parsedTotal = Number(totalYears);
+    if (Number.isInteger(parsedTotal) && parsedTotal > 0) {
+      return parsedTotal;
     }
 
-    if (yearValue === 1) return "First Year";
-    if (yearValue === 2) return "Second Year";
-    if (yearValue === 3) return "Third Year";
-    if (yearValue === 4) return "Fourth Year";
+    const start = Number(batchStart);
+    const end = Number(batchEnd);
+    if (Number.isInteger(start) && Number.isInteger(end) && end > start) {
+      return end - start;
+    }
 
-    return `Year ${yearValue}`;
+    return 0;
+  };
+
+  const getYearBatchRange = (batchStart, yearValue, batchEnd) => {
+    const start = Number(batchStart);
+    const selectedYear = Number(yearValue);
+
+    if (Number.isInteger(start) && Number.isInteger(selectedYear) && selectedYear > 0) {
+      const yearStart = start + (selectedYear - 1);
+      const yearEnd = yearStart + 1;
+      return `${yearStart} - ${yearEnd}`;
+    }
+
+    return `${batchStart} - ${batchEnd}`;
   };
 
   const getFormalHeadingLines = () => {
     if (!viewData) return [];
 
+    const yearRange = getYearBatchRange(viewData.batchStart, viewData.yearNumber, viewData.batchEnd);
+
     return [
       String(viewData.schoolName || "School").toUpperCase(),
-      `${viewData.programName} of ${viewData.batchStart} - ${viewData.batchEnd}`,
+      `${viewData.programName} ${yearRange}`,
       `Academic Calendar - ${viewData.yearHeading}`
     ];
   };
@@ -412,7 +536,11 @@ function AcademicCalendarTablePage() {
 
     if (savedCalendarFromState && Array.isArray(savedCalendarFromState.rows)) {
       const selectedYearNumber = Number(yearNumber);
-      const totalYears = Number(savedCalendarFromState.totalYears || 0);
+      const totalYears = getResolvedTotalYears(
+        savedCalendarFromState.totalYears,
+        savedCalendarFromState.batchStart,
+        savedCalendarFromState.batchEnd
+      );
 
       setViewData({
         schoolName: savedCalendarFromState.schoolName || location.state?.schoolName || "School",
@@ -421,7 +549,7 @@ function AcademicCalendarTablePage() {
         batchEnd: savedCalendarFromState.batchEnd,
         yearNumber: selectedYearNumber,
         totalYears,
-        yearHeading: savedCalendarFromState.yearHeading || getAcademicYearHeading(selectedYearNumber, totalYears),
+        yearHeading: getAcademicYearHeading(selectedYearNumber, totalYears),
         terms: []
       });
 
@@ -430,7 +558,8 @@ function AcademicCalendarTablePage() {
         date: row.date || "",
         day: row.day || "-",
         weekLabel: row.weekLabel || "-",
-        remarks: row.remarks || "-"
+        remarks: (row.remarks && row.remarks !== "-") ? row.remarks : "",
+        ...deriveCalendarColumns(row)
       }));
 
       setEditableRows(normalizedRows);
@@ -471,14 +600,20 @@ function AcademicCalendarTablePage() {
           detectedSchool = matchedSchool?.name || "School";
         }
 
+        const resolvedTotalYears = getResolvedTotalYears(
+          savedCalendar?.totalYears || almanac?.year || 0,
+          savedCalendar?.batchStart || almanac?.batchStart,
+          savedCalendar?.batchEnd || almanac?.batchEnd
+        );
+
         setViewData({
           schoolName: detectedSchool,
           programName: programFromState,
           batchStart: savedCalendar?.batchStart || almanac?.batchStart,
           batchEnd: savedCalendar?.batchEnd || almanac?.batchEnd,
           yearNumber: selectedYearNumber,
-          totalYears: Number(savedCalendar?.totalYears || almanac?.year || 0),
-          yearHeading: savedCalendar?.yearHeading || getAcademicYearHeading(selectedYearNumber, Number(savedCalendar?.totalYears || almanac?.year || 0)),
+          totalYears: resolvedTotalYears,
+          yearHeading: getAcademicYearHeading(selectedYearNumber, resolvedTotalYears),
           terms: yearData?.terms || []
         });
 
@@ -492,10 +627,23 @@ function AcademicCalendarTablePage() {
           const matched = savedMap.get(`${row.termLabel}::${row.date}`);
           if (!matched) return row;
 
+          const mergedColumnValues = deriveCalendarColumns({
+            ...row,
+            ...matched,
+            remarks: (matched.remarks && matched.remarks !== "-")
+              ? matched.remarks
+              : (row.remarks && row.remarks !== "-" ? row.remarks : "")
+          });
+
           return {
             ...row,
             weekLabel: matched.weekLabel || row.weekLabel,
-            remarks: matched.remarks || row.remarks
+            remarks: (matched.remarks && matched.remarks !== "-")
+              ? matched.remarks
+              : (row.remarks && row.remarks !== "-" ? row.remarks : ""),
+            isTermBegin: Boolean(matched.isTermBegin) || Boolean(row.isTermBegin),
+            isTermEnd: Boolean(matched.isTermEnd) || Boolean(row.isTermEnd),
+            ...mergedColumnValues
           };
         });
 
@@ -551,10 +699,16 @@ function AcademicCalendarTablePage() {
     [editableRows]
   );
 
-  const handleRemarksChange = (rowIndex, value) => {
+  const handleColumnChange = (rowIndex, field, value) => {
     setEditableRows((current) =>
       current.map((item, index) => (
-        index === rowIndex ? { ...item, remarks: value } : item
+        index === rowIndex
+          ? {
+            ...item,
+            [field]: value,
+            remarks: buildRemarksFromColumns({ ...item, [field]: value })
+          }
+          : item
       ))
     );
   };
@@ -575,13 +729,55 @@ function AcademicCalendarTablePage() {
     setSaveStatus({ type: "", message: "" });
 
     try {
+      let targetAlmanacId = isValidObjectId(almanacId) ? almanacId : "";
+
+      if (!targetAlmanacId) {
+        const stateAlmanacId = location.state?.savedCalendarData?.almanacId;
+        if (isValidObjectId(stateAlmanacId)) {
+          targetAlmanacId = stateAlmanacId;
+        }
+      }
+
+      if (!targetAlmanacId && viewData?.programName && viewData?.batchStart && viewData?.batchEnd && viewData?.totalYears) {
+        const batchesRes = await axios.get("http://localhost:5000/api/almanac/batches");
+        const matchedBatch = (batchesRes.data || []).find((item) =>
+          String(item.program || "").toLowerCase().trim() === String(viewData.programName || "").toLowerCase().trim()
+          && Number(item.batchStart) === Number(viewData.batchStart)
+          && Number(item.batchEnd) === Number(viewData.batchEnd)
+          && Number(item.year) === Number(viewData.totalYears)
+        );
+
+        if (isValidObjectId(matchedBatch?._id)) {
+          targetAlmanacId = matchedBatch._id;
+        }
+      }
+
+      if (!targetAlmanacId) {
+        setSaveStatus({
+          type: "error",
+          message: "Unable to save table: valid almanac record not found for this programme and batch."
+        });
+        setSaving(false);
+        return;
+      }
+
       const payload = {
         rows: editableRows.map((item) => ({
           termLabel: item.termLabel,
           weekLabel: item.weekLabel,
           date: item.date,
           day: item.day,
-          remarks: item.remarks
+          remarks: buildRemarksFromColumns(item) || item.remarks,
+          studentLedActivities: item.studentLedActivities,
+          compensatoryWorkingDay: item.compensatoryWorkingDay,
+          assessmentWeek: item.assessmentWeek,
+          holidays: item.holidays,
+          events: item.events,
+          selfRegistration: item.selfRegistration,
+          breakColumn: item.breakColumn,
+          isTermBegin: item.isTermBegin,
+          isTermEnd: item.isTermEnd,
+          isResultsDay: item.isResultsDay
         })),
         schoolName: viewData.schoolName,
         program: viewData.programName,
@@ -591,7 +787,7 @@ function AcademicCalendarTablePage() {
         yearHeading: viewData.yearHeading
       };
 
-      const endpoint = `http://localhost:5000/api/almanac/${almanacId}/year/${yearNumber}/day-wise-table`;
+      const endpoint = `http://localhost:5000/api/almanac/${targetAlmanacId}/year/${yearNumber}/day-wise-table`;
       let res;
 
       try {
@@ -614,7 +810,9 @@ function AcademicCalendarTablePage() {
       const statusText = saveError?.response?.status ? ` (HTTP ${saveError.response.status})` : "";
       setSaveStatus({
         type: "error",
-        message: backendMessage ? `${backendMessage}${statusText}` : "Unable to save table"
+        message: backendMessage
+          ? `${backendMessage}${statusText}`
+          : (saveError?.message ? `${saveError.message}${statusText}` : `Unable to save table${statusText}`)
       });
     } finally {
       setSaving(false);
@@ -655,57 +853,69 @@ function AcademicCalendarTablePage() {
 
       if (isCsv) {
         const csvText = await file.text();
-        pairs = extractDateRemarkPairsFromCsv(csvText, tableDatesSet);
+        pairs = extractDateActivityColumnsFromCsv(csvText, tableDatesSet);
       } else {
         const buffer = await file.arrayBuffer();
-        pairs = await extractDateRemarkPairsFromExcel(buffer, tableDatesSet);
+        pairs = await extractDateActivityColumnsFromExcel(buffer, tableDatesSet);
       }
 
       if (!pairs.length) {
         setPdfImportStatus({
           type: "error",
-          message: "No valid Date and Remarks rows found. Use two columns named Date and Remarks."
+          message: "No dates found in the uploaded file."
         });
         return;
       }
 
-      const latestRemarkByDate = new Map();
+      const latestActivityByDate = new Map();
       pairs.forEach((item) => {
-        latestRemarkByDate.set(item.date, item.remarks);
+        latestActivityByDate.set(item.date, {
+          compensatoryWorkingDay: item.compensatoryWorkingDay,
+          holidays: item.holidays,
+          events: item.events
+        });
       });
 
-      const uploadedDates = Array.from(latestRemarkByDate.keys());
-      const unmatchedDates = uploadedDates.filter((dateValue) => !tableDatesSet.has(dateValue));
-      if (unmatchedDates.length) {
-        const preview = unmatchedDates.slice(0, 5).join(", ");
-        const suffix = unmatchedDates.length > 5 ? " ..." : "";
+      const uploadedDates = Array.from(latestActivityByDate.keys());
+      const matchedDates = uploadedDates.filter((dateValue) => tableDatesSet.has(dateValue));
+
+      if (!matchedDates.length) {
         setPdfImportStatus({
           type: "error",
-          message: `Date mismatch: uploaded file has dates not found in table (${preview}${suffix}). Please keep exact day, month and year.`
+          message: "No dates found in the uploaded file."
         });
         return;
       }
 
       let updatedCount = 0;
-      setEditableRows((current) => current.map((row) => {
-        const remarkFromFile = latestRemarkByDate.get(row.date);
-        if (!remarkFromFile) return row;
-        if ((row.remarks || "").trim() === remarkFromFile.trim()) return row;
+      const nextRows = editableRows.map((row) => {
+        const activityFromFile = latestActivityByDate.get(row.date);
+        if (!activityFromFile) return row;
+        
+        const hasChanges =
+          (activityFromFile.compensatoryWorkingDay && activityFromFile.compensatoryWorkingDay !== (row.compensatoryWorkingDay || "")) ||
+          (activityFromFile.holidays && activityFromFile.holidays !== (row.holidays || "")) ||
+          (activityFromFile.events && activityFromFile.events !== (row.events || ""));
+        
+        if (!hasChanges) return row;
         updatedCount += 1;
-        return { ...row, remarks: remarkFromFile };
-      }));
+        const updated = {
+          ...row,
+          compensatoryWorkingDay: activityFromFile.compensatoryWorkingDay || row.compensatoryWorkingDay,
+          holidays: activityFromFile.holidays || row.holidays,
+          events: activityFromFile.events || row.events
+        };
+        return {
+          ...updated,
+          ...deriveCalendarColumns(updated)
+        };
+      });
 
-      if (!updatedCount) {
-        setPdfImportStatus({
-          type: "error",
-          message: "No matching dates found between uploaded file and the table."
-        });
-        return;
-      }
+      setEditableRows(nextRows);
 
       setPdfImportStatus({
         type: "success",
-        message: `${updatedCount} row(s) updated from uploaded file.`
+        message: "File uploaded successfully."
       });
     } catch (uploadError) {
       console.error("Excel/CSV import failed:", uploadError);
@@ -756,7 +966,11 @@ function AcademicCalendarTablePage() {
           )}
 
           {readOnlyView && (
-            <AcademicCalendarTemplate headingLines={getFormalHeadingLines()} model={templateModel} />
+            <AcademicCalendarTemplate
+              headingLines={getFormalHeadingLines()}
+              model={templateModel}
+              schoolName={viewData.schoolName}
+            />
           )}
 
           {!readOnlyView && (
@@ -801,13 +1015,19 @@ function AcademicCalendarTablePage() {
                     <th>Week</th>
                     <th>Date</th>
                     <th>Day</th>
-                    <th>Remarks</th>
+                    <th>Student Led Activities</th>
+                    <th>Compensatory Working Day</th>
+                    <th>Assessment Week</th>
+                    <th>Holidays</th>
+                    <th>Events</th>
+                    <th>Self Registration</th>
+                    <th>Break</th>
                   </tr>
                 </thead>
                 <tbody>
                   {!renderRows.length ? (
                     <tr>
-                      <td colSpan="5" className="dayWiseEmpty">No date rows available for selected year.</td>
+                      <td colSpan="11" className="dayWiseEmpty">No date rows available for selected year.</td>
                     </tr>
                   ) : (
                     renderRows.map((row) => (
@@ -835,8 +1055,56 @@ function AcademicCalendarTablePage() {
                           <input
                             type="text"
                             className="tableEditInput"
-                            value={row.remarks}
-                            onChange={(event) => handleRemarksChange(row.rowIndex, event.target.value)}
+                            value={row.studentLedActivities || ""}
+                            onChange={(event) => handleColumnChange(row.rowIndex, "studentLedActivities", event.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="tableEditInput"
+                            value={row.compensatoryWorkingDay || ""}
+                            onChange={(event) => handleColumnChange(row.rowIndex, "compensatoryWorkingDay", event.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="tableEditInput"
+                            value={row.assessmentWeek || ""}
+                            onChange={(event) => handleColumnChange(row.rowIndex, "assessmentWeek", event.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="tableEditInput"
+                            value={row.holidays || ""}
+                            onChange={(event) => handleColumnChange(row.rowIndex, "holidays", event.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="tableEditInput"
+                            value={row.events || ""}
+                            onChange={(event) => handleColumnChange(row.rowIndex, "events", event.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="tableEditInput"
+                            value={row.selfRegistration || ""}
+                            onChange={(event) => handleColumnChange(row.rowIndex, "selfRegistration", event.target.value)}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            className="tableEditInput"
+                            value={row.breakColumn || ""}
+                            onChange={(event) => handleColumnChange(row.rowIndex, "breakColumn", event.target.value)}
                           />
                         </td>
                       </tr>
@@ -864,7 +1132,11 @@ function AcademicCalendarTablePage() {
               </button>
             </div>
 
-            <AcademicCalendarTemplate headingLines={getFormalHeadingLines()} model={templateModel} />
+            <AcademicCalendarTemplate
+              headingLines={getFormalHeadingLines()}
+              model={templateModel}
+              schoolName={viewData.schoolName}
+            />
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 .calendarTemplateSheet {
   background: #ffffff;
   border: 1px solid #c3d9eb;
-  width: min(1160px, 100%);
+  width: min(1180px, 100%);
   margin: 0 auto;
   box-shadow: 0 18px 32px rgba(8, 54, 91, 0.14);
 }
@@ -9,11 +9,13 @@
 .calendarTemplateHead {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
-  padding: 12px 14px 10px;
-  border-bottom: 18px solid #0f69aa;
+  padding: 14px 16px 12px;
+  border-bottom: 16px solid var(--template-brand-color, #0f69aa);
   background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 .calendarTemplateLogo {
@@ -37,18 +39,19 @@
 }
 
 .calendarTemplateTitleBlock p {
-  margin: 1px 0;
-  color: #0d487a;
+  margin: 2px 0;
+  color: var(--template-brand-color, #0d487a);
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .calendarTemplateTitleBlock .line-1 {
-  font-size: 1rem;
+  font-size: 1.04rem;
 }
 
 .calendarTemplateTitleBlock .line-2,
 .calendarTemplateTitleBlock .line-3 {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
 }
 
 .calendarTemplateTitleBlock .line-4,
@@ -59,18 +62,20 @@
 .calendarTemplateBody {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  padding: 12px;
+  gap: 12px;
+  padding: 14px;
 }
 
 .templateMonthCard {
   border: 1px solid #b8d2e7;
   background: #fcfeff;
-  padding: 8px;
+  padding: 10px;
   break-inside: avoid;
+  page-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .templateMonthHeading {
@@ -82,14 +87,14 @@
   margin: 0;
   text-align: center;
   color: #0d5c95;
-  font-size: 0.86rem;
+  font-size: 0.92rem;
   letter-spacing: 0.03em;
 }
 
 .templateMonthLayout {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) minmax(235px, 1.05fr);
-  gap: 8px;
+  gap: 10px;
   align-items: start;
 }
 
@@ -111,8 +116,8 @@
 .templateMiniCalendar td {
   border: 1px solid #d2e2ef;
   text-align: center;
-  padding: 3px 0;
-  font-size: 0.73rem;
+  padding: 4px 0;
+  font-size: 0.74rem;
   color: #14466c;
 }
 
@@ -133,49 +138,61 @@
   color: transparent;
 }
 
+.templateMiniCalendar td.status-student-led {
+  background: #8fd0ff;
+}
+
 .templateMiniCalendar td.status-event {
-  background: #d9f4de;
+  background: #c8f0cf;
 }
 
 .templateMiniCalendar td.status-weekend {
   background: #f3f3f3;
 }
 
+.templateMiniCalendar td.status-compensatory {
+  background: #f6c8ab;
+}
+
 .templateMiniCalendar td.status-self-registration {
-  background: #e4f0ff;
+  background: #dfeeff;
 }
 
 .templateMiniCalendar td.status-term-begin {
-  background: #ffdfbe;
+  background: #ffb766;
 }
 
 .templateMiniCalendar td.status-term-end {
-  background: #ffd4dd;
+  background: #d9b100;
+}
+
+.templateMiniCalendar td.status-results-day {
+  background: #1a3a66;
 }
 
 .templateMiniCalendar td.status-assessment {
-  background: #ece0ff;
+  background: #f8c7de;
 }
 
 .templateMiniCalendar td.status-break {
-  background: #fff2a8;
+  background: #fff0a8;
 }
 
 .templateMiniCalendar td.status-holiday {
-  background: #f8d7dc;
+  background: #b98ad6;
 }
 
 .templateMonthEvents {
   margin: 0;
-  padding: 4px 0 0 16px;
+  padding: 2px 0 0 16px;
   min-height: 100%;
 }
 
 .templateMonthEvents li {
   color: #275372;
-  font-size: 0.69rem;
-  line-height: 1.18;
-  margin: 0 0 4px;
+  font-size: 0.7rem;
+  line-height: 1.22;
+  margin: 0 0 5px;
 }
 
 .templateMonthEvents li.empty {
@@ -196,12 +213,14 @@
 
 .calendarTemplateLegend {
   border-top: 1px solid #c8ddee;
-  padding: 8px 10px 6px;
+  padding: 10px 12px 8px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
   background: #f4fbff;
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 .legendItem {
@@ -220,21 +239,155 @@
   border: 1px solid rgba(15, 76, 122, 0.15);
 }
 
+.legendSwatch.status-student-led {
+  background: #8fd0ff;
+}
+
+.legendSwatch.status-event {
+  background: #c8f0cf;
+}
+
+.legendSwatch.status-weekend {
+  background: #f3f3f3;
+}
+
+.legendSwatch.status-self-registration {
+  background: #dfeeff;
+}
+
+.legendSwatch.status-term-begin {
+  background: #ffb766;
+}
+
+.legendSwatch.status-compensatory {
+  background: #f6c8ab;
+}
+
+.legendSwatch.status-term-end {
+  background: #d9b100;
+}
+
+.legendSwatch.status-results-day {
+  background: #1a3a66;
+}
+
+.legendSwatch.status-break {
+  background: #fff0a8;
+}
+
+.legendSwatch.status-assessment {
+  background: #f8c7de;
+}
+
+.legendSwatch.status-holiday {
+  background: #b98ad6;
+}
+
 .calendarTemplateFooterBar {
-  background: #0f69aa;
+  background: var(--template-brand-color, #0f69aa);
   color: #ffffff;
   text-align: center;
-  padding: 10px 12px;
+  padding: 11px 12px;
   font-size: 0.85rem;
   font-weight: 700;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.calendarTemplateSheet.compact {
+  width: 740px;
+  border-width: 1px;
+  box-shadow: none;
+}
+
+.calendarTemplateSheet.compact .calendarTemplateHead {
+  gap: 8px;
+  padding: 8px 9px 7px;
+  border-bottom-width: 8px;
+}
+
+.calendarTemplateSheet.compact .calendarTemplateLogo {
+  width: 46px;
+}
+
+.calendarTemplateSheet.compact .calendarTemplateTextLogo {
+  width: 90px;
+}
+
+.calendarTemplateSheet.compact .calendarTemplateTitleBlock p {
+  margin: 1px 0;
+  line-height: 1.12;
+}
+
+.calendarTemplateSheet.compact .calendarTemplateTitleBlock .line-1 {
+  font-size: 0.72rem;
+}
+
+.calendarTemplateSheet.compact .calendarTemplateTitleBlock .line-2,
+.calendarTemplateSheet.compact .calendarTemplateTitleBlock .line-3,
+.calendarTemplateSheet.compact .calendarTemplateTitleBlock .line-4,
+.calendarTemplateSheet.compact .calendarTemplateTitleBlock .line-5 {
+  font-size: 0.58rem;
 }
 
 .calendarTemplateSheet.compact .calendarTemplateBody {
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  padding: 5px;
+}
+
+.calendarTemplateSheet.compact .templateMonthCard {
+  padding: 4px;
+  gap: 3px;
+}
+
+.calendarTemplateSheet.compact .templateMonthHeading h3 {
+  font-size: 0.66rem;
 }
 
 .calendarTemplateSheet.compact .templateMonthLayout {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(80px, 0.6fr) minmax(150px, 1fr);
+  gap: 3px;
+}
+
+.calendarTemplateSheet.compact .templateMonthEvents {
+  padding: 0 0 0 11px;
+}
+
+.calendarTemplateSheet.compact .templateMonthEvents {
+  padding: 0 0 0 12px;
+}
+
+.calendarTemplateSheet.compact .templateMonthEvents li {
+  font-size: 0.52rem;
+  line-height: 1.15;
+  margin-bottom: 1px;
+}
+
+.calendarTemplateSheet.compact .templateMiniCalendar th,
+.calendarTemplateSheet.compact .templateMiniCalendar td {
+  font-size: 0.53rem;
+  padding: 1px 0;
+}
+
+.calendarTemplateSheet.compact .calendarTemplateLegend {
+  gap: 6px;
+  padding: 5px 7px 4px;
+}
+
+.calendarTemplateSheet.compact .legendItem {
+  font-size: 0.52rem;
+  gap: 4px;
+}
+
+.calendarTemplateSheet.compact .legendSwatch {
+  width: 9px;
+  height: 9px;
+}
+
+.calendarTemplateSheet.compact .calendarTemplateFooterBar {
+  padding: 5px 7px;
+  font-size: 0.56rem;
 }
 
 @media (max-width: 900px) {

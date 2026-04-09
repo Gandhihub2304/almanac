@@ -188,23 +188,23 @@ exports.saveAlmanac = async (req, res) => {
 
     const existing = await Almanac.findOne(filter).lean();
 
-    const savedAlmanac = await Almanac.findOneAndUpdate(
-      filter,
-      {
-        $set: {
-          yearsData
-        }
-      },
-      {
-        upsert: true,
-        new: true,
-        runValidators: true,
-        setDefaultsOnInsert: true
-      }
-    );
+    // Check if batch already exists - prevent duplicates
+    if (existing) {
+      return res.status(409).json({ 
+        message: `This batch is already created for ${program} (${parsedBatchStart}-${parsedBatchEnd}). Please edit the existing batch or create a new batch.`
+      });
+    }
+
+    const savedAlmanac = await Almanac.create({
+      program,
+      year: parsedYear,
+      batchStart: parsedBatchStart,
+      batchEnd: parsedBatchEnd,
+      yearsData
+    });
 
     res.json({
-      message: existing ? "Almanac updated for this batch" : "Almanac saved for this batch",
+      message: "Almanac saved for this batch ✅",
       almanac: savedAlmanac
     });
 
@@ -300,7 +300,17 @@ exports.saveDayWiseTable = async (req, res) => {
       weekLabel: String(item?.weekLabel || "-").trim() || "-",
       date: String(item?.date || "").trim(),
       day: String(item?.day || "-").trim() || "-",
-      remarks: String(item?.remarks || "-").trim() || "-"
+      remarks: String(item?.remarks || "-").trim() || "-",
+      studentLedActivities: String(item?.studentLedActivities || "").trim(),
+      compensatoryWorkingDay: String(item?.compensatoryWorkingDay || "").trim(),
+      assessmentWeek: String(item?.assessmentWeek || "").trim(),
+      holidays: String(item?.holidays || "").trim(),
+      events: String(item?.events || "").trim(),
+      selfRegistration: String(item?.selfRegistration || "").trim(),
+      breakColumn: String(item?.breakColumn || "").trim(),
+      isTermBegin: Boolean(item?.isTermBegin),
+      isTermEnd: Boolean(item?.isTermEnd),
+      isResultsDay: Boolean(item?.isResultsDay)
     }));
 
     await Calendar.findOneAndUpdate(
@@ -527,6 +537,77 @@ exports.getSavedCalendarById = async (req, res) => {
     res.json(calendar);
   } catch (error) {
     console.error("GET SAVED CALENDAR BY ID ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateAlmanacById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { program, year, batchStart, batchEnd, yearsData } = req.body;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid almanac id format" });
+    }
+
+    if (!program || !year || !batchStart || !batchEnd || !Array.isArray(yearsData)) {
+      return res.status(400).json({ message: "Missing required almanac fields" });
+    }
+
+    const parsedYear = Number(year);
+    const parsedBatchStart = Number(batchStart);
+    const parsedBatchEnd = Number(batchEnd);
+
+    if (Number.isNaN(parsedYear) || Number.isNaN(parsedBatchStart) || Number.isNaN(parsedBatchEnd)) {
+      return res.status(400).json({ message: "Year and batch values must be numbers" });
+    }
+
+    if (parsedBatchEnd < parsedBatchStart) {
+      return res.status(400).json({ message: "Batch end cannot be smaller than batch start" });
+    }
+
+    if (yearsData.length !== parsedYear) {
+      return res.status(400).json({ message: "Years data does not match selected year count" });
+    }
+
+    const breakRuleMessage = validateBreakRules(yearsData, parsedYear);
+    if (breakRuleMessage) {
+      return res.status(400).json({ message: breakRuleMessage });
+    }
+
+    const existing = await Almanac.findById(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Almanac not found" });
+    }
+
+    const duplicate = await Almanac.findOne({
+      _id: { $ne: id },
+      program,
+      year: parsedYear,
+      batchStart: parsedBatchStart,
+      batchEnd: parsedBatchEnd
+    }).lean();
+
+    if (duplicate) {
+      return res.status(409).json({
+        message: `Another almanac already exists for ${program} (${parsedBatchStart}-${parsedBatchEnd}).`
+      });
+    }
+
+    existing.program = program;
+    existing.year = parsedYear;
+    existing.batchStart = parsedBatchStart;
+    existing.batchEnd = parsedBatchEnd;
+    existing.yearsData = yearsData;
+
+    const updatedAlmanac = await existing.save();
+
+    res.json({
+      message: "Almanac is updated successfully",
+      almanac: updatedAlmanac
+    });
+  } catch (error) {
+    console.error("UPDATE ALMANAC ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
