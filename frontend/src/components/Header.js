@@ -10,6 +10,7 @@ function Header() {
   const [schools, setSchools] = useState([]);
   const [activePanel, setActivePanel] = useState("home");
   const [selectedSchool, setSelectedSchool] = useState(null);
+  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
   const [headerOffset, setHeaderOffset] = useState(116);
   const [batches, setBatches] = useState([]);
   const [batchFetchError, setBatchFetchError] = useState("");
@@ -18,6 +19,14 @@ function Header() {
     programName: "",
     batchKey: ""
   });
+  const [trackFilters, setTrackFilters] = useState({
+    schoolName: "",
+    programName: "",
+    batchKey: ""
+  });
+  const [trackSearchResult, setTrackSearchResult] = useState(null);
+  const [trackSearchError, setTrackSearchError] = useState("");
+  const [isTrackSearching, setIsTrackSearching] = useState(false);
   const [addSchoolName, setAddSchoolName] = useState("");
   const [addProgramInput, setAddProgramInput] = useState("");
   const [addPrograms, setAddPrograms] = useState([]);
@@ -29,53 +38,83 @@ function Header() {
   const normalizeSchoolName = (value) =>
     (value || "").toLowerCase().replace(/\s+/g, " ").trim();
 
+  const schoolBrandPalette = [
+    {
+      matches: ["engineering"],
+      bg: "rgb(192, 34, 34)",
+      border: "rgb(192, 34, 34)"
+    },
+    {
+      matches: ["informatics"],
+      bg: "rgb(229, 9, 127)",
+      border: "rgb(229, 9, 127)"
+    },
+    {
+      matches: ["management studies", "management"],
+      bg: "rgb(12, 84, 160)",
+      border: "rgb(12, 84, 160)"
+    },
+    {
+      matches: ["law"],
+      bg: "rgb(43, 42, 41)",
+      border: "rgb(43, 42, 41)"
+    },
+    {
+      matches: ["architecture"],
+      bg: "rgb(247, 167, 7)",
+      border: "rgb(247, 167, 7)"
+    },
+    {
+      matches: ["psychology"],
+      bg: "rgb(123, 62, 83)",
+      border: "rgb(123, 62, 83)"
+    },
+    {
+      matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"],
+      bg: "rgb(236, 105, 31)",
+      border: "rgb(236, 105, 31)"
+    },
+    {
+      matches: ["liberal arts"],
+      bg: "rgb(137, 137, 137)",
+      border: "rgb(137, 137, 137)"
+    },
+    {
+      matches: ["health sciences", "health science"],
+      bg: "rgb(0, 110, 54)",
+      border: "rgb(0, 110, 54)"
+    },
+    {
+      matches: ["pharmacy"],
+      bg: "rgb(120, 184, 51)",
+      border: "rgb(120, 184, 51)"
+    },
+    {
+      matches: ["school of sciences", "school of science", "sciences"],
+      bg: "rgb(243, 156, 163)",
+      border: "rgb(243, 156, 163)"
+    },
+    {
+      matches: ["ph.d", "phd"],
+      bg: "rgb(50, 43, 106)",
+      border: "rgb(50, 43, 106)"
+    }
+  ];
+
   const getSchoolCardPalette = (schoolName) => {
     const normalized = normalizeSchoolName(schoolName);
 
-    if (normalized.includes("informatics")) {
-      return { bg: "#fff9dc", border: "#e6d88a" }; // light yellow
-    }
+    const matched = schoolBrandPalette.find((entry) =>
+      entry.matches.some((keyword) => normalized.includes(keyword))
+    );
 
-    if (normalized.includes("engineering")) {
-      return { bg: "#eaf4ff", border: "#9fc2e6" }; // light blue
-    }
-
-    if (normalized.includes("law")) {
-      return { bg: "#f3f3f3", border: "#8a8a8a" }; // light black/charcoal theme
-    }
-
-    if (normalized.includes("health science") || normalized.includes("health sciences")) {
-      return { bg: "#e8f8ec", border: "#9dc9a8" }; // light green
-    }
-
-    if (normalized.includes("architecture")) {
-      return { bg: "#fff2e5", border: "#e5b17b" }; // light orange
-    }
-
-    if (normalized.includes("management")) {
-      return { bg: "#ffecee", border: "#e2a1a8" }; // light red
-    }
-
-    if (normalized.includes("psychology")) {
-      return { bg: "#f2f2f5", border: "#b9bac4" }; // light ash
-    }
-
-    if (
-      normalized.includes("ancient hindu science")
-      || normalized.includes("ancient hindu sciences")
-      || normalized.includes("school of ahs")
-      || normalized.includes(" ahs")
-    ) {
-      return { bg: "#f4efff", border: "#b9a8df" }; // light purple
-    }
-
-    return { bg: "#f5f8ff", border: "#c4d2ef" };
+    return matched || { bg: "#0d4e82", border: "#0d4e82" };
   };
 
   const drawerItems = [
     {
       key: "home",
-      label: "Overview",
+      label: "Home",
       title: "Home",
       icon: (
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -84,8 +123,18 @@ function Header() {
       )
     },
     {
+      key: "trackAcademic",
+      label: "Track Academic",
+      title: "Track Academic",
+      icon: (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v3h12V5H6zm0 5v9h12v-9H6zm2 2h3v3H8v-3zm5 0h3v3h-3v-3z" />
+        </svg>
+      )
+    },
+    {
       key: "view",
-      label: "Saved Almanac Batches",
+      label: "Almanacs",
       title: "View",
       icon: (
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -193,6 +242,14 @@ function Header() {
       return;
     }
 
+    if (panel === "trackAcademic") {
+      await fetchBatches();
+      setTrackSearchResult(null);
+      setTrackSearchError("");
+      setActivePanel("trackAcademic");
+      return;
+    }
+
     if (panel === "view") {
       await fetchBatches();
     }
@@ -247,6 +304,16 @@ function Header() {
     });
   };
 
+  const clearTrackFilters = () => {
+    setTrackFilters({
+      schoolName: "",
+      programName: "",
+      batchKey: ""
+    });
+    setTrackSearchResult(null);
+    setTrackSearchError("");
+  };
+
   const savedBatchOptions = useMemo(() => {
     const schoolNames = (schools || []).map((item) => item.name).sort((a, b) => a.localeCompare(b));
 
@@ -294,6 +361,438 @@ function Header() {
       return true;
     });
   }, [batches, savedBatchFilters]);
+
+  const trackFilterOptions = useMemo(() => {
+    const schoolNames = (schools || []).map((item) => item.name).sort((a, b) => a.localeCompare(b));
+
+    const selectedSchool = (schools || []).find((item) => item.name === trackFilters.schoolName);
+    const selectedPrograms = Array.isArray(selectedSchool?.programs) ? selectedSchool.programs : [];
+
+    const selectedProgramBatches = trackFilters.programName
+      ? batches.filter((item) => item.program === trackFilters.programName)
+      : [];
+
+    const batchKeys = Array.from(
+      new Set(selectedProgramBatches.map((item) => `${item.batchStart}-${item.batchEnd}`))
+    ).sort((a, b) => {
+      const [aStart] = a.split("-").map(Number);
+      const [bStart] = b.split("-").map(Number);
+      return bStart - aStart;
+    });
+
+    return {
+      schools: schoolNames,
+      programs: selectedPrograms.sort((a, b) => a.localeCompare(b)),
+      batches: batchKeys
+    };
+  }, [schools, batches, trackFilters.schoolName, trackFilters.programName]);
+
+  const parseBatchKey = (value) => {
+    const [batchStartRaw, batchEndRaw] = String(value || "").split("-");
+    const batchStart = Number(batchStartRaw);
+    const batchEnd = Number(batchEndRaw);
+
+    if (Number.isNaN(batchStart) || Number.isNaN(batchEnd)) {
+      return null;
+    }
+
+    return { batchStart, batchEnd };
+  };
+
+  const toLocalIsoDate = (value) => {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const parseCalendarDate = (value) => {
+    const normalized = String(value || "").trim();
+    if (!normalized) {
+      return null;
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+      const [year, month, day] = normalized.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+
+    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+  };
+
+  const formatDisplayDate = (value) => {
+    const date = parseCalendarDate(value);
+    if (!date) return "-";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const dayDiff = (startDate, endDate) => {
+    const diffMs = endDate.getTime() - startDate.getTime();
+    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  };
+
+  const normalizeValue = (value) =>
+    String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+  const isMeaningfulLabel = (value) => {
+    const text = String(value || "").trim();
+    return Boolean(text) && text !== "-";
+  };
+
+  const getTrackPhase = (row) => {
+    const weekLabel = String(row?.weekLabel || "").trim();
+    const combinedText = [
+      row?.weekLabel,
+      row?.remarks,
+      row?.selfRegistration,
+      row?.breakColumn,
+      row?.assessmentWeek,
+      row?.holidays,
+      row?.events,
+      row?.studentLedActivities
+    ]
+      .map((item) => normalizeValue(item))
+      .join(" ");
+
+    if (row?.selfRegistration || /self\s*registration/.test(combinedText)) {
+      return { phaseLabel: "Self Registration", phaseMessage: "You are in the self registration week." };
+    }
+
+    if (row?.isTermBegin || /term\s*begins?|term\s*start/.test(combinedText)) {
+      return { phaseLabel: "Term Begin", phaseMessage: "The term has started." };
+    }
+
+    if (row?.breakColumn && /results?\s*day/i.test(row.breakColumn)) {
+      return { phaseLabel: "Results Day", phaseMessage: "Today is marked as results day." };
+    }
+
+    if (row?.assessmentWeek || /assessment|exam|test/.test(combinedText)) {
+      return { phaseLabel: "Comprehensive Assessment", phaseMessage: "You are in the comprehensive assessment period." };
+    }
+
+    if (row?.breakColumn || /break/.test(combinedText)) {
+      return { phaseLabel: "Term Break", phaseMessage: "You are in the term break period." };
+    }
+
+    if (isMeaningfulLabel(weekLabel)) {
+      return { phaseLabel: weekLabel, phaseMessage: `You are currently in ${weekLabel}.` };
+    }
+
+    return { phaseLabel: "Current Week", phaseMessage: "You are in the current scheduled week." };
+  };
+
+  const isWithinRange = (date, start, end) => {
+    if (!start || !end) return false;
+    return date.getTime() >= start.getTime() && date.getTime() <= end.getTime();
+  };
+
+  const buildFallbackTrackingResult = (almanac, todayDate) => {
+    const terms = (almanac?.yearsData || [])
+      .flatMap((yearItem, yearIndex) =>
+        (yearItem?.terms || []).map((term, termIndex) => ({
+          yearNumber: yearIndex + 1,
+          termNumber: termIndex + 1,
+          selfStart: parseCalendarDate(term?.selfStart),
+          selfEnd: parseCalendarDate(term?.selfEnd),
+          termStart: parseCalendarDate(term?.termStart),
+          termEnd: parseCalendarDate(term?.termEnd),
+          assessmentStart: parseCalendarDate(term?.assessmentStart),
+          assessmentEnd: parseCalendarDate(term?.assessmentEnd),
+          breakStart: parseCalendarDate(term?.breakStart),
+          breakEnd: parseCalendarDate(term?.breakEnd)
+        }))
+      )
+      .filter((term) => term.termStart && term.termEnd)
+      .sort((a, b) => a.termStart.getTime() - b.termStart.getTime());
+
+    if (!terms.length) {
+      return null;
+    }
+
+    const firstTerm = terms[0];
+    const lastTerm = terms.reduce((latest, current) => (
+      !latest || current.termEnd.getTime() > latest.termEnd.getTime() ? current : latest
+    ), null);
+
+    if (todayDate.getTime() < firstTerm.termStart.getTime()) {
+      const daysLeft = Math.max(0, dayDiff(todayDate, firstTerm.termStart));
+      return {
+        primary: "This batch is not started yet.",
+        secondary: `Still there is time to start the batch. It will start on ${formatDisplayDate(toLocalIsoDate(firstTerm.termStart))} and starts in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`,
+        meta: `Term start date: ${formatDisplayDate(toLocalIsoDate(firstTerm.termStart))}`
+      };
+    }
+
+    if (lastTerm && todayDate.getTime() > lastTerm.termEnd.getTime()) {
+      return {
+        primary: "This batch is already completed.",
+        secondary: "",
+        meta: ""
+      };
+    }
+
+    const activeTerm = terms.find((term) => isWithinRange(todayDate, term.termStart, term.termEnd));
+    if (!activeTerm) {
+      const previousTerm = [...terms]
+        .filter((term) => term.termEnd.getTime() < todayDate.getTime())
+        .sort((a, b) => b.termEnd.getTime() - a.termEnd.getTime())[0];
+      const nextTerm = terms.find((term) => term.termStart.getTime() > todayDate.getTime());
+
+      if (previousTerm && nextTerm && previousTerm.yearNumber !== nextTerm.yearNumber) {
+        return {
+          primary: "This year is already completed.",
+          secondary: "",
+          meta: ""
+        };
+      }
+
+      if (!nextTerm) {
+        return null;
+      }
+
+      const daysToNextTerm = Math.max(0, dayDiff(todayDate, nextTerm.termStart));
+      return {
+        primary: "The current date is between terms.",
+        secondary: `Next term starts on ${formatDisplayDate(toLocalIsoDate(nextTerm.termStart))} (${daysToNextTerm} day${daysToNextTerm === 1 ? "" : "s"} left).`,
+        meta: `Upcoming term: Year ${nextTerm.yearNumber} Term ${nextTerm.termNumber}`
+      };
+    }
+
+    if (activeTerm.selfStart && activeTerm.selfEnd && isWithinRange(todayDate, activeTerm.selfStart, activeTerm.selfEnd)) {
+      const daysLeft = Math.max(0, dayDiff(todayDate, activeTerm.selfEnd));
+      return {
+        primary: "You are in the Self Registration week.",
+        secondary: `Term starts on ${formatDisplayDate(toLocalIsoDate(activeTerm.termStart))}. ${daysLeft} day${daysLeft === 1 ? "" : "s"} left in self registration period.`,
+        meta: `Year ${activeTerm.yearNumber} Term ${activeTerm.termNumber}`
+      };
+    }
+
+    if (activeTerm.assessmentStart && activeTerm.assessmentEnd && isWithinRange(todayDate, activeTerm.assessmentStart, activeTerm.assessmentEnd)) {
+      const daysLeft = Math.max(0, dayDiff(todayDate, activeTerm.assessmentEnd));
+      return {
+        primary: "You are in the Comprehensive Assessment period.",
+        secondary: `${daysLeft} day${daysLeft === 1 ? "" : "s"} left in assessment week.`,
+        meta: `Year ${activeTerm.yearNumber} Term ${activeTerm.termNumber}`
+      };
+    }
+
+    if (activeTerm.breakStart && activeTerm.breakEnd && isWithinRange(todayDate, activeTerm.breakStart, activeTerm.breakEnd)) {
+      const daysLeft = Math.max(0, dayDiff(todayDate, activeTerm.breakEnd));
+      return {
+        primary: "You are in the Term Break period.",
+        secondary: `${daysLeft} day${daysLeft === 1 ? "" : "s"} left to complete break.`,
+        meta: `Year ${activeTerm.yearNumber} Term ${activeTerm.termNumber}`
+      };
+    }
+
+    const weekNumber = Math.floor(Math.max(0, dayDiff(activeTerm.termStart, todayDate)) / 7) + 1;
+    const nextWeekStart = new Date(activeTerm.termStart);
+    nextWeekStart.setDate(nextWeekStart.getDate() + (weekNumber * 7));
+
+    const hasNextWeekInsideTerm = nextWeekStart.getTime() <= activeTerm.termEnd.getTime();
+    const daysToNextWeek = hasNextWeekInsideTerm ? Math.max(0, dayDiff(todayDate, nextWeekStart)) : 0;
+
+    return {
+      primary: `Currently in Week ${weekNumber}.`,
+      secondary: hasNextWeekInsideTerm
+        ? `${daysToNextWeek} day${daysToNextWeek === 1 ? "" : "s"} left to reach Week ${weekNumber + 1} (starts on ${formatDisplayDate(toLocalIsoDate(nextWeekStart))}).`
+        : "This is the final week of the active term.",
+      meta: `Year ${activeTerm.yearNumber} Term ${activeTerm.termNumber} | Term start date: ${formatDisplayDate(toLocalIsoDate(activeTerm.termStart))}`
+    };
+  };
+
+  const handleTrackAcademicSearch = async () => {
+    setTrackSearchError("");
+    setTrackSearchResult(null);
+
+    if (!trackFilters.schoolName || !trackFilters.programName || !trackFilters.batchKey) {
+      setTrackSearchError("Please select School, Programme, and Batch before searching.");
+      return;
+    }
+
+    const parsedBatch = parseBatchKey(trackFilters.batchKey);
+    if (!parsedBatch) {
+      setTrackSearchError("Invalid batch selected.");
+      return;
+    }
+
+    try {
+      setIsTrackSearching(true);
+
+      const matchedAlmanacBatch = batches.find((item) =>
+        normalizeValue(item.program) === normalizeValue(trackFilters.programName)
+        && Number(item.batchStart) === parsedBatch.batchStart
+        && Number(item.batchEnd) === parsedBatch.batchEnd
+      );
+
+      if (matchedAlmanacBatch?._id) {
+        const almanacRes = await axios.get(`http://localhost:5000/api/almanac/${matchedAlmanacBatch._id}`);
+        const fallbackResult = buildFallbackTrackingResult(almanacRes?.data, parseCalendarDate(new Date()));
+
+        if (fallbackResult) {
+          setTrackSearchResult({
+            title: `${trackFilters.programName} (${trackFilters.batchKey}) tracking`,
+            primary: fallbackResult.primary,
+            secondary: fallbackResult.secondary,
+            meta: `School: ${trackFilters.schoolName} | ${fallbackResult.meta}`
+          });
+          return;
+        }
+      }
+
+      const savedCalendarsRes = await axios.get("http://localhost:5000/api/almanac/saved-calendars");
+      const savedCalendars = Array.isArray(savedCalendarsRes.data) ? savedCalendarsRes.data : [];
+
+      const matchedCalendars = savedCalendars.filter((item) => {
+        const schoolName = item.schoolName || getSchoolForProgram(item.program);
+        return normalizeSchoolName(schoolName) === normalizeSchoolName(trackFilters.schoolName)
+          && normalizeValue(item.program) === normalizeValue(trackFilters.programName)
+          && Number(item.batchStart) === parsedBatch.batchStart
+          && Number(item.batchEnd) === parsedBatch.batchEnd;
+      });
+
+      if (!matchedCalendars.length) {
+        setTrackSearchError("No saved academic calendar data found for this selection.");
+        return;
+      }
+
+      const detailResponses = await Promise.all(
+        matchedCalendars
+          .filter((item) => item.calendarId)
+          .map((item) => axios.get(`http://localhost:5000/api/almanac/saved-calendars/${item.calendarId}`))
+      );
+
+      const allRows = detailResponses
+        .map((response) => ({
+          yearNumber: Number(response?.data?.yearNumber || 0),
+          rows: Array.isArray(response?.data?.rows) ? response.data.rows : []
+        }))
+        .flatMap((entry) =>
+          entry.rows.map((row) => ({
+            ...row,
+            yearNumber: entry.yearNumber,
+            dateObj: parseCalendarDate(row?.date),
+            isoDate: toLocalIsoDate(parseCalendarDate(row?.date))
+          }))
+        )
+        .filter((row) => row.dateObj && row.isoDate)
+        .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+
+      if (!allRows.length) {
+        if (!matchedAlmanacBatch?._id) {
+          setTrackSearchError("No valid saved rows or almanac ranges found for this selection.");
+          return;
+        }
+
+        const almanacRes = await axios.get(`http://localhost:5000/api/almanac/${matchedAlmanacBatch._id}`);
+        const fallbackResult = buildFallbackTrackingResult(almanacRes?.data, parseCalendarDate(new Date()));
+
+        if (!fallbackResult) {
+          setTrackSearchError("Unable to calculate live tracking from saved almanac ranges.");
+          return;
+        }
+
+        setTrackSearchResult({
+          title: `${trackFilters.programName} (${trackFilters.batchKey}) tracking`,
+          primary: fallbackResult.primary,
+          secondary: fallbackResult.secondary,
+          meta: `School: ${trackFilters.schoolName} | ${fallbackResult.meta}`
+        });
+        return;
+      }
+
+      const todayDate = parseCalendarDate(new Date());
+      const todayIso = toLocalIsoDate(todayDate);
+      const todayIndex = allRows.findIndex((row) => row.isoDate === todayIso);
+      const firstRow = allRows[0];
+      const lastRow = allRows[allRows.length - 1];
+
+      if (todayDate.getTime() < firstRow.dateObj.getTime()) {
+        const daysUntilStart = Math.max(0, dayDiff(todayDate, firstRow.dateObj));
+        setTrackSearchResult({
+          title: `${trackFilters.programName} (${trackFilters.batchKey}) tracking`,
+          primary: `This batch is not started yet.`,
+          secondary: `Still there is time to start the batch. It will start on ${formatDisplayDate(firstRow.isoDate)} and starts in ${daysUntilStart} day${daysUntilStart === 1 ? "" : "s"}.`,
+          meta: `School: ${trackFilters.schoolName}`
+        });
+        return;
+      }
+
+      if (todayDate.getTime() > lastRow.dateObj.getTime()) {
+        setTrackSearchResult({
+          primary: `This batch is already completed.`,
+          secondary: "",
+          meta: ""
+        });
+        return;
+      }
+
+      let currentRow = null;
+      let contextMessage = "";
+
+      if (todayIndex >= 0) {
+        currentRow = allRows[todayIndex];
+        contextMessage = `Today is ${formatDisplayDate(currentRow.isoDate)}.`;
+      } else {
+        const previousRows = allRows.filter((row) => row.dateObj.getTime() < todayDate.getTime());
+        currentRow = previousRows[previousRows.length - 1] || firstRow;
+        contextMessage = `Today (${formatDisplayDate(todayIso)}) is between saved dates. Latest tracked date is ${formatDisplayDate(currentRow.isoDate)}.`;
+      }
+
+      const currentWeekLabel = isMeaningfulLabel(currentRow.weekLabel)
+        ? currentRow.weekLabel
+        : "Current Week";
+      const trackPhase = getTrackPhase(currentRow);
+
+      const nextTermBeginRow = allRows.find((row) =>
+        row.dateObj.getTime() >= todayDate.getTime()
+        && Boolean(row.isTermBegin)
+      );
+
+      const nextWeekRow = allRows.find((row) =>
+        row.dateObj.getTime() > todayDate.getTime()
+        && normalizeValue(row.weekLabel) !== normalizeValue(currentWeekLabel)
+      );
+
+      const currentReferenceDate = todayDate;
+      const daysToNextWeek = nextWeekRow ? Math.max(0, dayDiff(currentReferenceDate, nextWeekRow.dateObj)) : 0;
+
+      const termStartMessage = nextTermBeginRow
+        ? `Term start date: ${formatDisplayDate(nextTermBeginRow.isoDate)}.`
+        : "";
+
+      const nextWeekMessage = nextWeekRow
+        ? `${daysToNextWeek} day${daysToNextWeek === 1 ? "" : "s"} left to reach ${nextWeekRow.weekLabel || "next week"} (starts on ${formatDisplayDate(nextWeekRow.isoDate)}).`
+        : "This appears to be the final recorded week for this batch.";
+
+      const secondaryMessage = termStartMessage
+        ? `${nextWeekMessage} ${termStartMessage}`
+        : nextWeekMessage;
+
+      setTrackSearchResult({
+        title: `${trackFilters.programName} (${trackFilters.batchKey}) tracking`,
+        primary: `${trackFilters.programName} is currently in ${currentWeekLabel}. ${trackPhase.phaseMessage}`,
+        secondary: secondaryMessage,
+        meta: `School: ${trackFilters.schoolName} | ${contextMessage} | Phase: ${trackPhase.phaseLabel}`
+      });
+    } catch (error) {
+      console.error("Track academic search error:", error);
+      setTrackSearchError(error?.response?.data?.message || "Unable to track the selected academic calendar.");
+    } finally {
+      setIsTrackSearching(false);
+    }
+  };
 
   const handleDeleteSavedAlmanac = async (batchItem) => {
     const shouldDelete = window.confirm(
@@ -402,7 +901,13 @@ function Header() {
 
   return (
     <>
-      <section className="landingShell" style={{ "--header-offset": `${headerOffset}px` }}>
+      <section
+        className="landingShell"
+        style={{
+          "--header-offset": `${headerOffset}px`,
+          "--drawer-width": isDrawerCollapsed ? "86px" : "202px"
+        }}
+      >
         <div className="header" ref={headerRef}>
           <img src="/Aurora Logo.png" alt="Aurora Logo" className="headerLogo" />
           <div className="heroTitleWrap">
@@ -415,7 +920,18 @@ function Header() {
           </p>
         </div>
 
-        <aside className="sideDrawer">
+        <aside className={`sideDrawer ${isDrawerCollapsed ? "collapsed" : ""}`}>
+          <button
+            type="button"
+            className="drawerCollapseToggle"
+            onClick={() => setIsDrawerCollapsed((current) => !current)}
+            aria-label={isDrawerCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isDrawerCollapsed ? "Expand" : "Collapse"}
+          >
+            <span className="drawerCollapseIcon" aria-hidden="true">
+              {isDrawerCollapsed ? ">" : "<"}
+            </span>
+          </button>
           {drawerItems.map((item) => (
             <button
               key={item.key}
@@ -425,8 +941,8 @@ function Header() {
               aria-label={item.title}
             >
               <span className="drawerIcon" aria-hidden="true">{item.icon}</span>
-              <span className="drawerText">{item.label}</span>
-              <span className="drawerChevron" aria-hidden="true">›</span>
+              {!isDrawerCollapsed && <span className="drawerText">{item.label}</span>}
+              {!isDrawerCollapsed && <span className="drawerChevron" aria-hidden="true">&gt;</span>}
             </button>
           ))}
         </aside>
@@ -468,7 +984,7 @@ function Header() {
 
         {activePanel === "view" && (
           <section className="plainPanel">
-            <h2 className="panelTitle">Saved Almanac Batches</h2>
+            <h2 className="panelTitle">Almanacs</h2>
             {batchFetchError && <p className="panelInfo">{batchFetchError}</p>}
             {!batchFetchError && batches.length === 0 && (
               <p className="panelInfo">No saved almanacs.</p>
@@ -602,6 +1118,117 @@ function Header() {
 
             {!batchFetchError && batches.length > 0 && filteredSavedBatches.length === 0 && (
               <p className="panelInfo">No saved almanacs.</p>
+            )}
+          </section>
+        )}
+
+        {activePanel === "trackAcademic" && (
+          <section className="plainPanel">
+            <h2 className="panelTitle">Track Academic</h2>
+
+            {batchFetchError && <p className="panelInfo">{batchFetchError}</p>}
+
+            {!batchFetchError && (
+              <div className="savedBatchFilterBar trackFilterBar">
+                <div className="savedBatchFilterItem">
+                  <label htmlFor="track-school">School</label>
+                  <select
+                    id="track-school"
+                    value={trackFilters.schoolName}
+                    onChange={(event) => {
+                      setTrackFilters({
+                        schoolName: event.target.value,
+                        programName: "",
+                        batchKey: ""
+                      });
+                      setTrackSearchResult(null);
+                      setTrackSearchError("");
+                    }}
+                  >
+                    <option value="">Select School</option>
+                    {trackFilterOptions.schools.map((schoolName) => (
+                      <option key={schoolName} value={schoolName}>
+                        {schoolName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="savedBatchFilterItem">
+                  <label htmlFor="track-program">Programme</label>
+                  <select
+                    id="track-program"
+                    value={trackFilters.programName}
+                    disabled={!trackFilters.schoolName}
+                    onChange={(event) => {
+                      setTrackFilters((current) => ({
+                        ...current,
+                        programName: event.target.value,
+                        batchKey: ""
+                      }));
+                      setTrackSearchResult(null);
+                      setTrackSearchError("");
+                    }}
+                  >
+                    <option value="">Select Programme</option>
+                    {trackFilterOptions.programs.map((programName) => (
+                      <option key={programName} value={programName}>
+                        {programName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="savedBatchFilterItem">
+                  <label htmlFor="track-batch">Batch</label>
+                  <select
+                    id="track-batch"
+                    value={trackFilters.batchKey}
+                    disabled={!trackFilters.programName}
+                    onChange={(event) => {
+                      setTrackFilters((current) => ({
+                        ...current,
+                        batchKey: event.target.value
+                      }));
+                      setTrackSearchResult(null);
+                      setTrackSearchError("");
+                    }}
+                  >
+                    <option value="">Select Batch</option>
+                    {trackFilterOptions.batches.map((batchKey) => (
+                      <option key={batchKey} value={batchKey}>
+                        {batchKey}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  className="formButton primary trackSearchButton"
+                  onClick={handleTrackAcademicSearch}
+                  disabled={isTrackSearching}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M10.5 3a7.5 7.5 0 0 1 5.96 12.06l4.24 4.24-1.4 1.4-4.24-4.24A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z" />
+                  </svg>
+                  {isTrackSearching ? "Searching..." : "Search"}
+                </button>
+
+                <button className="formButton" onClick={clearTrackFilters}>Clear Filters</button>
+              </div>
+            )}
+
+            {trackSearchError && <p className="panelInfo">{trackSearchError}</p>}
+
+            {trackSearchResult && (
+              <div className="trackResultCard">
+                {trackSearchResult.title && trackSearchResult.primary !== "This batch is already completed." && (
+                  <h3>{trackSearchResult.title}</h3>
+                )}
+                <p className="trackResultPrimary">{trackSearchResult.primary}</p>
+                {trackSearchResult.secondary && <p>{trackSearchResult.secondary}</p>}
+                {trackSearchResult.meta && <p className="trackResultMeta">{trackSearchResult.meta}</p>}
+              </div>
             )}
           </section>
         )}

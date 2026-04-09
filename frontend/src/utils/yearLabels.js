@@ -11,6 +11,10 @@ export const getYearLabels = (totalYears) => {
     return ["Junior", "Senior"];
   }
 
+  if (yearCount === 3) {
+    return ["Freshman", "Junior", "Senior"];
+  }
+
   if (yearCount === 5) {
     return ["Freshman", "Sophomore", "Junior", "Senior 1", "Senior 2"];
   }

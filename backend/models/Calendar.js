@@ -6,7 +6,17 @@ const savedRowSchema = new mongoose.Schema(
     weekLabel: String,
     date: String,
     day: String,
-    remarks: String
+    remarks: String,
+    studentLedActivities: String,
+    compensatoryWorkingDay: String,
+    assessmentWeek: String,
+    holidays: String,
+    events: String,
+    selfRegistration: String,
+    breakColumn: String,
+    isTermBegin: Boolean,
+    isTermEnd: Boolean,
+    isResultsDay: Boolean
   },
   { _id: false }
 );

@@ -371,8 +371,8 @@
 }
 
 .previewBanner {
-  background: linear-gradient(90deg, #4d5660 0%, #626b75 100%);
-  color: #ffffff;
+  background: var(--preview-brand-color, #4d5660);
+  color: var(--preview-brand-text, #ffffff);
   text-align: center;
   font-weight: 800;
   font-size: 0.98rem;
@@ -383,15 +383,11 @@
 
 .previewSchoolTitle {
   text-align: center;
-  color: #c92525;
+  color: var(--preview-brand-color, #c92525);
   font-size: 1.08rem;
   font-weight: 800;
   letter-spacing: 0.02em;
   margin: 2px 0 6px;
-}
-
-.previewBanner.engineeringTheme {
-  background: #c92525;
 }
 
 .previewHeaderBar {
@@ -499,6 +495,11 @@
   background: #b7cdeb;
 }
 
+.yearBand4 td,
+.yearBand4 .previewYearCell {
+  background: #f4c3c8;
+}
+
 .previewSignoffRow {
   display: flex;
   justify-content: space-between;
@@ -515,16 +516,11 @@
 
 .previewFooterBar {
   margin-top: 10px;
-  background: linear-gradient(90deg, #d5d7da 0%, #c9cdd2 100%);
-  color: #233445;
+  background: var(--preview-brand-color, #4d5660);
+  color: var(--preview-brand-text, #ffffff);
   text-align: center;
   font-size: 0.82rem;
   padding: 7px 10px;
-}
-
-.previewFooterBar.engineeringTheme {
-  background: #c92525;
-  color: #ffffff;
 }
 
 @media print {
@@ -594,22 +590,17 @@
     margin: 0 0 4mm;
     padding: 3mm 2mm;
     font-size: 12pt;
-    color: #ffffff !important;
-    background: #595f66 !important;
+    color: var(--preview-brand-text, #ffffff) !important;
+    background: var(--preview-brand-color, #595f66) !important;
   }
 
   .previewSchoolTitle {
     margin: 0 0 1.6mm;
     font-size: 12pt;
-    color: #c92525 !important;
+    color: var(--preview-brand-color, #c92525) !important;
     text-align: center;
     font-weight: 800;
     letter-spacing: 0.02em;
-  }
-
-  .previewBanner.engineeringTheme {
-    background: #c92525 !important;
-    color: #ffffff !important;
   }
 
   .previewHeaderBar {
@@ -707,6 +698,11 @@
     background: #b7cdeb !important;
   }
 
+  .yearBand4 td,
+  .yearBand4 .previewYearCell {
+    background: #f4c3c8 !important;
+  }
+
   .previewSignoffRow {
     margin-top: 3.4mm;
     padding: 0 2mm;
@@ -720,13 +716,8 @@
     margin-top: 2.2mm;
     padding: 2mm;
     font-size: 8.5pt;
-    color: #233445 !important;
-    background: #d5d7da !important;
-  }
-
-  .previewFooterBar.engineeringTheme {
-    background: #c92525 !important;
-    color: #ffffff !important;
+    color: var(--preview-brand-text, #ffffff) !important;
+    background: var(--preview-brand-color, #595f66) !important;
   }
 }
 

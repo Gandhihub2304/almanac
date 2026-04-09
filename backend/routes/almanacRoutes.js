@@ -8,6 +8,7 @@ const {
 	getSavedCalendarByAlmanacYear,
 	getSavedCalendarById,
 	saveDayWiseTable,
+	updateAlmanacById,
 	deleteSavedCalendar,
 	deleteSavedCalendarById,
 	deleteAlmanacBatchRange
@@ -19,6 +20,7 @@ router.get("/batches", getAlmanacBatches);
 router.get("/saved-calendars", getSavedCalendars);
 router.get("/saved-calendars/:calendarId", getSavedCalendarById);
 router.get("/:id", getAlmanacById);
+router.put("/:id", updateAlmanacById);
 router.get("/:id/year/:yearNumber/day-wise-table", getSavedCalendarByAlmanacYear);
 router.delete("/:id", deleteAlmanacById);
 router.put("/:id/year/:yearNumber/day-wise-table", saveDayWiseTable);

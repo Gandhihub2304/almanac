@@ -6,6 +6,7 @@ import "./AcademicCalendarPage.css";
 import "./Modal.css";
 import AcademicCalendarTemplate from "./AcademicCalendarTemplate";
 import { buildAcademicCalendarTemplateModel } from "../utils/academicCalendarTemplate";
+import { getYearLabels } from "../utils/yearLabels";
 
 function AcademicCalendarPage() {
   const navigate = useNavigate();
@@ -63,47 +64,33 @@ function AcademicCalendarPage() {
 
   const normalize = (value) => (value || "").toLowerCase().replace(/\s+/g, " ").trim();
 
+  const schoolBrandPalette = [
+    { matches: ["engineering"], color: "rgb(192, 34, 34)" },
+    { matches: ["informatics"], color: "rgb(229, 9, 127)" },
+    { matches: ["management studies", "management"], color: "rgb(12, 84, 160)" },
+    { matches: ["law"], color: "rgb(43, 42, 41)" },
+    { matches: ["architecture"], color: "rgb(247, 167, 7)" },
+    { matches: ["psychology"], color: "rgb(123, 62, 83)" },
+    { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "rgb(236, 105, 31)" },
+    { matches: ["liberal arts"], color: "rgb(137, 137, 137)" },
+    { matches: ["health sciences", "health science"], color: "rgb(0, 110, 54)" },
+    { matches: ["pharmacy"], color: "rgb(120, 184, 51)" },
+    { matches: ["school of sciences", "school of science", "sciences"], color: "rgb(243, 156, 163)" },
+    { matches: ["ph.d", "phd"], color: "rgb(50, 43, 106)" }
+  ];
+
   const getSchoolCardPalette = (schoolName) => {
     const normalized = normalize(schoolName);
 
-    if (normalized.includes("informatics")) {
-      return { bg: "#fff9dc", border: "#e6d88a" }; // light yellow
-    }
+    const matched = schoolBrandPalette.find((entry) =>
+      entry.matches.some((keyword) => normalized.includes(keyword))
+    );
+    const brand = matched?.color || "#0d4e82";
 
-    if (normalized.includes("engineering")) {
-      return { bg: "#eaf4ff", border: "#9fc2e6" }; // light blue
-    }
-
-    if (normalized.includes("law")) {
-      return { bg: "#f3f3f3", border: "#8a8a8a" }; // light black/charcoal theme
-    }
-
-    if (normalized.includes("health science") || normalized.includes("health sciences")) {
-      return { bg: "#e8f8ec", border: "#9dc9a8" }; // light green
-    }
-
-    if (normalized.includes("architecture")) {
-      return { bg: "#fff2e5", border: "#e5b17b" }; // light orange
-    }
-
-    if (normalized.includes("management")) {
-      return { bg: "#ffecee", border: "#e2a1a8" }; // light red
-    }
-
-    if (normalized.includes("psychology")) {
-      return { bg: "#f2f2f5", border: "#b9bac4" }; // light ash
-    }
-
-    if (
-      normalized.includes("ancient hindu science")
-      || normalized.includes("ancient hindu sciences")
-      || normalized.includes("school of ahs")
-      || normalized.includes(" ahs")
-    ) {
-      return { bg: "#f4efff", border: "#b9a8df" }; // light purple
-    }
-
-    return { bg: "#f5f8ff", border: "#c4d2ef" };
+    return {
+      bg: brand,
+      border: brand
+    };
   };
 
   const buildBatchOptionsForProgram = (programName) => {
@@ -131,18 +118,36 @@ function AcademicCalendarPage() {
   };
 
   const getAcademicYearHeading = (yearValue, totalYears) => {
-    const ugLabels = ["Freshman Year", "Sophomore Year", "Junior Year", "Senior Year"];
+    const labels = getYearLabels(totalYears);
+    return labels[Number(yearValue) - 1] || `Year ${yearValue}`;
+  };
 
-    if (totalYears >= 4 && ugLabels[yearValue - 1]) {
-      return ugLabels[yearValue - 1];
+  const getResolvedTotalYears = (totalYears, batchStart, batchEnd) => {
+    const parsedTotal = Number(totalYears);
+    if (Number.isInteger(parsedTotal) && parsedTotal > 0) {
+      return parsedTotal;
     }
 
-    if (yearValue === 1) return "First Year";
-    if (yearValue === 2) return "Second Year";
-    if (yearValue === 3) return "Third Year";
-    if (yearValue === 4) return "Fourth Year";
+    const start = Number(batchStart);
+    const end = Number(batchEnd);
+    if (Number.isInteger(start) && Number.isInteger(end) && end > start) {
+      return end - start;
+    }
 
-    return `Year ${yearValue}`;
+    return 0;
+  };
+
+  const getYearBatchRange = (batchStart, yearValue, batchEnd) => {
+    const start = Number(batchStart);
+    const selectedYear = Number(yearValue);
+
+    if (Number.isInteger(start) && Number.isInteger(selectedYear) && selectedYear > 0) {
+      const yearStart = start + (selectedYear - 1);
+      const yearEnd = yearStart + 1;
+      return `${yearStart} - ${yearEnd}`;
+    }
+
+    return `${batchStart} - ${batchEnd}`;
   };
 
   const getSchoolForProgram = useCallback((programName) => {
@@ -287,17 +292,20 @@ function AcademicCalendarPage() {
       }
 
       const schoolName = item.schoolName || getSchoolForProgram(item.program);
-      const yearHeading = getAcademicYearHeading(Number(item.yearNumber), Number(item.totalYears || 0));
+      const totalYears = getResolvedTotalYears(item.totalYears, item.batchStart, item.batchEnd);
+      const yearHeading = getAcademicYearHeading(Number(item.yearNumber), totalYears);
+      const yearRange = getYearBatchRange(item.batchStart, item.yearNumber, item.batchEnd);
       const headingLines = [
         String(schoolName || "School").toUpperCase(),
-        `${item.program} of ${item.batchStart} - ${item.batchEnd}`,
+        `${item.program} ${yearRange}`,
         `Academic Calendar - ${yearHeading}`
       ];
 
       const templateModel = buildAcademicCalendarTemplateModel({ rows });
       setDownloadTemplatePayload({
         headingLines,
-        model: templateModel
+        model: templateModel,
+        schoolName
       });
 
       await new Promise((resolve) => {
@@ -312,9 +320,23 @@ function AcademicCalendarPage() {
       const opt = {
         margin: [5, 5, 5, 5],
         filename: `academic-calendar-${item.batchStart}-${item.batchEnd}-year-${item.yearNumber}.pdf`,
-        image: { type: "png", quality: 0.95 },
-        html2canvas: { scale: 1.2, useCORS: true, backgroundColor: "#ffffff" },
-        jsPdf: { orientation: "landscape", unit: "mm", format: "a4" }
+        image: { type: "png", quality: 1 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          letterRendering: true
+        },
+        pagebreak: {
+          mode: ["css", "legacy"],
+          avoid: [
+            ".calendarTemplateHead",
+            ".templateMonthCard",
+            ".calendarTemplateLegend",
+            ".calendarTemplateFooterBar"
+          ]
+        },
+        jsPDF: { orientation: "portrait", unit: "mm", format: "a4" }
       };
 
       html2pdf().set(opt).from(element).save();
@@ -448,11 +470,22 @@ function AcademicCalendarPage() {
 
       <main className="academicCalendarContent">
         <div className="calendarBackRow">
-          <button type="button" className="calendarBackButton" onClick={() => navigate("/")}>Back</button>
+          <button
+            type="button"
+            className="calendarBackButton calendarTopLink calendarTopLinkBlack"
+            onClick={() => navigate("/")}
+          >
+            <span className="calendarBackInner">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="calendarBackIcon">
+                <path d="M13.9 5.3 7.2 12l6.7 6.7 1.4-1.4L10 12l5.3-5.3z" />
+              </svg>
+              <span>Back</span>
+            </span>
+          </button>
           {!showSavedCalendars && (
             <button
               type="button"
-              className="calendarBackButton"
+              className="calendarBackButton calendarTopLink calendarTopLinkBlue"
               onClick={() => {
                 setCalendarError("");
                 setShowSavedCalendars(true);
@@ -464,7 +497,7 @@ function AcademicCalendarPage() {
           {showSavedCalendars && (
             <button
               type="button"
-              className="calendarBackButton"
+              className="calendarBackButton calendarTopLink calendarTopLinkBlue"
               onClick={() => {
                 setCalendarError("");
                 setShowSavedCalendars(false);
@@ -734,6 +767,8 @@ function AcademicCalendarPage() {
             <AcademicCalendarTemplate
               headingLines={downloadTemplatePayload.headingLines}
               model={downloadTemplatePayload.model}
+              schoolName={downloadTemplatePayload.schoolName}
+              compact
             />
           </div>
         </div>

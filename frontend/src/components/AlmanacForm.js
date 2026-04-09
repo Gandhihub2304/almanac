@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
@@ -24,13 +24,15 @@ function AlmanacForm() {
   const [showPreview, setShowPreview] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
   const [showWarning, setShowWarning] = useState(false);
+  const [existingAlmanacId, setExistingAlmanacId] = useState("");
+  const [isLoadingExisting, setIsLoadingExisting] = useState(false);
 
   const showWarningModal = (msg) => {
     setWarningMessage(msg);
     setShowWarning(true);
   };
 
-  const invalidDateMessage = "❌ This date is invalid";
+  const invalidDateMessage = "❌ Select the date within term duration";
 
   // 🔥 CREATE TERM
   const createTerm = (termNumber) => ({
@@ -65,9 +67,8 @@ function AlmanacForm() {
     Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1))
   );
 
-  if (!year) {
-    return <h2 style={{ textAlign: "center" }}>No Year Selected ❌</h2>;
-  }
+  const createDefaultYearsData = () =>
+    Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1));
 
   const getNextTermRef = (yearIndex, termIndex) => {
     if (termIndex < 3) {
@@ -343,6 +344,56 @@ function AlmanacForm() {
     }
   };
 
+  useEffect(() => {
+    const loadExistingAlmanac = async () => {
+      if (!program || !year || !batchStart || !batchEnd) {
+        setExistingAlmanacId("");
+        return;
+      }
+
+      const parsedBatchStart = Number(batchStart);
+      const parsedBatchEnd = Number(batchEnd);
+      const parsedYear = Number(year);
+
+      if (Number.isNaN(parsedBatchStart) || Number.isNaN(parsedBatchEnd) || Number.isNaN(parsedYear)) {
+        setExistingAlmanacId("");
+        return;
+      }
+
+      try {
+        setIsLoadingExisting(true);
+        const batchesRes = await axios.get("http://localhost:5000/api/almanac/batches");
+        const matchingBatch = (batchesRes.data || []).find((item) =>
+          String(item.program || "").trim().toLowerCase() === String(program || "").trim().toLowerCase()
+          && Number(item.year) === parsedYear
+          && Number(item.batchStart) === parsedBatchStart
+          && Number(item.batchEnd) === parsedBatchEnd
+        );
+
+        if (!matchingBatch?._id) {
+          setExistingAlmanacId("");
+          setYearsData(createDefaultYearsData());
+          return;
+        }
+
+        const almanacRes = await axios.get(`http://localhost:5000/api/almanac/${matchingBatch._id}`);
+        const loadedYearsData = Array.isArray(almanacRes?.data?.yearsData)
+          ? cloneYearsData(almanacRes.data.yearsData)
+          : createDefaultYearsData();
+
+        setExistingAlmanacId(matchingBatch._id);
+        setYearsData(loadedYearsData);
+      } catch (error) {
+        console.error("Load existing almanac error:", error);
+        setExistingAlmanacId("");
+      } finally {
+        setIsLoadingExisting(false);
+      }
+    };
+
+    loadExistingAlmanac();
+  }, [program, year, batchStart, batchEnd]);
+
   // ✅ SELF START (Year 1 Term 1 drives the full timeline)
   const handleSelfStart = (y, t, value) => {
     if (!(y === 0 && t === 0)) {
@@ -352,6 +403,12 @@ function AlmanacForm() {
 
     if (!batchStart || !batchEnd) {
       showWarningModal("❌ Please set Batch Start and End first");
+      return;
+    }
+
+    // Validate batch year is valid (4-digit format yyyy)
+    if (!/^\d{4}$/.test(batchStart)) {
+      showWarningModal("❌ Please select valid batch year");
       return;
     }
 
@@ -842,6 +899,51 @@ function AlmanacForm() {
     }
   };
 
+  const handleUpdate = async () => {
+    if (!existingAlmanacId) {
+      showWarningModal("No existing almanac found for selected batch to update ❌");
+      return;
+    }
+
+    if (!batchStart || !batchEnd) {
+      showWarningModal("Enter Batch Start and End ❌");
+      return;
+    }
+
+    const parsedBatchStart = Number(batchStart);
+    const parsedBatchEnd = Number(batchEnd);
+
+    if (Number.isNaN(parsedBatchStart) || Number.isNaN(parsedBatchEnd)) {
+      showWarningModal("Batch values must be numbers ❌");
+      return;
+    }
+
+    if (parsedBatchEnd < parsedBatchStart) {
+      showWarningModal("Batch End cannot be less than Batch Start ❌");
+      return;
+    }
+
+    if (!validateBreakRules()) {
+      return;
+    }
+
+    try {
+      const response = await axios.put(`http://localhost:5000/api/almanac/${existingAlmanacId}`, {
+        program,
+        year,
+        batchStart: parsedBatchStart,
+        batchEnd: parsedBatchEnd,
+        yearsData
+      });
+
+      showWarningModal(response?.data?.message || "Almanac is updated successfully");
+    } catch (error) {
+      console.error(error);
+      const backendMessage = error?.response?.data?.message;
+      showWarningModal(backendMessage ? `Update Failed ❌\n${backendMessage}` : "Update Failed ❌");
+    }
+  };
+
   const toDisplayDate = (value) => {
     if (!value) return "-";
     const date = new Date(value);
@@ -874,6 +976,10 @@ function AlmanacForm() {
   };
 
   const romanTerms = ["I", "II", "III", "IV"];
+
+  if (!year) {
+    return <h2 style={{ textAlign: "center" }}>No Year Selected ❌</h2>;
+  }
 
   return (
     <>
@@ -1032,16 +1138,18 @@ function AlmanacForm() {
                               type="button"
                               className="addHolidayLink"
                               onClick={() => handleBreakModeChange(yIndex, tIndex, "auto")}
+                              title="Auto Break"
                             >
-                              Auto Break
+                              +
                             </button>
                           ) : (
                             <button
                               type="button"
                               className="addHolidayLink"
                               onClick={() => handleBreakModeChange(yIndex, tIndex, "none")}
+                              title="Remove Break"
                             >
-                              Remove Break
+                              −
                             </button>
                           )}
                           {t.breakMode === "manual" && (
@@ -1049,8 +1157,9 @@ function AlmanacForm() {
                               type="button"
                               className="addHolidayLink"
                               onClick={() => handleBreakModeChange(yIndex, tIndex, "auto")}
+                              title="Use Auto"
                             >
-                              Use Auto
+                              ⚙
                             </button>
                           )}
                         </>
@@ -1067,6 +1176,15 @@ function AlmanacForm() {
       <div className="actionRow">
         <button className="previewBtn" onClick={() => setShowPreview(true)}>
           Preview Design
+        </button>
+
+        <button
+          className="saveBtn"
+          onClick={handleUpdate}
+          disabled={!existingAlmanacId || isLoadingExisting}
+          title={!existingAlmanacId ? "Select an existing batch to update" : "Update selected almanac"}
+        >
+          {isLoadingExisting ? "Checking..." : "Update Almanac"}
         </button>
 
         <button className="saveBtn" onClick={handleSave}>

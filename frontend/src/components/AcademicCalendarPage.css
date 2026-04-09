@@ -66,6 +66,7 @@
     #ffffff;
   overflow: hidden;
   box-shadow: 0 8px 18px rgba(12, 68, 112, 0.11);
+  color: #ffffff;
   opacity: 0;
   animation: academicCardIn 0.42s ease forwards;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -91,22 +92,24 @@
   gap: 8px;
   cursor: pointer;
   text-align: left;
+  color: inherit;
   background:
     linear-gradient(90deg, rgba(16, 120, 160, 0.1) 0, rgba(16, 120, 160, 0.1) 7px, transparent 7px),
     transparent;
 }
 
 .calendarSchoolName {
-  color: #0a4a78;
+  color: inherit;
   font-size: 1.02rem;
   font-weight: 800;
   line-height: 1.25;
 }
 
 .calendarProgramCount {
-  color: #17628f;
+  color: inherit;
   font-weight: 700;
   font-size: 0.84rem;
+  opacity: 0.92;
 }
 
 .calendarProgrammeWrap {
@@ -206,7 +209,7 @@
 .dayWiseTable {
   width: 100%;
   border-collapse: collapse;
-  min-width: 700px;
+  min-width: 1300px;
 }
 
 .dayWiseTable th,
@@ -282,13 +285,24 @@
 
 .tableEditInput.centered {
   text-align: center;
+  padding: 6px;
+  font-size: 0.84rem;
 }
 
 .mergedWeekCell {
   text-align: center;
   vertical-align: middle;
   background: #f6fbff;
-  min-width: 120px;
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
+}
+
+.dayWiseTable th:nth-child(2),
+.dayWiseTable td:nth-child(2) {
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
 }
 
 .previewCellCentered {
@@ -308,7 +322,14 @@
   z-index: -1;
   pointer-events: none;
   background: #ffffff;
-  padding: 16px;
+  width: 740px;
+  padding: 0;
+}
+
+.calendarHiddenTemplateRender .calendarTemplateSheet {
+  width: 740px;
+  margin: 0;
+  box-shadow: none;
 }
 
 .calendarSuccessText {
@@ -345,7 +366,7 @@
   margin-bottom: 12px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 16px;
 }
 
 .calendarBackButton {
@@ -356,6 +377,83 @@
   border-radius: 10px;
   padding: 8px 14px;
   cursor: pointer;
+}
+
+.calendarTopLink {
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  padding: 4px 0;
+  box-shadow: none;
+  font-size: 1.02rem;
+  font-weight: 800;
+  position: relative;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.calendarTopLink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+
+.calendarTopLink:hover,
+.calendarTopLink:focus-visible {
+  transform: translateY(-1px);
+}
+
+.calendarTopLink:hover::after,
+.calendarTopLink:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.calendarTopLinkBlue {
+  color: #0f69d6;
+}
+
+.calendarTopLinkBlue:hover,
+.calendarTopLinkBlue:focus-visible {
+  color: #0a4f9f;
+}
+
+.calendarTopLinkBlue:focus-visible {
+  outline: 2px solid rgba(15, 105, 214, 0.25);
+  outline-offset: 4px;
+}
+
+.calendarTopLinkBlack {
+  color: #1a1a1a;
+  margin-right: 6px;
+}
+
+.calendarTopLinkBlack:hover,
+.calendarTopLinkBlack:focus-visible {
+  color: #000000;
+}
+
+.calendarTopLinkBlack:focus-visible {
+  outline: 2px solid rgba(0, 0, 0, 0.2);
+  outline-offset: 4px;
+}
+
+.calendarBackInner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendarBackIcon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex: 0 0 18px;
 }
 
 @keyframes statusPop {
@@ -432,25 +530,28 @@
   background: linear-gradient(150deg, #ffffff 0%, #eefbff 100%);
   box-shadow: 0 8px 18px rgba(13, 78, 112, 0.12);
   padding: 12px;
+  color: #ffffff;
 }
 
 .savedCalendarCard h3 {
   margin: 0;
-  color: #0c537e;
+  color: inherit;
   font-size: 0.96rem;
 }
 
 .savedCalendarCard h4 {
   margin: 4px 0 8px;
-  color: #157083;
+  color: inherit;
   font-size: 0.88rem;
+  opacity: 0.96;
 }
 
 .savedCalendarCard p {
   margin: 3px 0;
-  color: #2a627e;
+  color: inherit;
   font-size: 0.82rem;
   font-weight: 600;
+  opacity: 0.92;
 }
 
 .savedCalendarActions {
