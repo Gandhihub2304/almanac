@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
@@ -47,7 +47,7 @@ function AlmanacForm() {
     holidays: [{ start: "", end: "" }],
     assessmentStart: "",
     assessmentEnd: "",
-    breakMode: "auto",
+    breakMode: "none",
     breakStart: "",
     breakEnd: ""
   });
@@ -67,8 +67,10 @@ function AlmanacForm() {
     Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1))
   );
 
-  const createDefaultYearsData = () =>
-    Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1));
+  const createDefaultYearsData = useCallback(
+    () => Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1)),
+    [year]
+  );
 
   const getNextTermRef = (yearIndex, termIndex) => {
     if (termIndex < 3) {
@@ -108,12 +110,20 @@ function AlmanacForm() {
     return toRange(term.breakStart, term.breakEnd);
   };
 
+  const getAssessmentDisplayValue = (term, termIndex) => {
+    if (termIndex === 3) {
+      return "-";
+    }
+
+    return toRange(term.assessmentStart, term.assessmentEnd);
+  };
+
   const cloneYearsData = (data) => (
     data.map((yearItem) => ({
       ...yearItem,
       terms: (yearItem.terms || []).map((termItem) => ({
         ...termItem,
-        breakMode: termItem.breakMode || "auto",
+        breakMode: termItem.breakMode || (termItem.breakStart && termItem.breakEnd ? "auto" : "none"),
         activities: (termItem.activities && termItem.activities.length > 0
           ? termItem.activities
           : [{ start: termItem.activityStart || "", end: termItem.activityEnd || "" }
@@ -122,6 +132,40 @@ function AlmanacForm() {
       }))
     }))
   );
+
+  const getNormalizedYearsDataForSubmit = (data) => {
+    const totalYears = Array.isArray(data) ? data.length : 0;
+
+    return (data || []).map((yearItem, yearIndex) => ({
+      ...yearItem,
+      terms: (yearItem.terms || []).map((termItem, termIndex) => {
+        const hasBreakDates = Boolean(termItem.breakStart && termItem.breakEnd);
+        const isFourthTerm = termIndex === 3;
+        const isThirdTerm = termIndex === 2;
+        const isFinalTerm = yearIndex === totalYears - 1 && isFourthTerm;
+
+        let normalizedBreakMode = termItem.breakMode || (hasBreakDates ? "auto" : "none");
+
+        if (!hasBreakDates || isThirdTerm || isFinalTerm) {
+          normalizedBreakMode = "none";
+        }
+
+        return {
+          ...termItem,
+          assessmentStart: isFourthTerm ? "" : (termItem.assessmentStart || ""),
+          assessmentEnd: isFourthTerm ? "" : (termItem.assessmentEnd || ""),
+          breakMode: normalizedBreakMode,
+          breakStart: normalizedBreakMode === "none" ? "" : (termItem.breakStart || ""),
+          breakEnd: normalizedBreakMode === "none" ? "" : (termItem.breakEnd || ""),
+          activities: (termItem.activities && termItem.activities.length > 0
+            ? termItem.activities
+            : [{ start: termItem.activityStart || "", end: termItem.activityEnd || "" }
+            ]).map((activity) => ({ ...activity })),
+          holidays: (termItem.holidays || []).map((holiday) => ({ ...holiday }))
+        };
+      })
+    }));
+  };
 
   const getActivities = (term) => {
     const activities = term.activities && term.activities.length > 0
@@ -154,8 +198,8 @@ function AlmanacForm() {
     return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
   };
 
-  const getDefaultBreakRange = (assessmentEnd, weekCount = 1) => {
-    const breakStartDate = getNextMonday(new Date(assessmentEnd));
+  const getDefaultBreakRange = (referenceEndDate, weekCount = 1) => {
+    const breakStartDate = getNextMonday(new Date(referenceEndDate));
     const breakEndDate = addWeeks(breakStartDate, weekCount);
     breakEndDate.setDate(breakEndDate.getDate() - 1);
 
@@ -177,7 +221,43 @@ function AlmanacForm() {
     return toIso(rangeEndDate);
   };
 
-  const recalculateTerm = (term) => {
+  const getNextSelfStartFromReferenceEnd = (referenceEndDate) => {
+    if (!referenceEndDate) {
+      return "";
+    }
+
+    return toIso(getNextMonday(new Date(referenceEndDate)));
+  };
+
+  const getBreakReferenceEndDate = (term, termIndex) => (
+    termIndex === 3 ? term.termEnd : term.assessmentEnd
+  );
+
+  const getExpectedNextSelfStart = (term, termIndex) => {
+    if (termIndex === 3) {
+      if (term.breakMode !== "none" && term.breakEnd) {
+        return getLastWeekStartFromRange(term.breakEnd);
+      }
+
+      return getNextSelfStartFromReferenceEnd(term.termEnd);
+    }
+
+    if (term.breakMode === "none") {
+      return getNextSelfStartFromReferenceEnd(term.assessmentEnd);
+    }
+
+    if (termIndex === 2) {
+      return getNextSelfStartFromReferenceEnd(term.assessmentEnd);
+    }
+
+    if (term.breakStart) {
+      return term.breakStart;
+    }
+
+    return getNextSelfStartFromReferenceEnd(term.assessmentEnd);
+  };
+
+  const recalculateTerm = (term, termIndex) => {
     if (!term.termStart) {
       term.termEnd = "";
       term.assessmentStart = "";
@@ -200,6 +280,12 @@ function AlmanacForm() {
     const termEndDate = addWeeks(new Date(term.termStart), weeks);
     termEndDate.setDate(termEndDate.getDate() - 1);
     term.termEnd = toIso(termEndDate);
+
+    if (termIndex === 3) {
+      term.assessmentStart = "";
+      term.assessmentEnd = "";
+      return;
+    }
 
     const assessmentStartDate = getNextMonday(termEndDate);
     const assessmentEndDate = addWeeks(assessmentStartDate, 1);
@@ -224,7 +310,9 @@ function AlmanacForm() {
       return;
     }
 
-    if (!term.assessmentEnd) {
+    const breakReferenceEndDate = getBreakReferenceEndDate(term, termIndex);
+
+    if (!breakReferenceEndDate) {
       term.breakStart = "";
       term.breakEnd = "";
       return;
@@ -237,7 +325,7 @@ function AlmanacForm() {
     }
 
     if (term.breakMode === "manual" && term.breakStart && term.breakEnd) {
-      const minBreakStart = toIso(getNextMonday(new Date(term.assessmentEnd)));
+      const minBreakStart = toIso(getNextMonday(new Date(breakReferenceEndDate)));
       const duration = getDurationInDays(term.breakStart, term.breakEnd);
 
       if (
@@ -254,7 +342,7 @@ function AlmanacForm() {
 
     if (term.breakMode === "auto" || !term.breakStart || !term.breakEnd) {
       const defaultBreakWeeks = termIndex === 3 ? 3 : 1;
-      const { breakStart, breakEnd } = getDefaultBreakRange(term.assessmentEnd, defaultBreakWeeks);
+      const { breakStart, breakEnd } = getDefaultBreakRange(breakReferenceEndDate, defaultBreakWeeks);
       term.breakStart = breakStart;
       term.breakEnd = breakEnd;
     }
@@ -279,7 +367,9 @@ function AlmanacForm() {
           if (!prevRef) continue;
           const prevTerm = data[prevRef.yearIndex].terms[prevRef.termIndex];
 
-          if (!prevTerm?.assessmentEnd) {
+          const expectedSelfStart = getExpectedNextSelfStart(prevTerm, prevRef.termIndex);
+
+          if (!expectedSelfStart) {
             term.selfStart = "";
             term.selfEnd = "";
             term.termStart = "";
@@ -291,17 +381,7 @@ function AlmanacForm() {
             continue;
           }
 
-          if (prevRef.termIndex === 2 && prevTerm.assessmentStart) {
-            term.selfStart = prevTerm.assessmentStart;
-          } else if (prevRef.termIndex === 3 && prevTerm.breakStart && prevTerm.breakEnd) {
-            term.selfStart = getLastWeekStartFromRange(prevTerm.breakEnd);
-          } else if (prevTerm.breakMode === "none" && prevTerm.assessmentStart) {
-            term.selfStart = prevTerm.assessmentStart;
-          } else if (prevTerm.breakStart && prevTerm.breakEnd) {
-            term.selfStart = prevTerm.breakStart;
-          } else {
-            term.selfStart = toIso(getNextMonday(new Date(prevTerm.assessmentEnd)));
-          }
+          term.selfStart = expectedSelfStart;
         }
 
         if (term.selfStart) {
@@ -312,7 +392,7 @@ function AlmanacForm() {
           term.termStart = "";
         }
 
-        recalculateTerm(term);
+        recalculateTerm(term, t);
         syncBreakForTerm(term, y, t, data);
       }
     }
@@ -392,7 +472,7 @@ function AlmanacForm() {
     };
 
     loadExistingAlmanac();
-  }, [program, year, batchStart, batchEnd]);
+  }, [program, year, batchStart, batchEnd, createDefaultYearsData]);
 
   // ✅ SELF START (Year 1 Term 1 drives the full timeline)
   const handleSelfStart = (y, t, value) => {
@@ -680,7 +760,9 @@ function AlmanacForm() {
       return;
     }
 
-    if (!term.assessmentEnd) {
+    const breakReferenceEndDate = getBreakReferenceEndDate(term, t);
+
+    if (!breakReferenceEndDate) {
       showWarningModal(invalidDateMessage);
       return;
     }
@@ -689,7 +771,7 @@ function AlmanacForm() {
     term[field] = value;
 
     if (term.breakStart && term.breakEnd) {
-      const minBreakStart = toIso(getNextMonday(new Date(term.assessmentEnd)));
+      const minBreakStart = toIso(getNextMonday(new Date(breakReferenceEndDate)));
       if (term.breakStart < minBreakStart) {
         showWarningModal(invalidDateMessage);
         return;
@@ -722,7 +804,9 @@ function AlmanacForm() {
         const current = yearsData[y]?.terms?.[t];
         if (!current) continue;
 
-        if (!current.selfStart || !current.selfEnd || !current.termStart || !current.termEnd || !current.assessmentStart || !current.assessmentEnd) {
+        const requiresAssessmentWeek = t !== 3;
+        if (!current.selfStart || !current.selfEnd || !current.termStart || !current.termEnd
+          || (requiresAssessmentWeek && (!current.assessmentStart || !current.assessmentEnd))) {
           showWarningModal(invalidDateMessage);
           return false;
         }
@@ -811,7 +895,8 @@ function AlmanacForm() {
             return false;
           }
 
-          const minBreakStart = toIso(getNextMonday(new Date(current.assessmentEnd)));
+          const breakReferenceEndDate = getBreakReferenceEndDate(current, t);
+          const minBreakStart = toIso(getNextMonday(new Date(breakReferenceEndDate)));
           if (
             current.breakStart < minBreakStart ||
             !isMonday(current.breakStart) ||
@@ -837,15 +922,7 @@ function AlmanacForm() {
           return false;
         }
 
-        const expectedNextSelfStart = t === 2
-          ? current.assessmentStart
-          : (current.breakMode === "none"
-            ? current.assessmentStart
-            : (t === 3 && current.breakEnd
-              ? getLastWeekStartFromRange(current.breakEnd)
-              : (current.breakStart
-                ? current.breakStart
-                : toIso(getNextMonday(new Date(current.assessmentEnd))))));
+        const expectedNextSelfStart = getExpectedNextSelfStart(current, t);
 
         if (nextTerm.selfStart !== expectedNextSelfStart) {
           showWarningModal(invalidDateMessage);
@@ -883,12 +960,13 @@ function AlmanacForm() {
     }
 
     try {
+      const normalizedYearsData = getNormalizedYearsDataForSubmit(yearsData);
       const response = await axios.post("http://localhost:5000/api/almanac", {
         program,
         year,
         batchStart: parsedBatchStart,
         batchEnd: parsedBatchEnd,
-        yearsData
+        yearsData: normalizedYearsData
       });
 
       showWarningModal(`${response.data.message} ✅`);
@@ -928,12 +1006,13 @@ function AlmanacForm() {
     }
 
     try {
+      const normalizedYearsData = getNormalizedYearsDataForSubmit(yearsData);
       const response = await axios.put(`http://localhost:5000/api/almanac/${existingAlmanacId}`, {
         program,
         year,
         batchStart: parsedBatchStart,
         batchEnd: parsedBatchEnd,
-        yearsData
+        yearsData: normalizedYearsData
       });
 
       showWarningModal(response?.data?.message || "Almanac is updated successfully");
@@ -1112,8 +1191,14 @@ function AlmanacForm() {
                     </td>
 
                     <td>
-                      <input type="date" value={t.assessmentStart} readOnly />
-                      <input type="date" value={t.assessmentEnd} readOnly />
+                      {tIndex === 3 ? (
+                        <span className="noBreakText" title="No assessment week">-</span>
+                      ) : (
+                        <>
+                          <input type="date" value={t.assessmentStart} readOnly />
+                          <input type="date" value={t.assessmentEnd} readOnly />
+                        </>
+                      )}
                     </td>
 
                     <td>
@@ -1249,7 +1334,7 @@ function AlmanacForm() {
                           <td>{toDisplayDate(term.termEnd)}</td>
                           <td>{getActivityRange(term)}</td>
                           <td>{getHolidayRange(term.holidays)}</td>
-                          <td>{toRange(term.assessmentStart, term.assessmentEnd)}</td>
+                          <td>{getAssessmentDisplayValue(term, tIndex)}</td>
                           <td>{getPreviewBreakValue(term, yIndex, tIndex)}</td>
                         </tr>
                       ))

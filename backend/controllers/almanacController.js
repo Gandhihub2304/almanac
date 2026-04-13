@@ -46,6 +46,36 @@ const getDurationInDays = (start, end) => {
   return Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 };
 
+const getBreakReferenceEndDate = (term, termIndex) => (
+  termIndex === 3 ? term.termEnd : term.assessmentEnd
+);
+
+const getExpectedNextSelfStart = (term, termIndex) => {
+  const breakMode = term.breakMode || "auto";
+
+  if (termIndex === 3) {
+    if (breakMode !== "none" && term.breakEnd) {
+      return getLastWeekStartIso(term.breakEnd);
+    }
+
+    return getNextMondayIso(term.termEnd);
+  }
+
+  if (breakMode === "none") {
+    return getNextMondayIso(term.assessmentEnd);
+  }
+
+  if (termIndex === 2) {
+    return getNextMondayIso(term.assessmentEnd);
+  }
+
+  if (term.breakStart) {
+    return term.breakStart;
+  }
+
+  return getNextMondayIso(term.assessmentEnd);
+};
+
 const validateBreakRules = (yearsData, totalYears) => {
   for (let yearIndex = 0; yearIndex < yearsData.length; yearIndex += 1) {
     const yearItem = yearsData[yearIndex] || {};
@@ -56,7 +86,9 @@ const validateBreakRules = (yearsData, totalYears) => {
       const isLastTerm = yearIndex === totalYears - 1 && termIndex === terms.length - 1;
       const isNoBreakTerm = termIndex === 2;
 
-      if (!term.selfStart || !term.selfEnd || !term.termStart || !term.termEnd || !term.assessmentStart || !term.assessmentEnd) {
+      const requiresAssessmentWeek = termIndex !== 3;
+      if (!term.selfStart || !term.selfEnd || !term.termStart || !term.termEnd
+        || (requiresAssessmentWeek && (!term.assessmentStart || !term.assessmentEnd))) {
         return `Year ${yearIndex + 1} Term ${termIndex + 1} has incomplete dates`;
       }
 
@@ -92,7 +124,7 @@ const validateBreakRules = (yearsData, totalYears) => {
         return `Year ${yearIndex + 1} Term ${termIndex + 1} break must start Monday and end Sunday`;
       }
 
-      const minBreakStart = getNextMondayIso(term.assessmentEnd);
+      const minBreakStart = getNextMondayIso(getBreakReferenceEndDate(term, termIndex));
       if (!minBreakStart || term.breakStart < minBreakStart) {
         return `Year ${yearIndex + 1} Term ${termIndex + 1} break must start after assessment week`;
       }
@@ -126,20 +158,7 @@ const validateBreakRules = (yearsData, totalYears) => {
         return `Year ${nextYearIndex + 1} Term ${nextTermIndex + 1} self registration is missing`;
       }
 
-      const breakMode = current.breakMode || "auto";
-      let expectedNextSelfStart = "";
-
-      if (termIndex === 2) {
-        expectedNextSelfStart = current.assessmentStart;
-      } else if (breakMode === "none") {
-        expectedNextSelfStart = current.assessmentStart;
-      } else if (termIndex === 3 && current.breakEnd) {
-        expectedNextSelfStart = getLastWeekStartIso(current.breakEnd);
-      } else if (current.breakStart) {
-        expectedNextSelfStart = current.breakStart;
-      } else {
-        expectedNextSelfStart = getNextMondayIso(current.assessmentEnd);
-      }
+      const expectedNextSelfStart = getExpectedNextSelfStart(current, termIndex);
 
       if (!expectedNextSelfStart || nextTerm.selfStart !== expectedNextSelfStart) {
         return `Year ${nextYearIndex + 1} Term ${nextTermIndex + 1} self registration sequence is invalid`;
@@ -210,6 +229,11 @@ exports.saveAlmanac = async (req, res) => {
 
   } catch (error) {
     console.error("BACKEND ERROR:", error);
+    if (error?.code === 11000) {
+      return res.status(409).json({
+        message: "Duplicate almanac detected for this selection. Please open the existing batch and edit it."
+      });
+    }
     res.status(500).json({ message: error.message });
   }
 };

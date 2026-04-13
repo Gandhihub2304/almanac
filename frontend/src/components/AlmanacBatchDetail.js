@@ -178,6 +178,14 @@ function AlmanacBatchDetail() {
     return ranges.length ? ranges.join(", ") : "-";
   };
 
+  const getAssessmentRange = (term, termIndex) => {
+    if (termIndex === 3) {
+      return "-";
+    }
+
+    return toRange(term.assessmentStart, term.assessmentEnd);
+  };
+
   if (loading) {
     return <h3 className="previewStatus">Loading batch programs...</h3>;
   }
@@ -293,7 +301,7 @@ function AlmanacBatchDetail() {
                       <td>{toDisplayDate(term.termEnd)}</td>
                       <td>{getActivityRange(term)}</td>
                       <td>{getHolidayRange(term.holidays)}</td>
-                      <td>{toRange(term.assessmentStart, term.assessmentEnd)}</td>
+                      <td>{getAssessmentRange(term, tIndex)}</td>
                       <td>{toRange(term.breakStart, term.breakEnd)}</td>
                     </tr>
                   ))
