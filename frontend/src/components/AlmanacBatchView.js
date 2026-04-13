@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { getYearLabels } from "../utils/yearLabels";
 import "./Almanac.css";
 
 function AlmanacBatchView() {
@@ -11,7 +12,7 @@ function AlmanacBatchView() {
   const [almanac, setAlmanac] = useState(null);
   const [schools, setSchools] = useState([]);
 
-  const yearNames = ["FRESHMAN", "SOPHOMORE", "JUNIOR", "SENIOR"];
+  const yearNames = getYearLabels(almanac?.yearsData?.length).map((item) => item.toUpperCase());
   const romanTerms = ["I", "II", "III", "IV"];
 
   const isPostgraduateProgram = (programName) => {
@@ -146,6 +147,14 @@ function AlmanacBatchView() {
     return ranges.length ? ranges.join(", ") : "-";
   };
 
+  const getAssessmentRange = (term, termIndex) => {
+    if (termIndex === 3) {
+      return "-";
+    }
+
+    return toRange(term.assessmentStart, term.assessmentEnd);
+  };
+
   if (loading) {
     return <h3 className="previewStatus">Loading almanac...</h3>;
   }
@@ -232,7 +241,7 @@ function AlmanacBatchView() {
                     <td>{toDisplayDate(term.termEnd)}</td>
                     <td>{getActivityRange(term)}</td>
                     <td>{getHolidayRange(term.holidays)}</td>
-                    <td>{toRange(term.assessmentStart, term.assessmentEnd)}</td>
+                    <td>{getAssessmentRange(term, tIndex)}</td>
                     <td>{toRange(term.breakStart, term.breakEnd)}</td>
                   </tr>
                 ))

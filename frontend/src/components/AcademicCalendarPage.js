@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import html2pdf from "html2pdf.js";
+import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
 import "./AcademicCalendarPage.css";
 import "./Modal.css";
 import AcademicCalendarTemplate from "./AcademicCalendarTemplate";
@@ -293,7 +293,8 @@ function AcademicCalendarPage() {
 
       const schoolName = item.schoolName || getSchoolForProgram(item.program);
       const totalYears = getResolvedTotalYears(item.totalYears, item.batchStart, item.batchEnd);
-      const yearHeading = getAcademicYearHeading(Number(item.yearNumber), totalYears);
+      const computedYearHeading = getAcademicYearHeading(Number(item.yearNumber), totalYears);
+      const yearHeading = String(item.yearHeading || computedYearHeading).trim();
       const yearRange = getYearBatchRange(item.batchStart, item.yearNumber, item.batchEnd);
       const headingLines = [
         String(schoolName || "School").toUpperCase(),

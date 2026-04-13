@@ -158,7 +158,7 @@ function Header() {
       title: "Edit",
       icon: (
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M7 3h10a2 2 0 0 1 2 2v14l-4-2.5L11 21l-4-4.5L3 19V5a2 2 0 0 1 2-2zm0 2v10.2l1.8-1.2L11 18l3.2-3.3 2.8 1.8V5H7z" />
+          <path d="m17.6 3.8 2.6 2.6a1 1 0 0 1 0 1.4l-9.8 9.8-4.2.8.8-4.2 9.8-9.8a1 1 0 0 1 1.4 0zM6.5 19.5h11a1 1 0 1 1 0 2h-11a1 1 0 1 1 0-2z" />
         </svg>
       )
     }
