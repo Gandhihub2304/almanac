@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
@@ -41,6 +41,7 @@ function AlmanacForm() {
     selfEnd: "",
     termStart: "",
     termEnd: "",
+    termDurationMode: "auto",
     activities: [{ start: "", end: "" }],
     activityStart: "",
     activityEnd: "",
@@ -67,9 +68,8 @@ function AlmanacForm() {
     Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1))
   );
 
-  const createDefaultYearsData = useCallback(
-    () => Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1)),
-    [year]
+  const createDefaultYearsData = () => (
+    Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1))
   );
 
   const getNextTermRef = (yearIndex, termIndex) => {
@@ -123,6 +123,7 @@ function AlmanacForm() {
       ...yearItem,
       terms: (yearItem.terms || []).map((termItem) => ({
         ...termItem,
+        termDurationMode: termItem.termDurationMode || "auto",
         breakMode: termItem.breakMode || (termItem.breakStart && termItem.breakEnd ? "auto" : "none"),
         activities: (termItem.activities && termItem.activities.length > 0
           ? termItem.activities
@@ -152,6 +153,9 @@ function AlmanacForm() {
 
         return {
           ...termItem,
+          termDurationMode: isFourthTerm
+            ? (termItem.termDurationMode || "auto")
+            : "auto",
           assessmentStart: isFourthTerm ? "" : (termItem.assessmentStart || ""),
           assessmentEnd: isFourthTerm ? "" : (termItem.assessmentEnd || ""),
           breakMode: normalizedBreakMode,
@@ -277,17 +281,47 @@ function AlmanacForm() {
     const holidayCount = (term.holidays || []).filter((h) => h.start).length;
     weeks += holidayCount;
 
-    const termEndDate = addWeeks(new Date(term.termStart), weeks);
-    termEndDate.setDate(termEndDate.getDate() - 1);
-    term.termEnd = toIso(termEndDate);
+    const defaultTermEnd = (() => {
+      const termEndDate = addWeeks(new Date(term.termStart), weeks);
+      termEndDate.setDate(termEndDate.getDate() - 1);
+      return toIso(termEndDate);
+    })();
+
+    term.termEnd = defaultTermEnd;
 
     if (termIndex === 3) {
+      const minFourthTermStart = term.selfEnd
+        ? toIso(getNextMonday(new Date(term.selfEnd)))
+        : "";
+
+      const hasManualDuration = term.termDurationMode === "manual";
+      if (hasManualDuration) {
+        const hasBothDates = Boolean(term.termStart && term.termEnd);
+        if (hasBothDates) {
+          const duration = getDurationInDays(term.termStart, term.termEnd);
+          const isValidManualRange = (!minFourthTermStart || term.termStart >= minFourthTermStart)
+            && isMonday(term.termStart)
+            && isSunday(term.termEnd)
+            && duration > 0
+            && duration <= 70;
+
+          if (!isValidManualRange) {
+            term.termDurationMode = "auto";
+            term.termStart = minFourthTermStart || term.termStart;
+            term.termEnd = defaultTermEnd;
+          }
+        }
+      } else {
+        term.termDurationMode = "auto";
+        term.termEnd = defaultTermEnd;
+      }
+
       term.assessmentStart = "";
       term.assessmentEnd = "";
       return;
     }
 
-    const assessmentStartDate = getNextMonday(termEndDate);
+    const assessmentStartDate = getNextMonday(new Date(term.termEnd));
     const assessmentEndDate = addWeeks(assessmentStartDate, 1);
     assessmentEndDate.setDate(assessmentEndDate.getDate() - 1);
 
@@ -386,7 +420,15 @@ function AlmanacForm() {
 
         if (term.selfStart) {
           term.selfEnd = getWeekEndFromStart(term.selfStart);
-          term.termStart = toIso(getNextMonday(new Date(term.selfEnd)));
+          const generatedTermStart = toIso(getNextMonday(new Date(term.selfEnd)));
+          const keepManualTermDuration = t === 3
+            && term.termDurationMode === "manual"
+            && term.termStart
+            && term.termEnd;
+
+          if (!keepManualTermDuration) {
+            term.termStart = generatedTermStart;
+          }
         } else {
           term.selfEnd = "";
           term.termStart = "";
@@ -472,7 +514,7 @@ function AlmanacForm() {
     };
 
     loadExistingAlmanac();
-  }, [program, year, batchStart, batchEnd, createDefaultYearsData]);
+  }, [program, year, batchStart, batchEnd]);
 
   // ✅ SELF START (Year 1 Term 1 drives the full timeline)
   const handleSelfStart = (y, t, value) => {
@@ -793,6 +835,74 @@ function AlmanacForm() {
     setYearsData(updated);
   };
 
+  const handleTermDurationDate = (y, t, field, value) => {
+    if (t !== 3) {
+      return;
+    }
+
+    if (!batchStart || !batchEnd) {
+      showWarningModal("❌ Please set Batch Start and End first");
+      return;
+    }
+
+    if (!value) {
+      const updated = cloneYearsData(yearsData);
+      const term = updated[y].terms[t];
+      term.termDurationMode = "auto";
+      term.termStart = term.selfEnd ? toIso(getNextMonday(new Date(term.selfEnd))) : "";
+      regenerateTimeline(updated);
+      setYearsData(updated);
+      return;
+    }
+
+    if (!isDateWithinBatchRange(value)) {
+      showWarningModal(`❌ Date must be between ${batchStart} and ${batchEnd}`);
+      return;
+    }
+
+    const updated = cloneYearsData(yearsData);
+    const term = updated[y].terms[t];
+
+    const minFourthTermStart = term.selfEnd ? toIso(getNextMonday(new Date(term.selfEnd))) : "";
+
+    if (field === "termStart") {
+      if (!isMonday(value)) {
+        showWarningModal("❌ Term 4 must start on Monday");
+        return;
+      }
+
+      if (minFourthTermStart && value < minFourthTermStart) {
+        showWarningModal(invalidDateMessage);
+        return;
+      }
+    }
+
+    if (field === "termEnd" && !isSunday(value)) {
+      showWarningModal("❌ Term 4 must end on Sunday");
+      return;
+    }
+
+    term.termDurationMode = "manual";
+    term[field] = value;
+
+    if (term.termStart && term.termEnd) {
+      const duration = getDurationInDays(term.termStart, term.termEnd);
+
+      if (duration <= 0) {
+        showWarningModal("❌ Term end cannot be before term start");
+        return;
+      }
+
+      if (duration > 70) {
+        showWarningModal("⚠️ Term 4 duration cannot be more than 10 weeks");
+        return;
+      }
+    }
+
+    regenerateTimeline(updated);
+    setYearsData(updated);
+  };
+
   const validateBreakRules = () => {
     if (!yearsData[0]?.terms?.[0]?.selfStart) {
       showWarningModal("Set Year 1 Term 1 self registration first");
@@ -813,9 +923,29 @@ function AlmanacForm() {
 
         if (current.termStart && current.selfEnd) {
           const expectedTermStart = toIso(getNextMonday(new Date(current.selfEnd)));
-          if (current.termStart !== expectedTermStart) {
+          const isFourthTerm = t === 3;
+
+          if (!isFourthTerm && current.termStart !== expectedTermStart) {
             showWarningModal(invalidDateMessage);
             return false;
+          }
+
+          if (isFourthTerm) {
+            if (!isMonday(current.termStart) || !isSunday(current.termEnd)) {
+              showWarningModal("❌ Term 4 duration must start on Monday and end on Sunday");
+              return false;
+            }
+
+            if (current.termStart < expectedTermStart) {
+              showWarningModal(invalidDateMessage);
+              return false;
+            }
+
+            const termDuration = getDurationInDays(current.termStart, current.termEnd);
+            if (termDuration <= 0 || termDuration > 70) {
+              showWarningModal("❌ Term 4 duration must be between 1 day and 10 weeks");
+              return false;
+            }
           }
         }
 
@@ -1129,8 +1259,27 @@ function AlmanacForm() {
                     </td>
 
                     <td>
-                      <input type="date" value={t.termStart} readOnly />
-                      <input type="date" value={t.termEnd} readOnly />
+                      {tIndex === 3 ? (
+                        <>
+                          <input
+                            type="date"
+                            value={t.termStart}
+                            onChange={(e) => handleTermDurationDate(yIndex, tIndex, "termStart", e.target.value)}
+                            title="Select Term 4 start date"
+                          />
+                          <input
+                            type="date"
+                            value={t.termEnd}
+                            onChange={(e) => handleTermDurationDate(yIndex, tIndex, "termEnd", e.target.value)}
+                            title="Select Term 4 end date"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <input type="date" value={t.termStart} readOnly />
+                          <input type="date" value={t.termEnd} readOnly />
+                        </>
+                      )}
                     </td>
 
                     <td>
