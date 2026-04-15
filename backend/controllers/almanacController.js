@@ -92,6 +92,22 @@ const validateBreakRules = (yearsData, totalYears) => {
         return `Year ${yearIndex + 1} Term ${termIndex + 1} has incomplete dates`;
       }
 
+      if (termIndex === 3) {
+        if (!isMonday(term.termStart) || !isSunday(term.termEnd)) {
+          return `Year ${yearIndex + 1} Term 4 duration must start Monday and end Sunday`;
+        }
+
+        const minFourthTermStart = getNextMondayIso(term.selfEnd);
+        if (!minFourthTermStart || term.termStart < minFourthTermStart) {
+          return `Year ${yearIndex + 1} Term 4 duration must start after self registration`;
+        }
+
+        const fourthTermDuration = getDurationInDays(term.termStart, term.termEnd);
+        if (fourthTermDuration <= 0 || fourthTermDuration > 70) {
+          return `Year ${yearIndex + 1} Term 4 duration must be between 1 and 70 days`;
+        }
+      }
+
       if (isLastTerm) {
         continue;
       }
