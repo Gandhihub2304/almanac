@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
@@ -68,9 +68,9 @@ function AlmanacForm() {
     Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1))
   );
 
-  const createDefaultYearsData = () => (
+  const createDefaultYearsData = useCallback(() => (
     Array.from({ length: Number(year || 0) }, (_, i) => createYear(i + 1))
-  );
+  ), [year]);
 
   const getNextTermRef = (yearIndex, termIndex) => {
     if (termIndex < 3) {
@@ -287,8 +287,6 @@ function AlmanacForm() {
       return toIso(termEndDate);
     })();
 
-    term.termEnd = defaultTermEnd;
-
     if (termIndex === 3) {
       const minFourthTermStart = term.selfEnd
         ? toIso(getNextMonday(new Date(term.selfEnd)))
@@ -310,6 +308,9 @@ function AlmanacForm() {
             term.termStart = minFourthTermStart || term.termStart;
             term.termEnd = defaultTermEnd;
           }
+        } else {
+          term.termDurationMode = "auto";
+          term.termEnd = defaultTermEnd;
         }
       } else {
         term.termDurationMode = "auto";
@@ -320,6 +321,8 @@ function AlmanacForm() {
       term.assessmentEnd = "";
       return;
     }
+
+    term.termEnd = defaultTermEnd;
 
     const assessmentStartDate = getNextMonday(new Date(term.termEnd));
     const assessmentEndDate = addWeeks(assessmentStartDate, 1);
@@ -514,7 +517,7 @@ function AlmanacForm() {
     };
 
     loadExistingAlmanac();
-  }, [program, year, batchStart, batchEnd]);
+  }, [program, year, batchStart, batchEnd, createDefaultYearsData]);
 
   // ✅ SELF START (Year 1 Term 1 drives the full timeline)
   const handleSelfStart = (y, t, value) => {
