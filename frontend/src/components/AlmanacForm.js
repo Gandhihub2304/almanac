@@ -48,6 +48,8 @@ function AlmanacForm() {
     holidays: [{ start: "", end: "" }],
     assessmentStart: "",
     assessmentEnd: "",
+    termEndManual: false,
+    termDurationBaseWeeks: 10,
     breakMode: "none",
     breakStart: "",
     breakEnd: ""
@@ -151,6 +153,8 @@ function AlmanacForm() {
           normalizedBreakMode = "none";
         }
 
+        const { termEndManual, termDurationBaseWeeks, ...restTermItem } = termItem;
+
         return {
           ...termItem,
           termDurationMode: isFourthTerm
@@ -247,11 +251,11 @@ function AlmanacForm() {
     }
 
     if (term.breakMode === "none") {
-      return getNextSelfStartFromReferenceEnd(term.assessmentEnd);
+      return term.assessmentStart || getNextSelfStartFromReferenceEnd(term.assessmentEnd);
     }
 
     if (termIndex === 2) {
-      return getNextSelfStartFromReferenceEnd(term.assessmentEnd);
+      return term.assessmentStart || getNextSelfStartFromReferenceEnd(term.assessmentEnd);
     }
 
     if (term.breakStart) {
@@ -266,13 +270,23 @@ function AlmanacForm() {
       term.termEnd = "";
       term.assessmentStart = "";
       term.assessmentEnd = "";
+      term.termDurationBaseWeeks = 10;
+      term.termEndManual = false;
       return;
     }
 
-    let weeks = 10;
-
     const activityCount = getActivities(term).filter((a) => a.start).length;
-    weeks += activityCount;
+    const holidayCount = (term.holidays || []).filter((h) => h.start).length;
+
+    let baseWeeks = 10;
+    if (termIndex === 3 && term.termEndManual) {
+      const parsedBaseWeeks = Number(term.termDurationBaseWeeks);
+      if (Number.isFinite(parsedBaseWeeks) && parsedBaseWeeks > 0) {
+        baseWeeks = parsedBaseWeeks;
+      }
+    }
+
+    const weeks = baseWeeks + activityCount + holidayCount;
 
     const firstFilledActivity = getActivities(term).find((a) => a.start && a.end);
     term.activityStart = firstFilledActivity?.start || "";
@@ -764,6 +778,57 @@ function AlmanacForm() {
       term.breakStart = "";
       term.breakEnd = "";
     }
+
+    regenerateTimeline(updated);
+    setYearsData(updated);
+  };
+
+  const handleFourthTermEndDate = (y, t, value) => {
+    if (t !== 3) {
+      return;
+    }
+
+    if (!batchStart || !batchEnd) {
+      showWarningModal("❌ Please set Batch Start and End first");
+      return;
+    }
+
+    const updated = cloneYearsData(yearsData);
+    const term = updated[y].terms[t];
+
+    if (!value) {
+      term.termEnd = "";
+      term.termEndManual = false;
+      term.termDurationBaseWeeks = 10;
+      regenerateTimeline(updated);
+      setYearsData(updated);
+      return;
+    }
+
+    if (!isDateWithinBatchRange(value)) {
+      showWarningModal(`❌ Date must be between ${batchStart} and ${batchEnd}`);
+      return;
+    }
+
+    if (!term.termStart || value < term.termStart) {
+      showWarningModal("❌ Term completion cannot be before commencement");
+      return;
+    }
+
+    const manualDurationDays = getDurationInDays(term.termStart, value);
+    const manualDurationWeeks = Math.ceil(manualDurationDays / 7);
+    const activityCount = getActivities(term).filter((item) => item.start).length;
+    const holidayCount = (term.holidays || []).filter((item) => item.start).length;
+    const baseWeeks = manualDurationWeeks - activityCount - holidayCount;
+
+    if (baseWeeks <= 0) {
+      showWarningModal("❌ Term duration is too short for selected activity/holiday weeks");
+      return;
+    }
+
+    term.termEnd = value;
+    term.termEndManual = true;
+    term.termDurationBaseWeeks = baseWeeks;
 
     regenerateTimeline(updated);
     setYearsData(updated);

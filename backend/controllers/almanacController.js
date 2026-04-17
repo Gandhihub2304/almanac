@@ -62,11 +62,11 @@ const getExpectedNextSelfStart = (term, termIndex) => {
   }
 
   if (breakMode === "none") {
-    return getNextMondayIso(term.assessmentEnd);
+    return term.assessmentStart || getNextMondayIso(term.assessmentEnd);
   }
 
   if (termIndex === 2) {
-    return getNextMondayIso(term.assessmentEnd);
+    return term.assessmentStart || getNextMondayIso(term.assessmentEnd);
   }
 
   if (term.breakStart) {
@@ -175,8 +175,16 @@ const validateBreakRules = (yearsData, totalYears) => {
       }
 
       const expectedNextSelfStart = getExpectedNextSelfStart(current, termIndex);
+      const breakMode = current.breakMode || "auto";
+      const allowsLegacyNoBreakSequence = termIndex === 2 || breakMode === "none";
+      const legacyExpectedNextSelfStart = allowsLegacyNoBreakSequence
+        ? getNextMondayIso(current.assessmentEnd)
+        : "";
 
-      if (!expectedNextSelfStart || nextTerm.selfStart !== expectedNextSelfStart) {
+      const isExpectedMatch = Boolean(expectedNextSelfStart) && nextTerm.selfStart === expectedNextSelfStart;
+      const isLegacyMatch = Boolean(legacyExpectedNextSelfStart) && nextTerm.selfStart === legacyExpectedNextSelfStart;
+
+      if (!isExpectedMatch && !isLegacyMatch) {
         return `Year ${nextYearIndex + 1} Term ${nextTermIndex + 1} self registration sequence is invalid`;
       }
     }
