@@ -4,8 +4,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(7, 38, 64, 0.42);
-  backdrop-filter: blur(4px);
+  background: rgba(11, 48, 86, 0.34);
+  backdrop-filter: blur(10px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -21,15 +21,12 @@
   width: min(520px, 100%);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
-  background:
-    radial-gradient(circle at 8% 0%, #f8fcff 0%, transparent 36%),
-    radial-gradient(circle at 90% 100%, #edf6ff 0%, transparent 30%),
-    linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8fd 100%);
   padding: 22px;
   border-radius: 22px;
-  border: 1px solid #cde0f2;
+  border: 1px solid #c9dcec;
   text-align: left;
-  box-shadow: 0 20px 42px rgba(11, 48, 78, 0.25);
+  box-shadow: 0 22px 48px rgba(11, 48, 86, 0.16);
   animation: modalIn 0.25s ease;
 }
 
@@ -43,24 +40,18 @@
 }
 
 .notificationCard--warning {
-  border-color: #ead08d;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(255, 236, 174, 0.7) 0%, transparent 35%),
-    linear-gradient(180deg, #fffdf2 0%, #fff7d9 100%);
+  border-color: #c9dcec;
+  background: linear-gradient(180deg, #ffffff 0%, #eef5fb 100%);
 }
 
 .notificationCard--error {
-  border-color: #f1b1b1;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(255, 210, 210, 0.75) 0%, transparent 35%),
-    linear-gradient(180deg, #fff5f5 0%, #ffe3e3 100%);
+  border-color: #c9dcec;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8fd 100%);
 }
 
 .notificationCard--success {
-  border-color: #9fd8ae;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(215, 249, 225, 0.85) 0%, transparent 35%),
-    linear-gradient(180deg, #f4fff7 0%, #ddf8e5 100%);
+  border-color: #c9dcec;
+  background: linear-gradient(180deg, #ffffff 0%, #eef5fb 100%);
 }
 
 .notificationHeader {
@@ -81,31 +72,31 @@
   font-size: 1.05rem;
   font-weight: 900;
   color: #ffffff;
-  box-shadow: 0 10px 18px rgba(11, 48, 78, 0.16);
+  box-shadow: 0 10px 18px rgba(11, 48, 86, 0.14);
 }
 
 .notificationCard--warning .notificationIcon {
-  background: linear-gradient(135deg, #d39c00, #f0b81a);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
 }
 
 .notificationCard--error .notificationIcon {
-  background: linear-gradient(135deg, #cc3f3f, #f05b5b);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
 }
 
 .notificationCard--success .notificationIcon {
-  background: linear-gradient(135deg, #1f8f52, #35b36c);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
 }
 
 .notificationTitle {
   margin: 0;
-  color: #16384c;
+  color: #0f3d70;
   font-size: 1.03rem;
   font-weight: 900;
 }
 
 .notificationMessage {
   margin: 3px 0 0;
-  color: #24465d;
+  color: #5c7084;
   font-size: 0.88rem;
   line-height: 1.45;
   white-space: pre-line;
@@ -120,36 +111,36 @@
 }
 
 .notificationCloseBtn--warning {
-  background: linear-gradient(135deg, #c89200, #e4ad16);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
   color: #ffffff;
 }
 
 .notificationCloseBtn--error {
-  background: linear-gradient(135deg, #c53d3d, #e05757);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
   color: #ffffff;
 }
 
 .notificationCloseBtn--success {
-  background: linear-gradient(135deg, #1f8f52, #35b36c);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
   color: #ffffff;
 }
 
 .modalCard h2,
 .modalCard h4 {
   margin: 0 0 12px;
-  color: #193447;
+  color: #0f3d70;
 }
 
 .modalCenterTitle {
   text-align: center;
   font-size: 1.55rem;
-  color: #13558a;
+  color: #0f5fa8;
 }
 
 .modalLabel {
   display: inline-block;
   margin-top: 6px;
-  color: #2c5b81;
+  color: #0f3d70;
   font-weight: 700;
   font-size: 0.88rem;
 }
@@ -159,10 +150,10 @@
   width: 100%;
   box-sizing: border-box;
   padding: 10px 12px;
-  border: 1px solid #bed2e3;
-  border-radius: 10px;
+  border: 1px solid #c9dcec;
+  border-radius: 12px;
   font-size: 0.92rem;
-  color: #1f3548;
+  color: #123a63;
   margin: 8px 0;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -170,8 +161,8 @@
 
 .modalCard input:focus,
 .modalCard select:focus {
-  border-color: #2f8ecb;
-  box-shadow: 0 0 0 3px rgba(47, 142, 203, 0.15);
+  border-color: #0f5fa8;
+  box-shadow: 0 0 0 3px rgba(15, 95, 168, 0.14);
 }
 
 .modalBtn {
@@ -179,7 +170,7 @@
   width: 100%;
   margin: 10px 0 0;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #0f5d9b, #1a74bb);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -197,7 +188,7 @@
   margin-top: 10px;
   width: 100%;
   padding: 10px 14px;
-  background: linear-gradient(135deg, #c64343, #b63636);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
   color: white;
   border: none;
   border-radius: 10px;
@@ -244,15 +235,15 @@
 }
 
 .textAdd {
-  color: #1f6fb0;
+  color: #0f5fa8;
 }
 
 .textOk {
-  color: #1e8b4b;
+  color: #0f5fa8;
 }
 
 .textCancel {
-  color: #c23f3f;
+  color: #5c7084;
 }
 
 .editRow {
@@ -310,15 +301,15 @@
 }
 
 .inlineBtn.edit {
-  background: #216ca8;
+  background: #0f5fa8;
 }
 
 .inlineBtn.delete {
-  background: #d94c45;
+  background: #0f5fa8;
 }
 
 .inlineBtn.add {
-  background: #1b6ea9;
+  background: #0f5fa8;
 }
 
 .programChips {
@@ -329,9 +320,9 @@
 }
 
 .programChip {
-  background: #ebf4ff;
-  border: 1px solid #bfd8ef;
-  color: #1d4d73;
+  background: #eef5fb;
+  border: 1px solid #c9dcec;
+  color: #0f5fa8;
   border-radius: 999px;
   padding: 5px 10px;
   font-size: 0.82rem;
@@ -351,9 +342,9 @@
 
 .selectionCard,
 .yearCard {
-  border: 1px solid #c3d9ec;
-  background: linear-gradient(165deg, #ffffff 0%, #edf6ff 100%);
-  color: #154a73;
+  border: 1px solid #c9dcec;
+  background: linear-gradient(165deg, #ffffff 0%, #eef5fb 100%);
+  color: #0f3d70;
   border-radius: 10px;
   padding: 8px 10px;
   cursor: pointer;
@@ -366,13 +357,13 @@
 .yearCard:hover,
 .selectionCard.active {
   transform: translateY(-2px);
-  border-color: #2b84c3;
-  box-shadow: 0 10px 18px rgba(20, 83, 130, 0.16);
+  border-color: #a7c9e5;
+  box-shadow: 0 10px 18px rgba(11, 48, 86, 0.12);
 }
 
 .selectionCard.active {
-  background: linear-gradient(165deg, #eaf5ff 0%, #d8edff 100%);
-  color: #0f4b79;
+  background: linear-gradient(165deg, #0f5fa8 0%, #1d75c1 100%);
+  color: #ffffff;
 }
 
 .yearBlockTitle {
@@ -388,7 +379,7 @@
 }
 
 .selectedProgramLabel {
-  color: #15507d;
+  color: #0f3d70;
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -398,9 +389,9 @@
 }
 
 .yearSelectDropdown {
-  background: linear-gradient(180deg, #ffffff 0%, #f1f8ff 100%);
-  border: 1px solid #9fc7e6;
-  color: #174f7b;
+  background: linear-gradient(180deg, #ffffff 0%, #eef5fb 100%);
+  border: 1px solid #c9dcec;
+  color: #123a63;
   font-weight: 600;
 }
 
@@ -417,8 +408,10 @@
   font-size: 0.84rem;
   font-weight: 700;
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid #c9dcec;
   cursor: pointer;
+  background: #ffffff;
+  color: #0f5fa8;
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
@@ -427,46 +420,46 @@
 }
 
 .compactBtnPrimary {
-  background: #0f6fb5;
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
   color: #ffffff;
-  border-color: #0f6fb5;
+  border-color: #0f5fa8;
 }
 
 .compactBtnPrimary:hover {
-  background: #0c5f9c;
-  border-color: #0c5f9c;
+  background: linear-gradient(135deg, #0b4f8d, #1464ab);
+  border-color: #0b4f8d;
 }
 
 .compactBtnPrimary:disabled {
-  background: #c7dceb;
-  border-color: #c7dceb;
-  color: #7c95ab;
+  background: #dbe8f4;
+  border-color: #dbe8f4;
+  color: #7b93a8;
   cursor: not-allowed;
   transform: none;
 }
 
 .compactBtnGhost {
   background: #ffffff;
-  color: #0f6fb5;
-  border-color: #9fc7e6;
+  color: #0f5fa8;
+  border-color: #c9dcec;
 }
 
 .compactBtnGhost:hover {
-  background: #eaf4fc;
-  border-color: #0f6fb5;
+  background: #eef5fb;
+  border-color: #a7c9e5;
 }
 
 .compactBtnDanger {
-  background: #c23f3f;
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
   color: #ffffff;
-  border-color: #c23f3f;
+  border-color: #0f5fa8;
   padding: 6px 14px;
   font-size: 0.8rem;
 }
 
 .compactBtnDanger:hover {
-  background: #a83535;
-  border-color: #a83535;
+  background: linear-gradient(135deg, #0b4f8d, #1464ab);
+  border-color: #0b4f8d;
 }
 
 .addSchoolCard {

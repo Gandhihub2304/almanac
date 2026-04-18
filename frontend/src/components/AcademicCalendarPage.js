@@ -65,18 +65,18 @@ function AcademicCalendarPage() {
   const normalize = (value) => (value || "").toLowerCase().replace(/\s+/g, " ").trim();
 
   const schoolBrandPalette = [
-    { matches: ["engineering"], color: "rgb(192, 34, 34)" },
-    { matches: ["informatics"], color: "rgb(229, 9, 127)" },
-    { matches: ["management studies", "management"], color: "rgb(12, 84, 160)" },
-    { matches: ["law"], color: "rgb(43, 42, 41)" },
-    { matches: ["architecture"], color: "rgb(247, 167, 7)" },
-    { matches: ["psychology"], color: "rgb(123, 62, 83)" },
-    { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "rgb(236, 105, 31)" },
-    { matches: ["liberal arts"], color: "rgb(137, 137, 137)" },
-    { matches: ["health sciences", "health science"], color: "rgb(0, 110, 54)" },
-    { matches: ["pharmacy"], color: "rgb(120, 184, 51)" },
-    { matches: ["school of sciences", "school of science", "sciences"], color: "rgb(243, 156, 163)" },
-    { matches: ["ph.d", "phd"], color: "rgb(50, 43, 106)" }
+    { matches: ["engineering"], color: "linear-gradient(135deg, #f8fbff 0%, #dcecff 100%)" },
+    { matches: ["informatics"], color: "linear-gradient(135deg, #fbfdff 0%, #e4edf9 100%)" },
+    { matches: ["management studies", "management"], color: "linear-gradient(135deg, #f6faff 0%, #d8e8f8 100%)" },
+    { matches: ["law"], color: "linear-gradient(135deg, #fcfdff 0%, #ebf1f7 100%)" },
+    { matches: ["architecture"], color: "linear-gradient(135deg, #f8fbff 0%, #e0ebf7 100%)" },
+    { matches: ["psychology"], color: "linear-gradient(135deg, #f7fbff 0%, #dce7fb 100%)" },
+    { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "linear-gradient(135deg, #f8fbff 0%, #e2ecf8 100%)" },
+    { matches: ["liberal arts"], color: "linear-gradient(135deg, #f8fbff 0%, #dde7f2 100%)" },
+    { matches: ["health sciences", "health science"], color: "linear-gradient(135deg, #f6fbff 0%, #d9ecfb 100%)" },
+    { matches: ["pharmacy"], color: "linear-gradient(135deg, #f8fbff 0%, #e2edf8 100%)" },
+    { matches: ["school of sciences", "school of science", "sciences"], color: "linear-gradient(135deg, #f6faff 0%, #dce6fb 100%)" },
+    { matches: ["ph.d", "phd"], color: "linear-gradient(135deg, #eef5ff 0%, #d8e6fb 100%)" }
   ];
 
   const getSchoolCardPalette = (schoolName) => {
@@ -85,11 +85,11 @@ function AcademicCalendarPage() {
     const matched = schoolBrandPalette.find((entry) =>
       entry.matches.some((keyword) => normalized.includes(keyword))
     );
-    const brand = matched?.color || "#0d4e82";
+    const brand = matched?.color || "linear-gradient(135deg, #f8fbff 0%, #d8e8f8 100%)";
 
     return {
       bg: brand,
-      border: brand
+      border: "#adc7e2"
     };
   };
 
@@ -465,7 +465,7 @@ function AcademicCalendarPage() {
         <img src="/Aurora Logo.png" alt="Aurora Logo" className="academicCalendarLogo" />
         <h1 className="academicCalendarTitle">Aurora University Academic Calendar</h1>
         <p className="academicCalendarSubtitle">
-          Select a school and programme to continue with year-wise academic calendar planning.
+          Select a school and programme to continue with a clean, blue-first calendar workflow.
         </p>
       </div>
 

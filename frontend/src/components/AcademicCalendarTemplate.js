@@ -4,18 +4,18 @@ const normalizeSchoolName = (value) =>
   String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
 
 const schoolBrandPalette = [
-  { matches: ["engineering"], color: "rgb(192, 34, 34)" },
-  { matches: ["informatics"], color: "rgb(229, 9, 127)" },
-  { matches: ["management studies", "management"], color: "rgb(12, 84, 160)" },
-  { matches: ["law"], color: "rgb(43, 42, 41)" },
-  { matches: ["architecture"], color: "rgb(247, 167, 7)" },
-  { matches: ["psychology"], color: "rgb(123, 62, 83)" },
-  { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "rgb(236, 105, 31)" },
-  { matches: ["liberal arts"], color: "rgb(137, 137, 137)" },
-  { matches: ["health sciences", "health science"], color: "rgb(0, 110, 54)" },
-  { matches: ["pharmacy"], color: "rgb(120, 184, 51)" },
-  { matches: ["school of sciences", "school of science", "sciences"], color: "rgb(243, 156, 163)" },
-  { matches: ["ph.d", "phd"], color: "rgb(50, 43, 106)" }
+  { matches: ["engineering"], color: "#0f5fa8" },
+  { matches: ["informatics"], color: "#1d75c1" },
+  { matches: ["management studies", "management"], color: "#1669b3" },
+  { matches: ["law"], color: "#245f9d" },
+  { matches: ["architecture"], color: "#3a7abd" },
+  { matches: ["psychology"], color: "#4d6fb0" },
+  { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "#3f86c6" },
+  { matches: ["liberal arts"], color: "#5d7f9f" },
+  { matches: ["health sciences", "health science"], color: "#1580b8" },
+  { matches: ["pharmacy"], color: "#2a8ac7" },
+  { matches: ["school of sciences", "school of science", "sciences"], color: "#5b8fc7" },
+  { matches: ["ph.d", "phd"], color: "#3463af" }
 ];
 
 const getSchoolBrandColor = (schoolName) => {
@@ -24,21 +24,21 @@ const getSchoolBrandColor = (schoolName) => {
     entry.matches.some((keyword) => normalized.includes(keyword))
   );
 
-  return matched?.color || "#0f69aa";
+  return matched?.color || "#0f5fa8";
 };
 
 const STATUS_COLORS = {
-  "student-led": "#8fd0ff",
-  event: "#c8f0cf",
-  weekend: "#f3f3f3",
-  compensatory: "#f6c8ab",
-  "self-registration": "#dfeeff",
-  "term-begin": "#ffb766",
-  "term-end": "#d9b100",
-  assessment: "#f8c7de",
-  break: "#fff0a8",
-  holiday: "#b98ad6",
-  "results-day": "#1a3a66",
+  "student-led": "#d4e8fb",
+  event: "#dfeefb",
+  weekend: "#eef2f7",
+  compensatory: "#b9d5f2",
+  "self-registration": "#eef5fb",
+  "term-begin": "#9fc4e4",
+  "term-end": "#7aa4d1",
+  assessment: "#d7e6ff",
+  break: "#cfe0f5",
+  holiday: "#bfd3ea",
+  "results-day": "#0f5fa8",
   "term-work": "#ffffff"
 };
 

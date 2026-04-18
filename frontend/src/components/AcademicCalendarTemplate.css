@@ -1,9 +1,9 @@
 .calendarTemplateSheet {
   background: #ffffff;
-  border: 1px solid #c3d9eb;
+  border: 1px solid #c9dcec;
   width: min(1180px, 100%);
   margin: 0 auto;
-  box-shadow: 0 18px 32px rgba(8, 54, 91, 0.14);
+  box-shadow: 0 18px 32px rgba(11, 48, 86, 0.12);
 }
 
 .calendarTemplateHead {
@@ -12,8 +12,8 @@
   gap: 16px;
   align-items: center;
   padding: 14px 16px 12px;
-  border-bottom: 16px solid var(--template-brand-color, #0f69aa);
-  background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+  border-bottom: 16px solid var(--template-brand-color, #0f5fa8);
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8fd 100%);
   page-break-inside: avoid;
   break-inside: avoid;
 }
@@ -40,7 +40,7 @@
 
 .calendarTemplateTitleBlock p {
   margin: 2px 0;
-  color: var(--template-brand-color, #0d487a);
+  color: var(--template-brand-color, #0b3d72);
   font-weight: 700;
   line-height: 1.2;
 }
@@ -67,8 +67,8 @@
 }
 
 .templateMonthCard {
-  border: 1px solid #b8d2e7;
-  background: #fcfeff;
+  border: 1px solid #c9dcec;
+  background: #ffffff;
   padding: 10px;
   break-inside: avoid;
   page-break-inside: avoid;
@@ -86,7 +86,7 @@
 .templateMonthHeading h3 {
   margin: 0;
   text-align: center;
-  color: #0d5c95;
+  color: #0f5fa8;
   font-size: 0.92rem;
   letter-spacing: 0.03em;
 }
@@ -114,16 +114,16 @@
 
 .templateMiniCalendar th,
 .templateMiniCalendar td {
-  border: 1px solid #d2e2ef;
+  border: 1px solid #d8e6f2;
   text-align: center;
   padding: 4px 0;
   font-size: 0.74rem;
-  color: #14466c;
+  color: #123a63;
 }
 
 .templateMiniCalendar th {
-  background: #f2f8fd;
-  color: #0f5c93;
+  background: #eef5fb;
+  color: #0f5fa8;
   font-weight: 800;
 }
 
@@ -139,47 +139,47 @@
 }
 
 .templateMiniCalendar td.status-student-led {
-  background: #8fd0ff;
+  background: #d4e8fb;
 }
 
 .templateMiniCalendar td.status-event {
-  background: #c8f0cf;
+  background: #dfeefb;
 }
 
 .templateMiniCalendar td.status-weekend {
-  background: #f3f3f3;
+  background: #eef2f7;
 }
 
 .templateMiniCalendar td.status-compensatory {
-  background: #f6c8ab;
+  background: #b9d5f2;
 }
 
 .templateMiniCalendar td.status-self-registration {
-  background: #dfeeff;
+  background: #eef5fb;
 }
 
 .templateMiniCalendar td.status-term-begin {
-  background: #ffb766;
+  background: #9fc4e4;
 }
 
 .templateMiniCalendar td.status-term-end {
-  background: #d9b100;
+  background: #7aa4d1;
 }
 
 .templateMiniCalendar td.status-results-day {
-  background: #1a3a66;
+  background: #0f5fa8;
 }
 
 .templateMiniCalendar td.status-assessment {
-  background: #f8c7de;
+  background: #d7e6ff;
 }
 
 .templateMiniCalendar td.status-break {
-  background: #fff0a8;
+  background: #cfe0f5;
 }
 
 .templateMiniCalendar td.status-holiday {
-  background: #b98ad6;
+  background: #bfd3ea;
 }
 
 .templateMonthEvents {
@@ -189,36 +189,36 @@
 }
 
 .templateMonthEvents li {
-  color: #275372;
+  color: #123a63;
   font-size: 0.7rem;
   line-height: 1.22;
   margin: 0 0 5px;
 }
 
 .templateMonthEvents li.empty {
-  color: #7291a7;
+  color: #7b93a8;
   list-style: none;
   margin-left: -16px;
 }
 
 .eventRange {
   font-weight: 800;
-  color: #134d78;
+  color: #0f5fa8;
 }
 
 .eventLabel {
   font-weight: 600;
-  color: #2a5d7d;
+  color: #4f6d8a;
 }
 
 .calendarTemplateLegend {
-  border-top: 1px solid #c8ddee;
+  border-top: 1px solid #d8e6f2;
   padding: 10px 12px 8px;
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
-  background: #f4fbff;
+  background: #f7fbff;
   page-break-inside: avoid;
   break-inside: avoid;
 }
@@ -228,7 +228,7 @@
   align-items: center;
   gap: 5px;
   font-size: 0.72rem;
-  color: #18486a;
+  color: #123a63;
   font-weight: 700;
 }
 
@@ -236,43 +236,43 @@
   width: 13px;
   height: 13px;
   border-radius: 2px;
-  border: 1px solid rgba(15, 76, 122, 0.15);
+  border: 1px solid rgba(15, 95, 168, 0.14);
 }
 
 .legendSwatch.status-student-led {
-  background: #8fd0ff;
+  background: #d4e8fb;
 }
 
 .legendSwatch.status-event {
-  background: #c8f0cf;
+  background: #dfeefb;
 }
 
 .legendSwatch.status-weekend {
-  background: #f3f3f3;
+  background: #eef2f7;
 }
 
 .legendSwatch.status-self-registration {
-  background: #dfeeff;
+  background: #eef5fb;
 }
 
 .legendSwatch.status-term-begin {
-  background: #ffb766;
+  background: #9fc4e4;
 }
 
 .legendSwatch.status-compensatory {
-  background: #f6c8ab;
+  background: #b9d5f2;
 }
 
 .legendSwatch.status-term-end {
-  background: #d9b100;
+  background: #7aa4d1;
 }
 
 .legendSwatch.status-results-day {
-  background: #1a3a66;
+  background: #0f5fa8;
 }
 
 .legendSwatch.status-break {
-  background: #fff0a8;
+  background: #cfe0f5;
 }
 
 .legendSwatch.status-assessment {
@@ -280,7 +280,7 @@
 }
 
 .legendSwatch.status-holiday {
-  background: #b98ad6;
+  background: #bfd3ea;
 }
 
 .calendarTemplateFooterBar {

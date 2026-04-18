@@ -292,9 +292,6 @@ function AlmanacForm() {
     term.activityStart = firstFilledActivity?.start || "";
     term.activityEnd = firstFilledActivity?.end || "";
 
-    const holidayCount = (term.holidays || []).filter((h) => h.start).length;
-    weeks += holidayCount;
-
     const defaultTermEnd = (() => {
       const termEndDate = addWeeks(new Date(term.termStart), weeks);
       termEndDate.setDate(termEndDate.getDate() - 1);

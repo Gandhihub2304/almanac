@@ -1,11 +1,12 @@
 .container {
   text-align: center;
   padding: 20px;
-  font-family: Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  color: #10243b;
 }
 
 .title {
   margin-top: 40px;
   font-size: 40px;
-  color: #1e293b;
+  color: #0f3d70;
 }
