@@ -435,14 +435,7 @@ function AlmanacForm() {
         if (term.selfStart) {
           term.selfEnd = getWeekEndFromStart(term.selfStart);
           const generatedTermStart = toIso(getNextMonday(new Date(term.selfEnd)));
-          const keepManualTermDuration = t === 3
-            && term.termDurationMode === "manual"
-            && term.termStart
-            && term.termEnd;
-
-          if (!keepManualTermDuration) {
-            term.termStart = generatedTermStart;
-          }
+          term.termStart = generatedTermStart;
         } else {
           term.selfEnd = "";
           term.termStart = "";
@@ -905,6 +898,10 @@ function AlmanacForm() {
       return;
     }
 
+    if (field !== "termEnd") {
+      return;
+    }
+
     if (!batchStart || !batchEnd) {
       showWarningModal("❌ Please set Batch Start and End first");
       return;
@@ -928,21 +925,7 @@ function AlmanacForm() {
     const updated = cloneYearsData(yearsData);
     const term = updated[y].terms[t];
 
-    const minFourthTermStart = term.selfEnd ? toIso(getNextMonday(new Date(term.selfEnd))) : "";
-
-    if (field === "termStart") {
-      if (!isMonday(value)) {
-        showWarningModal("❌ Term 4 must start on Monday");
-        return;
-      }
-
-      if (minFourthTermStart && value < minFourthTermStart) {
-        showWarningModal(invalidDateMessage);
-        return;
-      }
-    }
-
-    if (field === "termEnd" && !isSunday(value)) {
+    if (!isSunday(value)) {
       showWarningModal("❌ Term 4 must end on Sunday");
       return;
     }
@@ -1329,8 +1312,8 @@ function AlmanacForm() {
                           <input
                             type="date"
                             value={t.termStart}
-                            onChange={(e) => handleTermDurationDate(yIndex, tIndex, "termStart", e.target.value)}
-                            title="Select Term 4 start date"
+                            readOnly
+                            title="Term 4 start is auto-calculated"
                           />
                           <input
                             type="date"
