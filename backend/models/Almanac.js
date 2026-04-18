@@ -9,6 +9,12 @@ const termSchema = new mongoose.Schema({
   termStart: String,
   termEnd: String,
 
+  termDurationMode: {
+    type: String,
+    enum: ["auto", "manual"],
+    default: "auto"
+  },
+
   activities: [
     {
       start: String,
