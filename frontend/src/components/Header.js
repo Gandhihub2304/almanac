@@ -41,63 +41,63 @@ function Header() {
   const schoolBrandPalette = [
     {
       matches: ["engineering"],
-      bg: "rgb(192, 34, 34)",
-      border: "rgb(192, 34, 34)"
+      bg: "linear-gradient(135deg, #f8fbff 0%, #dcecff 100%)",
+      border: "#b4cfe9"
     },
     {
       matches: ["informatics"],
-      bg: "rgb(229, 9, 127)",
-      border: "rgb(229, 9, 127)"
+      bg: "linear-gradient(135deg, #fbfdff 0%, #e4edf9 100%)",
+      border: "#c0d6ea"
     },
     {
       matches: ["management studies", "management"],
-      bg: "rgb(12, 84, 160)",
-      border: "rgb(12, 84, 160)"
+      bg: "linear-gradient(135deg, #f6faff 0%, #d8e8f8 100%)",
+      border: "#b3d0e8"
     },
     {
       matches: ["law"],
-      bg: "rgb(43, 42, 41)",
-      border: "rgb(43, 42, 41)"
+      bg: "linear-gradient(135deg, #fcfdff 0%, #ebf1f7 100%)",
+      border: "#c3d2df"
     },
     {
       matches: ["architecture"],
-      bg: "rgb(247, 167, 7)",
-      border: "rgb(247, 167, 7)"
+      bg: "linear-gradient(135deg, #f8fbff 0%, #e0ebf7 100%)",
+      border: "#b9cede"
     },
     {
       matches: ["psychology"],
-      bg: "rgb(123, 62, 83)",
-      border: "rgb(123, 62, 83)"
+      bg: "linear-gradient(135deg, #f7fbff 0%, #dce7fb 100%)",
+      border: "#b4c6e6"
     },
     {
       matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"],
-      bg: "rgb(236, 105, 31)",
-      border: "rgb(236, 105, 31)"
+      bg: "linear-gradient(135deg, #f8fbff 0%, #e2ecf8 100%)",
+      border: "#bccfe0"
     },
     {
       matches: ["liberal arts"],
-      bg: "rgb(137, 137, 137)",
-      border: "rgb(137, 137, 137)"
+      bg: "linear-gradient(135deg, #f8fbff 0%, #dde7f2 100%)",
+      border: "#bccada"
     },
     {
       matches: ["health sciences", "health science"],
-      bg: "rgb(0, 110, 54)",
-      border: "rgb(0, 110, 54)"
+      bg: "linear-gradient(135deg, #f6fbff 0%, #d9ecfb 100%)",
+      border: "#b1d3eb"
     },
     {
       matches: ["pharmacy"],
-      bg: "rgb(120, 184, 51)",
-      border: "rgb(120, 184, 51)"
+      bg: "linear-gradient(135deg, #f8fbff 0%, #e2edf8 100%)",
+      border: "#bfd0e0"
     },
     {
       matches: ["school of sciences", "school of science", "sciences"],
-      bg: "rgb(243, 156, 163)",
-      border: "rgb(243, 156, 163)"
+      bg: "linear-gradient(135deg, #f6faff 0%, #dce6fb 100%)",
+      border: "#b5c8e5"
     },
     {
       matches: ["ph.d", "phd"],
-      bg: "rgb(50, 43, 106)",
-      border: "rgb(50, 43, 106)"
+      bg: "linear-gradient(135deg, #eef5ff 0%, #d8e6fb 100%)",
+      border: "#aabfe0"
     }
   ];
 
@@ -108,7 +108,7 @@ function Header() {
       entry.matches.some((keyword) => normalized.includes(keyword))
     );
 
-    return matched || { bg: "#0d4e82", border: "#0d4e82" };
+    return matched || { bg: "linear-gradient(135deg, #f8fbff 0%, #d8e8f8 100%)", border: "#adc7e2" };
   };
 
   const drawerItems = [
@@ -912,15 +912,24 @@ function Header() {
           <img src="/Aurora Logo.png" alt="Aurora Logo" className="headerLogo" />
           <div className="heroTitleWrap">
             <h1 className="headerTitle" onClick={() => setActivePanel("home")}>
-              Aurora University Almanac
+              <span className="headerTitleText">Aurora University Almanac</span>
             </h1>
           </div>
           <p className="headerSubTitle">
-            Build, manage, and review academic almanac plans with a cleaner workflow.
+            A premium white-and-blue workspace for schools, programmes, and calendar planning.
           </p>
         </div>
 
         <aside className={`sideDrawer ${isDrawerCollapsed ? "collapsed" : ""}`}>
+          <div className="drawerBrand">
+            <img src="/Aurora Logo.png" alt="Aurora Logo" className="drawerBrandLogo" />
+            {!isDrawerCollapsed && (
+              <div className="drawerBrandCopy">
+                <span className="drawerBrandKicker">Launch Hub</span>
+                <strong>Aurora UI</strong>
+              </div>
+            )}
+          </div>
           <button
             type="button"
             className="drawerCollapseToggle"

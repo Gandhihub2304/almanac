@@ -1,17 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 
 :root {
-  --bg-soft: #f3f7fb;
+  --bg-soft: #f7fbff;
   --bg-strong: #e6eef7;
   --surface: #ffffff;
-  --surface-alt: #f8fbff;
-  --ink-main: #12263a;
-  --ink-muted: #526579;
-  --primary: #145d99;
-  --primary-hover: #124f82;
-  --accent: #7cb5e0;
-  --line: #d5e2ef;
-  --shadow-soft: 0 12px 32px rgba(18, 38, 58, 0.08);
+  --surface-alt: #f4f8fd;
+  --ink-main: #10243b;
+  --ink-muted: #5c7084;
+  --primary: #0f5fa8;
+  --primary-hover: #0b3d72;
+  --accent: #9fc4e4;
+  --line: #d6e4f0;
+  --shadow-soft: 0 16px 36px rgba(11, 48, 86, 0.08);
 }
 
 .almanacContainer {
@@ -51,7 +51,7 @@
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  color: #111111;
+  color: var(--primary);
   font-weight: 700;
   text-decoration: none;
   border-bottom: 2px solid transparent;
@@ -59,8 +59,8 @@
 }
 
 .backLink:hover {
-  color: #000000;
-  border-color: #000000;
+  color: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
 .batchControls {
@@ -76,13 +76,13 @@
   padding: 12px;
   background: var(--surface);
   border: 1px solid var(--line);
-  box-shadow: 0 8px 22px rgba(18, 38, 58, 0.05);
+  box-shadow: 0 8px 22px rgba(11, 48, 86, 0.05);
   animation: panelRise 0.28s ease;
 }
 
 .yearTitle {
   margin: 0 0 10px;
-  color: #0e496f;
+  color: #0f3d70;
   font-size: 1.12rem;
 }
 
@@ -98,15 +98,15 @@
   background: #ffffff;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #d4e2ef;
-  box-shadow: 0 10px 22px rgba(18, 38, 58, 0.05);
+  border: 1px solid #d6e4f0;
+  box-shadow: 0 10px 22px rgba(11, 48, 86, 0.05);
 }
 
 .almanacTable th {
   padding: 8px 6px;
   text-align: center;
   color: #ffffff;
-  background: linear-gradient(90deg, #0f6db6 0%, #2d88cf 100%);
+  background: linear-gradient(90deg, #0f5fa8 0%, #1d75c1 100%);
   font-size: 0.79rem;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -120,14 +120,14 @@
 }
 
 .almanacTable tbody tr:nth-child(even) td {
-  background: #f4f9ff;
+  background: #f8fbff;
 }
 
 .termLabel {
   font-weight: 700;
-  color: #1b344b;
+  color: #123a63;
   white-space: nowrap;
-  background: #f4f9ff;
+  background: #f8fbff;
 }
 
 .noBreakText {
@@ -138,8 +138,8 @@
   min-height: 34px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #eef4fa 0%, #dfe9f3 100%);
-  color: #58708a;
+  background: linear-gradient(135deg, #eef5fb 0%, #dfe9f3 100%);
+  color: #0f5fa8;
   font-size: 1.1rem;
   font-weight: 900;
   box-shadow: inset 0 0 0 1px rgba(88, 112, 138, 0.12);
@@ -158,32 +158,32 @@
   max-width: 100%;
   padding: 6px 8px;
   border-radius: 9px;
-  border: 1px solid #bfd1e2;
+  border: 1px solid #c9dcec;
   background: #ffffff;
-  color: #20384d;
+  color: #123a63;
   font-size: 0.79rem;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .almanacContainer input:focus {
-  border-color: #2f8ecb;
-  box-shadow: 0 0 0 3px rgba(47, 142, 203, 0.15);
+  border-color: #0f5fa8;
+  box-shadow: 0 0 0 3px rgba(15, 95, 168, 0.14);
 }
 
 .almanacContainer input[readonly] {
-  background: #eef4fa;
-  color: #4a5d70;
+  background: #f4f8fd;
+  color: #5c7084;
 }
 
 .addHolidayLink {
   margin-top: 2px;
   width: 26px;
   height: 26px;
-  border: 1px solid #8ab9df;
+  border: 1px solid #c9dcec;
   border-radius: 999px;
-  color: #0b5d99;
-  background: linear-gradient(180deg, #f6fbff 0%, #e0effb 100%);
+  color: #0f5fa8;
+  background: linear-gradient(180deg, #ffffff 0%, #eef5fb 100%);
   font-size: 1rem;
   line-height: 1;
   font-weight: 800;
@@ -195,29 +195,29 @@
 }
 
 .addHolidayLink:hover {
-  background: #d7ebfb;
-  border-color: #0f5f9e;
+  background: #eef5fb;
+  border-color: #0f5fa8;
   transform: translateY(-1px);
 }
 
 .saveBtn {
   margin-top: 0;
   padding: 10px 18px;
-  border: 1px solid #0f63a5;
+  border: 1px solid #0f5fa8;
   border-radius: 12px;
-  background: linear-gradient(135deg, #0f6db6, #2b87cd);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
   color: #ffffff;
   font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(15, 96, 165, 0.26);
+  box-shadow: 0 8px 18px rgba(11, 48, 86, 0.16);
   transition: transform 0.15s ease, background 0.2s ease;
 }
 
 .saveBtn:hover {
   transform: translateY(-1px);
-  background: linear-gradient(135deg, #0c5b98, #226fa9);
+  background: linear-gradient(135deg, #0b4f8d, #1464ab);
 }
 
 .actionRow {
@@ -231,20 +231,20 @@
 .previewBtn {
   margin-top: 0;
   padding: 10px 18px;
-  border: 1px solid #0f63a5;
+  border: 1px solid #c9dcec;
   border-radius: 12px;
   background: #ffffff;
-  color: #0f63a5;
+  color: #0f5fa8;
   font-size: 0.9rem;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(15, 96, 165, 0.16);
+  box-shadow: 0 8px 18px rgba(11, 48, 86, 0.08);
   transition: transform 0.15s ease, background 0.2s ease;
 }
 
 .previewBtn:hover {
   transform: translateY(-1px);
-  background: #eaf4ff;
+  background: #eef5fb;
 }
 
 .batchDetailContainer {
@@ -255,7 +255,7 @@
 .batchDetailTitle {
   margin: 0 0 16px;
   font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
-  color: #0d4e82;
+  color: #0f3d70;
   font-weight: 800;
   letter-spacing: 0.01em;
 }
@@ -269,10 +269,10 @@
 
 .programLink {
   padding: 10px 18px;
-  border: 2px solid #145d99;
-  border-radius: 8px;
+  border: 1px solid #c9dcec;
+  border-radius: 12px;
   background: #ffffff;
-  color: #145d99;
+  color: #0f5fa8;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
@@ -280,24 +280,24 @@
 }
 
 .programLink:hover {
-  background-color: #e6f0f8;
-  border-color: #0d3d6b;
-  color: #0d3d6b;
+  background-color: #eef5fb;
+  border-color: #a7c9e5;
+  color: #0b3d72;
   transform: translateY(-2px);
 }
 
 .programLink.active {
-  background: linear-gradient(135deg, #145d99, #1e73b2);
+  background: linear-gradient(135deg, #0f5fa8, #1d75c1);
   color: #ffffff;
-  border-color: #145d99;
-  box-shadow: 0 6px 16px rgba(20, 93, 153, 0.3);
+  border-color: #0f5fa8;
+  box-shadow: 0 6px 16px rgba(11, 48, 86, 0.16);
 }
 
 .previewOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(13, 26, 39, 0.58);
-  backdrop-filter: blur(3px);
+  background: rgba(11, 48, 86, 0.34);
+  backdrop-filter: blur(10px);
   z-index: 40;
   padding: 20px;
   display: flex;
@@ -310,9 +310,9 @@
   max-height: calc(100vh - 40px);
   overflow: auto;
   border-radius: 16px;
-  background: #f4f7fb;
-  border: 1px solid #c7d8e9;
-  box-shadow: 0 20px 40px rgba(5, 17, 26, 0.35);
+  background: #ffffff;
+  border: 1px solid #c9dcec;
+  box-shadow: 0 22px 48px rgba(11, 48, 86, 0.16);
   animation: panelRise 0.28s ease;
 }
 
@@ -321,21 +321,21 @@
   justify-content: space-between;
   align-items: center;
   padding: 14px 16px;
-  border-bottom: 1px solid #d7e3ef;
+  border-bottom: 1px solid #d8e6f2;
 }
 
 .previewTopBar h3 {
   margin: 0;
   font-size: 1.15rem;
-  color: #173850;
+  color: #0f3d70;
 }
 
 .previewCloseBtn {
-  border: 0;
+  border: 1px solid #c9dcec;
   border-radius: 10px;
   padding: 8px 14px;
-  background: #d64545;
-  color: #fff;
+  background: linear-gradient(135deg, #ffffff 0%, #eef5fb 100%);
+  color: #0f5fa8;
   font-weight: 700;
   cursor: pointer;
 }
@@ -343,7 +343,7 @@
 .previewPaper {
   margin: 14px;
   background: #ffffff;
-  border: 1px solid #cedceb;
+  border: 1px solid #d6e4f0;
   padding: 10px 10px 8px;
 }
 
@@ -365,13 +365,13 @@
 
 .previewStatus {
   text-align: center;
-  color: #173850;
+  color: #0f3d70;
   font-size: 1.15rem;
   margin-top: 40px;
 }
 
 .previewBanner {
-  background: var(--preview-brand-color, #4d5660);
+  background: var(--preview-brand-color, #0f5fa8);
   color: var(--preview-brand-text, #ffffff);
   text-align: center;
   font-weight: 800;
@@ -383,7 +383,7 @@
 
 .previewSchoolTitle {
   text-align: center;
-  color: var(--preview-brand-color, #c92525);
+  color: var(--preview-brand-color, #0f5fa8);
   font-size: 1.08rem;
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -412,7 +412,7 @@
 .previewUniversityText {
   font-size: 1.02rem;
   font-weight: 800;
-  color: #1f2b36;
+  color: #10243b;
   line-height: 1.15;
   max-width: 320px;
 }
@@ -420,7 +420,7 @@
 .previewTextLogo {
   width: 130px;
   height: auto;
-  margin-right:auto ;
+  margin-right: auto;
   margin-top: 6px;
 }
 
@@ -457,48 +457,34 @@
 
 .previewTable th,
 .previewTable td {
-  border: 1px solid #c9dcef;
+  border: 1px solid #d6e4f0;
   padding: 6px 4px;
   text-align: center;
   word-break: break-word;
 }
 
 .previewTable th {
-  background: linear-gradient(180deg, #eef2f5 0%, #e3ebf3 100%);
-  color: #21384b;
+  background: linear-gradient(180deg, #eef5fb 0%, #e3ebf3 100%);
+  color: #123a63;
   font-weight: 800;
 }
 
 .previewYearCell {
   font-weight: 800;
-  color: #16314d;
+  color: #0f3d70;
   min-width: 90px;
 }
 
 .yearBand0 td,
-.yearBand0 .previewYearCell {
-  background: #e6c44c;
-}
-
+.yearBand0 .previewYearCell { background: #dfeefb; }
 .yearBand1 td,
-.yearBand1 .previewYearCell {
-  background: #d8b6d6;
-}
-
+.yearBand1 .previewYearCell { background: #eef5fb; }
 .yearBand2 td,
-.yearBand2 .previewYearCell {
-  background: #b8dfc9;
-}
-
+.yearBand2 .previewYearCell { background: #e6eef8; }
 .yearBand3 td,
-.yearBand3 .previewYearCell {
-  background: #b7cdeb;
-}
-
+.yearBand3 .previewYearCell { background: #d6e7f6; }
 .yearBand4 td,
-.yearBand4 .previewYearCell {
-  background: #f4c3c8;
-}
+.yearBand4 .previewYearCell { background: #edf3fa; }
 
 .previewSignoffRow {
   display: flex;
@@ -516,7 +502,7 @@
 
 .previewFooterBar {
   margin-top: 10px;
-  background: var(--preview-brand-color, #4d5660);
+  background: var(--preview-brand-color, #0f5fa8);
   color: var(--preview-brand-text, #ffffff);
   text-align: center;
   font-size: 0.82rem;
@@ -591,13 +577,13 @@
     padding: 3mm 2mm;
     font-size: 12pt;
     color: var(--preview-brand-text, #ffffff) !important;
-    background: var(--preview-brand-color, #595f66) !important;
+    background: var(--preview-brand-color, #0f5fa8) !important;
   }
 
   .previewSchoolTitle {
     margin: 0 0 1.6mm;
     font-size: 12pt;
-    color: var(--preview-brand-color, #c92525) !important;
+    color: var(--preview-brand-color, #0f5fa8) !important;
     text-align: center;
     font-weight: 800;
     letter-spacing: 0.02em;
@@ -625,7 +611,7 @@
 
   .previewUniversityText {
     font-size: 10pt;
-    color: #1f2b36 !important;
+    color: #10243b !important;
   }
 
   .previewTextLogo {
@@ -667,41 +653,27 @@
 
   .previewTable th,
   .previewTable td {
-    border: 1px solid #c5cfda !important;
+    border: 1px solid #d6e4f0 !important;
     padding: 1.8mm 1.2mm;
     word-break: break-word;
   }
 
   .previewTable th {
-    background: #eef2f5 !important;
-    color: #21384b !important;
+    background: #eef5fb !important;
+    color: #123a63 !important;
     font-weight: 800;
   }
 
   .yearBand0 td,
-  .yearBand0 .previewYearCell {
-    background: #e6c44c !important;
-  }
-
+  .yearBand0 .previewYearCell { background: #dfeefb !important; }
   .yearBand1 td,
-  .yearBand1 .previewYearCell {
-    background: #d8b6d6 !important;
-  }
-
+  .yearBand1 .previewYearCell { background: #eef5fb !important; }
   .yearBand2 td,
-  .yearBand2 .previewYearCell {
-    background: #b8dfc9 !important;
-  }
-
+  .yearBand2 .previewYearCell { background: #e6eef8 !important; }
   .yearBand3 td,
-  .yearBand3 .previewYearCell {
-    background: #b7cdeb !important;
-  }
-
+  .yearBand3 .previewYearCell { background: #d6e7f6 !important; }
   .yearBand4 td,
-  .yearBand4 .previewYearCell {
-    background: #f4c3c8 !important;
-  }
+  .yearBand4 .previewYearCell { background: #edf3fa !important; }
 
   .previewSignoffRow {
     margin-top: 3.4mm;
@@ -717,43 +689,23 @@
     padding: 2mm;
     font-size: 8.5pt;
     color: var(--preview-brand-text, #ffffff) !important;
-    background: var(--preview-brand-color, #595f66) !important;
+    background: var(--preview-brand-color, #0f5fa8) !important;
   }
 }
 
 @keyframes riseIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes headingGlow {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-    letter-spacing: 0.06em;
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    letter-spacing: 0.02em;
-  }
+  from { opacity: 0; transform: translateY(-8px); letter-spacing: 0.06em; }
+  to { opacity: 1; transform: translateY(0); letter-spacing: 0.02em; }
 }
 
 @keyframes panelRise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 768px) {

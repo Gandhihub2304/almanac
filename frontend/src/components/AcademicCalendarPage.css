@@ -4,9 +4,9 @@
   min-height: 100vh;
   font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at 10% 0%, rgba(104, 182, 250, 0.22) 0%, transparent 38%),
-    radial-gradient(circle at 90% 100%, rgba(103, 201, 135, 0.2) 0%, transparent 34%),
-    #f4f9ff;
+    radial-gradient(circle at 10% 0%, rgba(118, 173, 228, 0.2) 0%, transparent 38%),
+    radial-gradient(circle at 90% 100%, rgba(178, 210, 240, 0.22) 0%, transparent 34%),
+    #f8fbff;
 }
 
 .academicCalendarHeader {
@@ -14,8 +14,10 @@
   top: 0;
   z-index: 20;
   padding: 26px 24px 24px;
-  background: linear-gradient(120deg, #047cde 0%, #1388ed 50%, #0d8bf2 100%);
-  color: #f6fbff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 248, 253, 0.98) 100%);
+  color: #0f3d70;
+  border-bottom: 1px solid rgba(15, 95, 168, 0.12);
+  box-shadow: 0 18px 42px rgba(11, 48, 86, 0.12);
 }
 
 .academicCalendarLogo {
@@ -25,6 +27,11 @@
   height: 95px;
   width: auto;
   object-fit: contain;
+  padding: 8px 10px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 95, 168, 0.12);
+  box-shadow: 0 10px 22px rgba(11, 48, 86, 0.12);
 }
 
 .academicCalendarTitle {
@@ -39,7 +46,7 @@
   margin: 14px 0 0;
   text-align: center;
   font-size: 1rem;
-  color: rgba(239, 248, 255, 0.94);
+  color: #5c7084;
 }
 
 .academicCalendarContent {
@@ -48,7 +55,7 @@
 
 .academicSectionTitle {
   margin: 0 0 18px;
-  color: #0c4f86;
+  color: #0f3d70;
   font-size: clamp(1.2rem, 1rem + 1vw, 1.7rem);
 }
 
@@ -59,14 +66,12 @@
 }
 
 .calendarSchoolCard {
-  border: 1px solid #b7d3ea;
-  border-radius: 14px;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(237, 247, 255, 0.94) 75%),
-    #ffffff;
+  border: 1px solid rgba(15, 95, 168, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 249, 253, 0.98) 100%);
   overflow: hidden;
-  box-shadow: 0 8px 18px rgba(12, 68, 112, 0.11);
-  color: #ffffff;
+  box-shadow: 0 16px 32px rgba(11, 48, 86, 0.08);
+  color: #0f3d70;
   opacity: 0;
   animation: academicCardIn 0.42s ease forwards;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -74,12 +79,12 @@
 
 .calendarSchoolCard:hover {
   transform: translateY(-3px);
-  border-color: #73add7;
-  box-shadow: 0 14px 24px rgba(14, 72, 120, 0.15);
+  border-color: #a7c9e5;
+  box-shadow: 0 20px 36px rgba(11, 48, 86, 0.12);
 }
 
 .calendarSchoolCard.expanded {
-  border-color: #6ba7d5;
+  border-color: #9fc3e0;
 }
 
 .calendarSchoolHeader {
@@ -93,9 +98,7 @@
   cursor: pointer;
   text-align: left;
   color: inherit;
-  background:
-    linear-gradient(90deg, rgba(16, 120, 160, 0.1) 0, rgba(16, 120, 160, 0.1) 7px, transparent 7px),
-    transparent;
+  background: linear-gradient(90deg, rgba(15, 95, 168, 0.08) 0, rgba(15, 95, 168, 0.08) 7px, transparent 7px);
 }
 
 .calendarSchoolName {
@@ -122,9 +125,9 @@
 .calendarProgrammePill {
   display: inline-block;
   border-radius: 999px;
-  border: 1px solid #9ec7d9;
-  background: #edf9f8;
-  color: #0d5c77;
+  border: 1px solid #c9dcec;
+  background: #ffffff;
+  color: #0f5fa8;
   padding: 5px 9px;
   font-size: 0.8rem;
   font-weight: 700;
@@ -134,53 +137,53 @@
 
 .calendarProgrammePill:hover {
   transform: translateY(-1px);
-  border-color: #66abbe;
-  background: #ddf2f0;
+  border-color: #a7c9e5;
+  background: #eef5fb;
 }
 
 .dayWiseCalendarSection {
   margin-top: 24px;
-  border: 1px solid #bdd8ef;
+  border: 1px solid rgba(15, 95, 168, 0.12);
   border-radius: 20px;
-  background: linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
-  box-shadow: 0 14px 28px rgba(14, 72, 120, 0.12);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 16px 32px rgba(11, 48, 86, 0.08);
   overflow: hidden;
 }
 
 .dayWiseHeaderCard {
   padding: 18px;
-  border-bottom: 1px solid #d3e6f6;
-  background: linear-gradient(110deg, #e8f4ff 0%, #f4fbff 100%);
+  border-bottom: 1px solid rgba(15, 95, 168, 0.08);
+  background: linear-gradient(110deg, #ffffff 0%, #f4f8fd 100%);
 }
 
 .dayWiseHeaderCard h3 {
   margin: 0;
-  color: #0f4f84;
+  color: #0f3d70;
   font-size: 1.22rem;
 }
 
 .dayWiseHeaderCard h4 {
   margin: 6px 0 0;
-  color: #16639d;
+  color: #1b5b95;
   font-size: 1.05rem;
 }
 
 .dayWiseHeaderCard p {
   margin: 6px 0 0;
-  color: #29597f;
+  color: #5c7084;
   font-weight: 600;
 }
 
 .formalCalendarHeading {
   padding: 16px 14px 8px;
-  border-bottom: 1px solid #d3e6f6;
+  border-bottom: 1px solid rgba(15, 95, 168, 0.08);
   text-align: center;
-  background: linear-gradient(110deg, #e8f4ff 0%, #f4fbff 100%);
+  background: linear-gradient(110deg, #ffffff 0%, #f4f8fd 100%);
 }
 
 .formalCalendarHeading p {
   margin: 4px 0;
-  color: #0f4f84;
+  color: #1b5b95;
   font-weight: 700;
 }
 
@@ -214,26 +217,26 @@
 
 .dayWiseTable th,
 .dayWiseTable td {
-  border: 1px solid #d5e6f5;
+  border: 1px solid rgba(15, 95, 168, 0.08);
   padding: 9px 10px;
   text-align: left;
-  color: #1c4667;
+  color: #123a63;
 }
 
 .dayWiseTable th {
-  background: #edf6ff;
-  color: #0f4f84;
+  background: #eef5fb;
+  color: #0f5fa8;
   font-size: 0.88rem;
 }
 
 .dayWiseTable tbody tr:nth-child(even) {
-  background: #f9fcff;
+  background: #f8fbff;
 }
 
 .dayWiseEmpty {
   text-align: center;
   font-weight: 700;
-  color: #486681;
+  color: #5c7084;
 }
 
 .tableActionRow {
@@ -245,41 +248,41 @@
 
 .tableActionRow .uploadPdfButton {
   margin-left: auto;
-  border-color: #0f6fbf;
-  background: linear-gradient(180deg, #2f98ec 0%, #187ed5 100%);
+  border-color: #0f5fa8;
+  background: linear-gradient(180deg, #0f5fa8 0%, #1d75c1 100%);
   color: #ffffff;
 }
 
 .tableActionRow .uploadPdfButton:hover {
-  background: linear-gradient(180deg, #268de0 0%, #1173c8 100%);
+  background: linear-gradient(180deg, #0b4f8d 0%, #1464ab 100%);
 }
 
 .tableActionRow .previewButton {
-  border-color: #e3b170;
-  background: linear-gradient(180deg, #ffe6c7 0%, #ffd8a7 100%);
-  color: #8a4f11;
+  border-color: #c9dcec;
+  background: linear-gradient(180deg, #ffffff 0%, #eef5fb 100%);
+  color: #0f5fa8;
 }
 
 .tableActionRow .previewButton:hover {
-  background: linear-gradient(180deg, #ffddb6 0%, #ffcf95 100%);
+  background: linear-gradient(180deg, #eef5fb 0%, #e0ebf7 100%);
 }
 
 .tableActionRow .saveButton {
-  border-color: #5bad7c;
-  background: linear-gradient(180deg, #83d9a6 0%, #53c081 100%);
-  color: #0f4e2d;
+  border-color: #0f5fa8;
+  background: linear-gradient(180deg, #0f5fa8 0%, #1d75c1 100%);
+  color: #ffffff;
 }
 
 .tableActionRow .saveButton:hover {
-  background: linear-gradient(180deg, #74d29b 0%, #45b674 100%);
+  background: linear-gradient(180deg, #0b4f8d 0%, #1464ab 100%);
 }
 
 .tableEditInput {
   width: 100%;
-  border: 1px solid #b7d4ea;
-  border-radius: 7px;
+  border: 1px solid #c9dcec;
+  border-radius: 10px;
   padding: 7px 8px;
-  color: #1c4667;
+  color: #123a63;
   background: #ffffff;
 }
 
@@ -292,7 +295,7 @@
 .mergedWeekCell {
   text-align: center;
   vertical-align: middle;
-  background: #f6fbff;
+  background: #eef5fb;
   width: 88px;
   min-width: 88px;
   max-width: 88px;
@@ -339,11 +342,11 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: 14px;
-  border: 1px solid #a9ddbe;
-  background: linear-gradient(135deg, #effdf3 0%, #daf6e2 100%);
-  color: #14653d;
+  border: 1px solid #c9dcec;
+  background: linear-gradient(135deg, #ffffff 0%, #eef5fb 100%);
+  color: #0f5fa8;
   font-weight: 800;
-  box-shadow: 0 10px 18px rgba(20, 101, 61, 0.12);
+  box-shadow: 0 10px 18px rgba(11, 48, 86, 0.12);
   animation: statusPop 0.22s ease;
 }
 
@@ -354,11 +357,11 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: 14px;
-  border: 1px solid #efb0b0;
-  background: linear-gradient(135deg, #fff3f3 0%, #ffe0e0 100%);
-  color: #9f2f2f;
+  border: 1px solid #cfdcec;
+  background: linear-gradient(135deg, #ffffff 0%, #f3f8fd 100%);
+  color: #0f3d70;
   font-weight: 800;
-  box-shadow: 0 10px 18px rgba(159, 47, 47, 0.12);
+  box-shadow: 0 10px 18px rgba(11, 48, 86, 0.12);
   animation: statusPop 0.22s ease;
 }
 
@@ -370,9 +373,9 @@
 }
 
 .calendarBackButton {
-  border: 1px solid #9dbfda;
+  border: 1px solid #c9dcec;
   background: linear-gradient(180deg, #ffffff 0%, #eff6fd 100%);
-  color: #0f4f84;
+  color: #0f5fa8;
   font-weight: 700;
   border-radius: 10px;
   padding: 8px 14px;
@@ -415,27 +418,27 @@
 }
 
 .calendarTopLinkBlue {
-  color: #0f69d6;
+  color: #0f5fa8;
 }
 
 .calendarTopLinkBlue:hover,
 .calendarTopLinkBlue:focus-visible {
-  color: #0a4f9f;
+  color: #0b3d72;
 }
 
 .calendarTopLinkBlue:focus-visible {
-  outline: 2px solid rgba(15, 105, 214, 0.25);
+  outline: 2px solid rgba(15, 95, 168, 0.24);
   outline-offset: 4px;
 }
 
 .calendarTopLinkBlack {
-  color: #1a1a1a;
+  color: #0f3d70;
   margin-right: 6px;
 }
 
 .calendarTopLinkBlack:hover,
 .calendarTopLinkBlack:focus-visible {
-  color: #000000;
+  color: #0b3d72;
 }
 
 .calendarTopLinkBlack:focus-visible {
@@ -471,7 +474,7 @@
   text-align: center;
   vertical-align: middle;
   font-weight: 800;
-  background: #f2f8ff;
+  background: #eef5fb;
 }
 
 .academicSelectorCard {
@@ -481,7 +484,7 @@
 .selectorSubText {
   margin: 4px 0 14px;
   text-align: center;
-  color: #17598f;
+  color: #0f3d70;
   font-weight: 700;
 }
 
@@ -494,9 +497,9 @@
 .savedFilterBar {
   margin: 0 0 12px;
   padding: 10px;
-  border: 1px solid #bfd8e9;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #ffffff 0%, #eef9ff 100%);
+  border: 1px solid rgba(15, 95, 168, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
   display: grid;
   grid-template-columns: repeat(3, minmax(160px, 1fr)) auto;
   gap: 8px;
@@ -510,27 +513,27 @@
 }
 
 .savedFilterItem label {
-  color: #155a83;
+  color: #0f3d70;
   font-size: 0.8rem;
   font-weight: 700;
 }
 
 .savedFilterItem select {
-  border: 1px solid #a9cde4;
-  border-radius: 8px;
+  border: 1px solid #c9dcec;
+  border-radius: 10px;
   padding: 7px 8px;
   font-size: 0.84rem;
-  color: #1d4e72;
+  color: #123a63;
   background: #ffffff;
 }
 
 .savedCalendarCard {
-  border: 1px solid #b9d8e8;
-  border-radius: 14px;
-  background: linear-gradient(150deg, #ffffff 0%, #eefbff 100%);
-  box-shadow: 0 8px 18px rgba(13, 78, 112, 0.12);
+  border: 1px solid rgba(15, 95, 168, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(150deg, #ffffff 0%, #f4f8fd 100%);
+  box-shadow: 0 16px 32px rgba(11, 48, 86, 0.08);
   padding: 12px;
-  color: #ffffff;
+  color: #0f3d70;
 }
 
 .savedCalendarCard h3 {
@@ -561,8 +564,8 @@
 }
 
 .savedIconButton {
-  border: 1px solid #a6c8e4;
-  background: #f1f8ff;
+  border: 1px solid #c9dcec;
+  background: #ffffff;
   width: 38px;
   height: 38px;
   border-radius: 999px;
@@ -575,16 +578,16 @@
 .savedIconButton svg {
   width: 18px;
   height: 18px;
-  fill: #0e4e83;
+  fill: #0f5fa8;
 }
 
 .savedIconButton.delete {
-  border-color: #e6b4b4;
-  background: #fff2f2;
+  border-color: #c9dcec;
+  background: #f7fbff;
 }
 
 .savedIconButton.delete svg {
-  fill: #b93d3d;
+  fill: #0b3d72;
 }
 
 .savedIconButton:disabled {
@@ -600,9 +603,9 @@
 }
 
 .previewTopClose {
-  border: 1px solid #afcae2;
-  background: #f3f9ff;
-  color: #0f4f84;
+  border: 1px solid #c9dcec;
+  background: #ffffff;
+  color: #0f5fa8;
   border-radius: 999px;
   width: 30px;
   height: 30px;
