@@ -1,9 +1,13 @@
 const School = require("../models/School");
+const { canonicalizeSchoolName, HEALTH_SCIENCES_CANONICAL } = require("../utils/schoolName");
 
 // ✅ CREATE
 exports.addSchool = async (req, res) => {
   try {
-    const school = new School(req.body);
+    const school = new School({
+      ...req.body,
+      name: canonicalizeSchoolName(req.body?.name)
+    });
     await school.save();
 
     res.status(201).json(school);
@@ -16,8 +20,18 @@ exports.addSchool = async (req, res) => {
 // ✅ READ
 exports.getSchools = async (req, res) => {
   try {
-    const schools = await School.find();
-    res.json(schools);
+    await School.updateMany(
+      { name: { $regex: /^school\s+of\s+health\s+science$/i } },
+      { $set: { name: HEALTH_SCIENCES_CANONICAL } }
+    );
+
+    const schools = await School.find().lean();
+    res.json(
+      schools.map((school) => ({
+        ...school,
+        name: canonicalizeSchoolName(school?.name)
+      }))
+    );
   } catch (error) {
     console.error("READ ERROR:", error);
     res.status(500).json({ message: error.message });
@@ -35,7 +49,7 @@ exports.updateSchool = async (req, res) => {
     const updated = await School.findByIdAndUpdate(
       id,
       {
-        name: name || "",
+        name: canonicalizeSchoolName(name || ""),
         programs: programs || []
       },
       { new: true }

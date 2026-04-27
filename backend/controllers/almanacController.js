@@ -1,6 +1,7 @@
 const Almanac = require("../models/Almanac");
 const Calendar = require("../models/Calendar");
 const mongoose = require("mongoose");
+const { canonicalizeSchoolName, HEALTH_SCIENCES_CANONICAL } = require("../utils/schoolName");
 
 const parseDate = (value) => {
   const date = new Date(value);
@@ -44,6 +45,30 @@ const getDurationInDays = (start, end) => {
   const endDate = parseDate(end);
   if (!startDate || !endDate) return 0;
   return Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+};
+
+const getActivities = (term) => {
+  if (Array.isArray(term?.activities) && term.activities.length > 0) {
+    return term.activities;
+  }
+
+  if (term?.activityStart) {
+    return [{ start: term.activityStart, end: term.activityEnd || "" }];
+  }
+
+  return [];
+};
+
+const getFilledWeekCount = (entries) => (
+  Array.isArray(entries)
+    ? entries.filter((entry) => entry?.start).length
+    : 0
+);
+
+const getFourthTermMaxDurationDays = (term) => {
+  const activityCount = getFilledWeekCount(getActivities(term));
+  const holidayCount = getFilledWeekCount(term?.holidays || []);
+  return 70 + ((activityCount + holidayCount) * 7);
 };
 
 const getBreakReferenceEndDate = (term, termIndex) => (
@@ -103,8 +128,9 @@ const validateBreakRules = (yearsData, totalYears) => {
         }
 
         const fourthTermDuration = getDurationInDays(term.termStart, term.termEnd);
-        if (fourthTermDuration <= 0 || fourthTermDuration > 70) {
-          return `Year ${yearIndex + 1} Term 4 duration must be between 1 and 70 days`;
+        const maxFourthTermDuration = getFourthTermMaxDurationDays(term);
+        if (fourthTermDuration <= 0 || fourthTermDuration > maxFourthTermDuration) {
+          return `Year ${yearIndex + 1} Term 4 duration must be within 10 weeks plus selected activity/holiday weeks`;
         }
       }
 
@@ -366,7 +392,7 @@ exports.saveDayWiseTable = async (req, res) => {
       {
         $set: {
           almanacId: id,
-          schoolName: String(schoolName || "School").trim(),
+          schoolName: canonicalizeSchoolName(schoolName || "School"),
           program: String(program || "").trim(),
           batchStart: Number(batchStart),
           batchEnd: Number(batchEnd),
@@ -493,7 +519,10 @@ exports.getSavedCalendarByAlmanacYear = async (req, res) => {
       return res.status(404).json({ message: "Saved calendar not found" });
     }
 
-    res.json(savedCalendar);
+    res.json({
+      ...savedCalendar,
+      schoolName: canonicalizeSchoolName(savedCalendar?.schoolName)
+    });
   } catch (error) {
     console.error("GET SAVED CALENDAR ERROR:", error);
     res.status(500).json({ message: error.message });
@@ -502,6 +531,11 @@ exports.getSavedCalendarByAlmanacYear = async (req, res) => {
 
 exports.getSavedCalendars = async (req, res) => {
   try {
+    await Calendar.updateMany(
+      { schoolName: { $regex: /^school\s+of\s+health\s+science$/i } },
+      { $set: { schoolName: HEALTH_SCIENCES_CANONICAL } }
+    );
+
     const calendars = await Calendar.find(
       {},
       {
@@ -527,7 +561,7 @@ exports.getSavedCalendars = async (req, res) => {
       savedCalendars.push({
         calendarId: calendar._id,
         almanacId: calendar.almanacId,
-        schoolName: calendar.schoolName,
+        schoolName: canonicalizeSchoolName(calendar.schoolName),
         program: calendar.program,
         totalYears: Number(calendar.totalYears || 0),
         batchStart: calendar.batchStart,
@@ -582,7 +616,10 @@ exports.getSavedCalendarById = async (req, res) => {
       return res.status(404).json({ message: "Saved calendar not found" });
     }
 
-    res.json(calendar);
+    res.json({
+      ...calendar,
+      schoolName: canonicalizeSchoolName(calendar?.schoolName)
+    });
   } catch (error) {
     console.error("GET SAVED CALENDAR BY ID ERROR:", error);
     res.status(500).json({ message: error.message });

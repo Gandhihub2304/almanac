@@ -475,16 +475,10 @@
   min-width: 90px;
 }
 
-.yearBand0 td,
-.yearBand0 .previewYearCell { background: #dfeefb; }
-.yearBand1 td,
-.yearBand1 .previewYearCell { background: #eef5fb; }
-.yearBand2 td,
-.yearBand2 .previewYearCell { background: #e6eef8; }
-.yearBand3 td,
-.yearBand3 .previewYearCell { background: #d6e7f6; }
-.yearBand4 td,
-.yearBand4 .previewYearCell { background: #edf3fa; }
+.yearBand td,
+.yearBand .previewYearCell {
+  background: var(--year-band-bg, #eef5fb);
+}
 
 .previewSignoffRow {
   display: flex;
@@ -664,16 +658,8 @@
     font-weight: 800;
   }
 
-  .yearBand0 td,
-  .yearBand0 .previewYearCell { background: #dfeefb !important; }
-  .yearBand1 td,
-  .yearBand1 .previewYearCell { background: #eef5fb !important; }
-  .yearBand2 td,
-  .yearBand2 .previewYearCell { background: #e6eef8 !important; }
-  .yearBand3 td,
-  .yearBand3 .previewYearCell { background: #d6e7f6 !important; }
-  .yearBand4 td,
-  .yearBand4 .previewYearCell { background: #edf3fa !important; }
+  .yearBand td,
+  .yearBand .previewYearCell { background: var(--year-band-bg, #eef5fb) !important; }
 
   .previewSignoffRow {
     margin-top: 3.4mm;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ProgramModal from "./ProgramModal";
@@ -10,7 +10,8 @@ function Header() {
   const [schools, setSchools] = useState([]);
   const [activePanel, setActivePanel] = useState("home");
   const [selectedSchool, setSelectedSchool] = useState(null);
-  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
+  const [isDrawerCollapsed] = useState(true);
+  const [isDrawerHoverExpanded, setIsDrawerHoverExpanded] = useState(false);
   const [headerOffset, setHeaderOffset] = useState(116);
   const [batches, setBatches] = useState([]);
   const [batchFetchError, setBatchFetchError] = useState("");
@@ -80,7 +81,7 @@ function Header() {
       border: "#bccada"
     },
     {
-      matches: ["health sciences", "health science"],
+      matches: ["health sciences"],
       bg: "linear-gradient(135deg, #f6fbff 0%, #d9ecfb 100%)",
       border: "#b1d3eb"
     },
@@ -108,7 +109,9 @@ function Header() {
       entry.matches.some((keyword) => normalized.includes(keyword))
     );
 
-    return matched || { bg: "linear-gradient(135deg, #f8fbff 0%, #d8e8f8 100%)", border: "#adc7e2" };
+    return matched
+      ? { bg: "#ffffff", border: matched.border }
+      : { bg: "#ffffff", border: "#adc7e2" };
   };
 
   const drawerItems = [
@@ -263,29 +266,7 @@ function Header() {
     return `${count} Programmes`;
   };
 
-  const groupBatchesByRange = (batchList) => {
-    const grouped = {};
-
-    (batchList || []).forEach((item) => {
-      const key = `${item.batchStart}-${item.batchEnd}`;
-      if (!grouped[key]) {
-        grouped[key] = {
-          batchStart: item.batchStart,
-          batchEnd: item.batchEnd,
-          programs: []
-        };
-      }
-      grouped[key].programs.push({
-        name: item.program,
-        year: item.year,
-        id: item._id
-      });
-    });
-
-    return Object.values(grouped).sort((a, b) => b.batchStart - a.batchStart);
-  };
-
-  const getSchoolForProgram = (programName) => {
+  const getSchoolForProgram = useCallback((programName) => {
     const matchedSchool = schools.find((school) =>
       (school.programs || []).some(
         (program) => (program || "").toLowerCase().replace(/\s+/g, " ").trim()
@@ -294,7 +275,7 @@ function Header() {
     );
 
     return matchedSchool?.name || "School";
-  };
+  }, [schools]);
 
   const clearSavedBatchFilters = () => {
     setSavedBatchFilters({
@@ -360,7 +341,7 @@ function Header() {
 
       return true;
     });
-  }, [batches, savedBatchFilters]);
+  }, [batches, savedBatchFilters, getSchoolForProgram]);
 
   const trackFilterOptions = useMemo(() => {
     const schoolNames = (schools || []).map((item) => item.name).sort((a, b) => a.localeCompare(b));
@@ -899,48 +880,44 @@ function Header() {
     await fetchSchools();
   };
 
+  const isDrawerExpanded = !isDrawerCollapsed || isDrawerHoverExpanded;
+
   return (
     <>
       <section
         className="landingShell"
         style={{
           "--header-offset": `${headerOffset}px`,
-          "--drawer-width": isDrawerCollapsed ? "86px" : "202px"
+          "--drawer-width": isDrawerExpanded ? "min(218px, 78vw)" : "86px"
         }}
       >
         <div className="header" ref={headerRef}>
-          <img src="/Aurora Logo.png" alt="Aurora Logo" className="headerLogo" />
-          <div className="heroTitleWrap">
-            <h1 className="headerTitle" onClick={() => setActivePanel("home")}>
-              <span className="headerTitleText">Aurora University Almanac</span>
-            </h1>
+          <div className="topBar">
+            <button type="button" className="headerBrand" onClick={() => setActivePanel("home")}>
+              <img src="/Aurora Logo.png" alt="Aurora University logo" className="headerLogo" />
+              <span className="headerBrandCopy">
+                <span className="headerBrandTitle">Aurora University</span>
+                <span className="headerBrandSubtitle">Almanac Generator</span>
+              </span>
+            </button>
+
+            <div className="headerActions" aria-label="Portal actions">
+              <button type="button" className="headerAvatar" aria-label="User profile">
+                AU
+              </button>
+            </div>
           </div>
-          <p className="headerSubTitle">
-            A premium white-and-blue workspace for schools, programmes, and calendar planning.
-          </p>
         </div>
 
-        <aside className={`sideDrawer ${isDrawerCollapsed ? "collapsed" : ""}`}>
-          <div className="drawerBrand">
-            <img src="/Aurora Logo.png" alt="Aurora Logo" className="drawerBrandLogo" />
-            {!isDrawerCollapsed && (
-              <div className="drawerBrandCopy">
-                <span className="drawerBrandKicker">Launch Hub</span>
-                <strong>Aurora UI</strong>
-              </div>
-            )}
-          </div>
-          <button
-            type="button"
-            className="drawerCollapseToggle"
-            onClick={() => setIsDrawerCollapsed((current) => !current)}
-            aria-label={isDrawerCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={isDrawerCollapsed ? "Expand" : "Collapse"}
-          >
-            <span className="drawerCollapseIcon" aria-hidden="true">
-              {isDrawerCollapsed ? ">" : "<"}
-            </span>
-          </button>
+        <aside
+          className={`sideDrawer ${isDrawerCollapsed ? "collapsed" : ""} ${isDrawerHoverExpanded ? "hoverExpanded" : ""}`}
+          onMouseEnter={() => {
+            if (isDrawerCollapsed) {
+              setIsDrawerHoverExpanded(true);
+            }
+          }}
+          onMouseLeave={() => setIsDrawerHoverExpanded(false)}
+        >
           {drawerItems.map((item) => (
             <button
               key={item.key}
@@ -950,15 +927,14 @@ function Header() {
               aria-label={item.title}
             >
               <span className="drawerIcon" aria-hidden="true">{item.icon}</span>
-              {!isDrawerCollapsed && <span className="drawerText">{item.label}</span>}
-              {!isDrawerCollapsed && <span className="drawerChevron" aria-hidden="true">&gt;</span>}
+              {isDrawerExpanded && <span className="drawerText">{item.label}</span>}
             </button>
           ))}
         </aside>
 
         {activePanel === "home" && (
-          <section className="plainPanel">
-            <div className="panelTitleRow">
+          <section className="plainPanel dashboardPanel">
+            <div className="panelTitleRow dashboardSectionHeader">
               <h2 className="panelTitle">Schools</h2>
               <button
                 className="academicCalendarLaunch"
@@ -967,6 +943,7 @@ function Header() {
                 Academic Calendar
               </button>
             </div>
+
             <div className="cardsGrid">
               {schools.map((school, index) => {
                 const palette = getSchoolCardPalette(school.name || "");

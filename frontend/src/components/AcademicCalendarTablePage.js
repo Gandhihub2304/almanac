@@ -942,13 +942,21 @@ function AcademicCalendarTablePage() {
   return (
     <section className="academicCalendarShell">
       <div className="academicCalendarHeader">
-        <img src="/Aurora Logo.png" alt="Aurora Logo" className="academicCalendarLogo" />
-        <h1 className="academicCalendarTitle">Aurora University Academic Calendar</h1>
-        <p className="academicCalendarSubtitle">
-          {readOnlyView
-            ? "Read-only day-wise schedule"
-            : "Editable day-wise schedule generated from saved almanac"}
-        </p>
+        <div className="academicCalendarHeaderBar">
+          <div className="academicCalendarBrand" role="button" tabIndex={0}>
+            <img src="/Aurora Logo.png" alt="Aurora University logo" className="academicCalendarBrandLogo" />
+            <span className="academicCalendarBrandCopy">
+              <span className="academicCalendarBrandTitle">Aurora University</span>
+              <span className="academicCalendarBrandSubtitle">Academic Calendar Generator</span>
+            </span>
+          </div>
+
+          <div className="academicCalendarActions" aria-label="Calendar actions">
+            <button type="button" className="academicCalendarAvatar" aria-label="User profile">
+              AU
+            </button>
+          </div>
+        </div>
       </div>
 
       <main className="academicCalendarContent">

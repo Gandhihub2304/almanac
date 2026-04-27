@@ -12,7 +12,7 @@ const schoolBrandPalette = [
   { matches: ["psychology"], color: "#4d6fb0" },
   { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "#3f86c6" },
   { matches: ["liberal arts"], color: "#5d7f9f" },
-  { matches: ["health sciences", "health science"], color: "#1580b8" },
+  { matches: ["health sciences"], color: "#1580b8" },
   { matches: ["pharmacy"], color: "#2a8ac7" },
   { matches: ["school of sciences", "school of science", "sciences"], color: "#5b8fc7" },
   { matches: ["ph.d", "phd"], color: "#3463af" }

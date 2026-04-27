@@ -73,7 +73,7 @@ function AcademicCalendarPage() {
     { matches: ["psychology"], color: "linear-gradient(135deg, #f7fbff 0%, #dce7fb 100%)" },
     { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "linear-gradient(135deg, #f8fbff 0%, #e2ecf8 100%)" },
     { matches: ["liberal arts"], color: "linear-gradient(135deg, #f8fbff 0%, #dde7f2 100%)" },
-    { matches: ["health sciences", "health science"], color: "linear-gradient(135deg, #f6fbff 0%, #d9ecfb 100%)" },
+    { matches: ["health sciences"], color: "linear-gradient(135deg, #f6fbff 0%, #d9ecfb 100%)" },
     { matches: ["pharmacy"], color: "linear-gradient(135deg, #f8fbff 0%, #e2edf8 100%)" },
     { matches: ["school of sciences", "school of science", "sciences"], color: "linear-gradient(135deg, #f6faff 0%, #dce6fb 100%)" },
     { matches: ["ph.d", "phd"], color: "linear-gradient(135deg, #eef5ff 0%, #d8e6fb 100%)" }
@@ -85,11 +85,10 @@ function AcademicCalendarPage() {
     const matched = schoolBrandPalette.find((entry) =>
       entry.matches.some((keyword) => normalized.includes(keyword))
     );
-    const brand = matched?.color || "linear-gradient(135deg, #f8fbff 0%, #d8e8f8 100%)";
 
     return {
-      bg: brand,
-      border: "#adc7e2"
+      bg: "#ffffff",
+      border: matched ? "#9dbfe1" : "#a9c4e4"
     };
   };
 
@@ -462,11 +461,21 @@ function AcademicCalendarPage() {
     <>
       <section className="academicCalendarShell">
       <div className="academicCalendarHeader">
-        <img src="/Aurora Logo.png" alt="Aurora Logo" className="academicCalendarLogo" />
-        <h1 className="academicCalendarTitle">Aurora University Academic Calendar</h1>
-        <p className="academicCalendarSubtitle">
-          Select a school and programme to continue with a clean, blue-first calendar workflow.
-        </p>
+        <div className="academicCalendarHeaderBar">
+          <div className="academicCalendarBrand" role="button" tabIndex={0}>
+            <img src="/Aurora Logo.png" alt="Aurora University logo" className="academicCalendarBrandLogo" />
+            <span className="academicCalendarBrandCopy">
+              <span className="academicCalendarBrandTitle">Aurora University</span>
+              <span className="academicCalendarBrandSubtitle">Academic Calendar Generator</span>
+            </span>
+          </div>
+
+          <div className="academicCalendarActions" aria-label="Calendar actions">
+            <button type="button" className="academicCalendarAvatar" aria-label="User profile">
+              AU
+            </button>
+          </div>
+        </div>
       </div>
 
       <main className="academicCalendarContent">
@@ -511,7 +520,7 @@ function AcademicCalendarPage() {
 
         {!showSavedCalendars ? (
           <>
-            <h2 className="academicSectionTitle">Schools And Programmes</h2>
+            <h2 className="academicSectionTitle">Schools</h2>
 
             <div className="calendarSchoolGrid">
               {schools.map((school, index) => {

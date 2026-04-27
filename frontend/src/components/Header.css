@@ -16,14 +16,33 @@
   top: 0;
   left: 0;
   right: 0;
-  padding: 26px 24px 26px;
+  padding: 14px 24px;
   border-radius: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 248, 253, 0.98) 100%);
+  background: rgba(255, 255, 255, 0.98);
   color: #0f3d70;
-  border-bottom: 1px solid rgba(15, 95, 168, 0.12);
-  box-shadow: 0 18px 42px rgba(11, 48, 86, 0.12);
+  border-bottom: 1px solid rgba(15, 95, 168, 0.1);
+  box-shadow: 0 10px 24px rgba(11, 48, 86, 0.08);
   overflow: hidden;
   z-index: 50;
+}
+
+.topBar {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.headerBrand {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  cursor: pointer;
 }
 
 .menuButton {
@@ -65,47 +84,52 @@
 }
 
 .headerLogo {
-  position: absolute;
-  top: 30px;
-  right: 70px;
-  height: 95px;
-  width: auto;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
-  padding: 8px 10px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(15, 95, 168, 0.12);
-  filter: drop-shadow(0 10px 22px rgba(11, 48, 86, 0.12));
+  flex: 0 0 30px;
+  border-radius: 8px;
 }
 
-.heroTitleWrap {
-  margin-top: 28px;
+.headerBrandCopy {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
-.headerTitle {
-  margin: 0;
-  font-size: clamp(1.9rem, 1.1rem + 2vw, 3rem);
-  line-height: 1.1;
-  text-align: center;
-  font-weight: 800;
-  white-space: nowrap;
-  cursor: pointer;
-  color: #0b3d72;
-}
-
-.headerTitleText {
-  display: inline-block;
-  animation: titleReveal 1s steps(24, end) both;
-}
-
-.headerSubTitle {
-  margin: 16px 0 0;
-  text-align: center;
+.headerBrandTitle {
   font-size: 1rem;
-  color: #5c7084;
-  letter-spacing: 0.01em;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #1c2430;
+}
+
+.headerBrandSubtitle {
+  font-size: 0.72rem;
+  line-height: 1;
+  color: #6b8298;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerAvatar {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: #eef4fb;
+  color: #27405f;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 0 0 1px rgba(15, 95, 168, 0.12);
 }
 
 .plainPanel {
@@ -113,6 +137,7 @@
   margin-left: var(--drawer-width, 202px);
   padding: 8px 20px;
   animation: panelIn 0.35s ease;
+  transition: margin-left 0.24s ease;
 }
 
 .centerPanel {
@@ -189,19 +214,19 @@
   margin: 0 0 16px;
   padding: 10px 12px 12px;
   border-radius: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #eef5fb 100%);
-  border: 1px solid rgba(15, 95, 168, 0.1);
-  box-shadow: 0 12px 24px rgba(11, 48, 86, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .drawerBrandLogo {
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   object-fit: contain;
-  border-radius: 12px;
-  padding: 5px;
-  background: #ffffff;
-  border: 1px solid rgba(15, 95, 168, 0.1);
+  border-radius: 10px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .drawerBrandCopy {
@@ -211,7 +236,7 @@
 }
 
 .drawerBrandKicker {
-  color: #6b8298;
+  color: rgba(255, 255, 255, 0.75);
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -219,7 +244,7 @@
 }
 
 .drawerBrandCopy strong {
-  color: #0f3d70;
+  color: #ffffff;
   font-size: 0.98rem;
 }
 
@@ -227,6 +252,182 @@
   margin: 0 0 10px;
   color: #5c7084;
   font-weight: 600;
+}
+
+.dashboardPanel {
+  max-width: 1320px;
+  margin-right: auto;
+  margin-top: 24px;
+  padding-bottom: 24px;
+}
+
+.dashboardHero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 24px 28px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #2456e4 0%, #214fd9 44%, #1b43c4 100%);
+  color: #ffffff;
+  box-shadow: 0 20px 40px rgba(20, 47, 147, 0.24);
+}
+
+.dashboardHeroAvatar {
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.dashboardHeroCopy {
+  min-width: 0;
+}
+
+.dashboardHeroTitle {
+  margin: 0 0 8px;
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.2rem);
+  line-height: 1.1;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.dashboardHeroMeta {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.98rem;
+  line-height: 1.55;
+  max-width: 64ch;
+}
+
+.dashboardHeroLine {
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.92rem;
+}
+
+.dashboardHeroButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: end;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  padding: 11px 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dashboardHeroButton svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dashboardSectionHeader {
+  margin-top: 6px;
+}
+
+.dashboardSubSectionHeader {
+  margin-top: 24px;
+}
+
+.dashboardModulesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.dashboardModuleCard {
+  border: 1px solid rgba(15, 95, 168, 0.12);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 16px 28px rgba(11, 48, 86, 0.08);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  color: #10243b;
+  cursor: pointer;
+  opacity: 0;
+  animation: cardIn 0.4s ease forwards;
+  transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dashboardModuleCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(33, 79, 217, 0.25);
+  box-shadow: 0 20px 36px rgba(11, 48, 86, 0.12);
+}
+
+.dashboardModuleIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  color: #ffffff;
+}
+
+.dashboardModuleIcon svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.dashboardModuleCopy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboardModuleCopy strong {
+  font-size: 0.98rem;
+  color: #1c2430;
+}
+
+.dashboardModuleCopy span {
+  font-size: 0.8rem;
+  color: #66788c;
+}
+
+.dashboardModuleArrow {
+  color: #9aa9b8;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.tone-blue .dashboardModuleIcon {
+  background: #2f7cf4;
+}
+
+.tone-green .dashboardModuleIcon {
+  background: #1bc95f;
+}
+
+.tone-purple .dashboardModuleIcon {
+  background: #a04be8;
 }
 
 .cardsGrid {
@@ -412,17 +613,17 @@
   left: 0;
   height: calc(100vh - var(--header-offset, 116px));
   overflow-y: auto;
-  width: min(176px, 78vw);
-  background: linear-gradient(180deg, #ffffff 0%, #f5f9fd 48%, #edf4fb 100%);
-  border-right: 1px solid rgba(15, 95, 168, 0.12);
-  box-shadow: 10px 0 28px rgba(11, 48, 86, 0.1);
+  width: min(218px, 78vw);
+  background: linear-gradient(180deg, #214fd9 0%, #1f4bcf 52%, #1840bb 100%);
+  border-right: 1px solid rgba(12, 37, 105, 0.22);
+  box-shadow: 12px 0 30px rgba(15, 27, 90, 0.18);
   padding: 18px 12px;
   border-radius: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
   transform: translateX(0);
-  transition: none;
+  transition: width 0.24s ease, padding 0.24s ease;
   z-index: 40;
 }
 
@@ -431,24 +632,37 @@
   align-items: center;
   padding: 18px 8px;
 }
+.sideDrawer.collapsed.hoverExpanded {
+  width: min(218px, 78vw);
+  align-items: stretch;
+  padding: 18px 12px;
+}
 
 .drawerCollapseToggle {
   width: 100%;
   min-height: 38px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 10px;
-  background: linear-gradient(135deg, #0f5fa8 0%, #1d75c1 100%);
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
   padding: 0 12px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .drawerCollapseToggle:hover {
-  background: linear-gradient(135deg, #0b4f8d 0%, #1464ab 100%);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.drawerCollapseToggle:focus-visible {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.18);
+  outline: 2px solid rgba(255, 255, 255, 0.26);
+  outline-offset: 2px;
 }
 
 .sideDrawer.collapsed .drawerCollapseToggle {
@@ -456,11 +670,37 @@
   justify-content: center;
   padding: 0;
 }
+.sideDrawer.collapsed.hoverExpanded .drawerCollapseToggle {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0 12px;
+}
 
 .drawerCollapseIcon {
-  font-size: 1.2rem;
-  line-height: 1;
-  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.drawerCollapseIcon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.sideDrawer:not(.collapsed) .drawerCollapseIcon {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+.sideDrawer.collapsed.hoverExpanded .drawerCollapseIcon {
+  opacity: 0;
+  transform: scale(0.6);
 }
 
 .sideDrawer.open {
@@ -476,7 +716,7 @@
   border: 0;
   border-radius: 12px;
   background: transparent;
-  color: #123a63;
+  color: rgba(255, 255, 255, 0.94);
   text-align: left;
   font-size: 0.96rem;
   font-weight: 700;
@@ -490,15 +730,20 @@
   justify-content: center;
   padding: 10px 0;
 }
+.sideDrawer.collapsed.hoverExpanded .drawerLink {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 10px 12px;
+}
 
 .drawerLink:hover {
-  background: rgba(15, 95, 168, 0.06);
+  background: rgba(255, 255, 255, 0.14);
   transform: translateX(2px);
 }
 
 .drawerLink.active {
-  background: linear-gradient(90deg, #eef5fb 0%, #dbe9f6 100%);
-  box-shadow: inset 0 0 0 1px rgba(15, 95, 168, 0.1);
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
 }
 
 .drawerIcon {
@@ -508,7 +753,7 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 26px;
-  color: #0f5fa8;
+  color: #ffffff;
 }
 
 .drawerIcon svg {
@@ -521,13 +766,6 @@
 .drawerText {
   flex: 1;
   letter-spacing: 0.01em;
-}
-
-.drawerChevron {
-  color: #6d8399;
-  font-size: 1.45rem;
-  line-height: 1;
-  margin-left: 2px;
 }
 
 .drawerBackdrop {
@@ -544,7 +782,7 @@
   border-radius: 20px;
   padding: 16px;
   text-align: left;
-  background: linear-gradient(165deg, #ffffff 0%, #f5f9fd 100%);
+  background: #ffffff;
   cursor: pointer;
   box-shadow: 0 16px 32px rgba(11, 48, 86, 0.08);
   color: #0f3d70;
@@ -722,19 +960,23 @@
 
 @media (max-width: 640px) {
   .header {
-    padding: 20px 16px 22px;
+    padding: 12px 14px;
     border-radius: 0;
   }
 
-  .menuButton {
-    top: 14px;
-    left: 14px;
+  .topBar {
+    min-height: 44px;
+    gap: 10px;
   }
 
   .headerLogo {
-    top: 14px;
-    right: 14px;
-    height: 64px;
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
+  }
+
+  .headerBrandTitle {
+    font-size: 0.92rem;
   }
 
   .sideDrawer {
@@ -765,12 +1007,6 @@
     margin-left: 0;
   }
 
-  .headerTitle {
-    white-space: normal;
-    margin-top: 30px;
-    font-size: clamp(1.45rem, 1rem + 3vw, 2.1rem);
-  }
-
   .plainPanel {
     padding: 10px 2px;
   }
@@ -783,5 +1019,19 @@
   .panelTitleRow {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .dashboardHero {
+    grid-template-columns: 1fr;
+    justify-items: start;
+    padding: 18px 18px 20px;
+  }
+
+  .dashboardHeroButton {
+    justify-self: start;
+  }
+
+  .dashboardModulesGrid {
+    grid-template-columns: 1fr;
   }
 }

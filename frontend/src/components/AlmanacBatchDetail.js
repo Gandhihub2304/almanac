@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { getYearLabels } from "../utils/yearLabels";
+import { getYearBandColor } from "../utils/yearBandColors";
 import "./Almanac.css";
 
 function AlmanacBatchDetail() {
@@ -45,7 +46,7 @@ function AlmanacBatchDetail() {
     { matches: ["psychology"], color: "rgb(123, 62, 83)" },
     { matches: ["ancient hindu sciences", "ancient hindu science", "school of ahs", " ahs"], color: "rgb(236, 105, 31)" },
     { matches: ["liberal arts"], color: "rgb(137, 137, 137)" },
-    { matches: ["health sciences", "health science"], color: "rgb(0, 110, 54)" },
+    { matches: ["health sciences"], color: "rgb(0, 110, 54)" },
     { matches: ["pharmacy"], color: "rgb(120, 184, 51)" },
     { matches: ["school of sciences", "school of science", "sciences"], color: "rgb(243, 156, 163)" },
     { matches: ["ph.d", "phd"], color: "rgb(50, 43, 106)" }
@@ -288,7 +289,11 @@ function AlmanacBatchDetail() {
               <tbody>
                 {(selectedAlmanac.yearsData || []).map((yearItem, yIndex) => (
                   (yearItem.terms || []).map((term, tIndex) => (
-                    <tr className={`yearBand yearBand${yIndex}`} key={`${yIndex}-${tIndex}`}>
+                    <tr
+                      className="yearBand"
+                      key={`${yIndex}-${tIndex}`}
+                      style={{ "--year-band-bg": getYearBandColor((selectedAlmanac.yearsData || []).length, yIndex) }}
+                    >
                       {tIndex === 0 && (
                         <td className="previewYearCell" rowSpan={(yearItem.terms || []).length}>
                           {yearNames[yIndex] || `Year ${yIndex + 1}`}
