@@ -258,6 +258,20 @@
   color: #123a63;
 }
 
+.calendarStatusCell {
+  font-weight: 700;
+}
+
+.calendarStatusCell .tableEditInput {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.65);
+  color: inherit;
+}
+
+.calendarStatusCell[style*="#d9f6d8"] .tableEditInput {
+  color: #1d6b34;
+}
+
 .dayWiseTable th {
   background: #eef5fb;
   color: #0f5fa8;

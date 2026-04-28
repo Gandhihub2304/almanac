@@ -28,17 +28,17 @@ const getSchoolBrandColor = (schoolName) => {
 };
 
 const STATUS_COLORS = {
-  "student-led": "#d4e8fb",
-  event: "#dfeefb",
-  weekend: "#eef2f7",
-  compensatory: "#b9d5f2",
-  "self-registration": "#eef5fb",
-  "term-begin": "#9fc4e4",
-  "term-end": "#7aa4d1",
-  assessment: "#d7e6ff",
-  break: "#cfe0f5",
-  holiday: "#bfd3ea",
-  "results-day": "#0f5fa8",
+  "student-led": "#cfe2ff",
+  event: "#d9f6d8",
+  weekend: "#ffffff",
+  compensatory: "#f7ddb8",
+  "self-registration": "#6ec68f",
+  "term-begin": "#f4a340",
+  "term-end": "#fde968",
+  assessment: "#f8c5de",
+  break: "#fff6bf",
+  holiday: "#f8caca",
+  "results-day": "#a7ddff",
   "term-work": "#ffffff"
 };
 
