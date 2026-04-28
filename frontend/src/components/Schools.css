@@ -23,6 +23,6 @@
 
 .schoolBtn:hover {
   transform: translateY(-1px);
-  border-color: #a7c9e5;
+  border-color: #0b4f8d;
   box-shadow: 0 20px 36px rgba(11, 48, 86, 0.12);
 }

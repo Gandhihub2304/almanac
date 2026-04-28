@@ -471,8 +471,16 @@
 }
 
 .trackFilterBar {
-  grid-template-columns: repeat(3, minmax(160px, 1fr)) auto auto;
+  grid-template-columns: minmax(220px, 380px) auto;
   align-items: end;
+}
+
+.trackClearFiltersButton {
+  padding: 7px;
+  width: 200px;
+  font-size: 0.82rem;
+  border-radius: 10px;
+  min-height: 34px;
 }
 
 .trackSearchButton {
@@ -517,6 +525,76 @@
   margin-top: 8px !important;
   color: #4f6378 !important;
   font-size: 0.9rem;
+}
+
+.trackSheetCard {
+  margin-top: 12px;
+  border: 1px solid rgba(15, 95, 168, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8fd 100%);
+  box-shadow: 0 12px 24px rgba(11, 48, 86, 0.08);
+  padding: 14px;
+}
+
+.trackSheetCard h3 {
+  margin: 0 0 10px;
+  color: #0f3d70;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.trackSheetTableWrap {
+  overflow: auto;
+}
+
+.trackSheetTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1300px;
+}
+
+.trackSheetTable th,
+.trackSheetTable td {
+  border: 1px solid rgba(15, 95, 168, 0.12);
+  padding: 8px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.trackSheetTable th {
+  background: #eaf3fb;
+  color: #0f5fa8;
+  font-size: 0.85rem;
+}
+
+.trackSheetWeekHeadingRow th {
+  height: 28px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  background: #f5f9ff;
+  color: #2d6f3a;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.trackSheetWeekHeadingRow .currentWeekHeading {
+  background: #dff3e6;
+  color: #156b2d;
+}
+
+.currentWeekCell {
+  background: #dff3e6 !important;
+  color: #156b2d;
+  font-weight: 800;
+}
+
+.trackSheetTable tbody tr:nth-child(even) {
+  background: #f8fbff;
+}
+
+.trackSheetTable tbody tr:nth-child(even) .currentWeekCell {
+  background: #cfeedd !important;
 }
 
 .formPanel {
@@ -835,7 +913,7 @@
 .schoolCard:hover,
 .batchCard:hover {
   transform: translateY(-4px);
-  border-color: #a7c9e5;
+  border-color: var(--apple-primary);
   box-shadow: 0 20px 38px rgba(11, 48, 86, 0.12);
 }
 

@@ -4,6 +4,7 @@ import "./Schools.css";
 
 function Schools() {
   const [selectedSchool, setSelectedSchool] = useState(null);
+  const [hoveredSchool, setHoveredSchool] = useState(null);
 
   const schools = [
     "School of Engineering",
@@ -22,7 +23,8 @@ function Schools() {
         {schools.map((school, index) => (
           <button
             key={index}
-            className="schoolBtn"
+            className={`schoolBtn ${hoveredSchool === school ? "active" : ""}`}
+            onMouseEnter={() => setHoveredSchool(school)}
             onClick={() => setSelectedSchool(school)}
           >
             {school}

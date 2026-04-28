@@ -2,14 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ProgramModal from "./ProgramModal";
+import { getYearLabels } from "../utils/yearLabels";
 import "./Header.css";
 
 function Header() {
   const navigate = useNavigate();
   const headerRef = useRef(null);
+  const currentCalendarYear = new Date().getFullYear();
   const [schools, setSchools] = useState([]);
   const [activePanel, setActivePanel] = useState("home");
   const [selectedSchool, setSelectedSchool] = useState(null);
+  const [hoveredSchoolId, setHoveredSchoolId] = useState(null);
   const [isDrawerCollapsed] = useState(true);
   const [isDrawerHoverExpanded, setIsDrawerHoverExpanded] = useState(false);
   const [headerOffset, setHeaderOffset] = useState(116);
@@ -20,14 +23,11 @@ function Header() {
     programName: "",
     batchKey: ""
   });
-  const [trackFilters, setTrackFilters] = useState({
-    schoolName: "",
-    programName: "",
-    batchKey: ""
-  });
-  const [trackSearchResult, setTrackSearchResult] = useState(null);
+  const [trackSchoolName, setTrackSchoolName] = useState("");
+  const [trackSheetSchool, setTrackSheetSchool] = useState("");
+  const [trackSheetRows, setTrackSheetRows] = useState([]);
   const [trackSearchError, setTrackSearchError] = useState("");
-  const [isTrackSearching, setIsTrackSearching] = useState(false);
+  const [isTrackLoading, setIsTrackLoading] = useState(false);
   const [addSchoolName, setAddSchoolName] = useState("");
   const [addProgramInput, setAddProgramInput] = useState("");
   const [addPrograms, setAddPrograms] = useState([]);
@@ -247,7 +247,9 @@ function Header() {
 
     if (panel === "trackAcademic") {
       await fetchBatches();
-      setTrackSearchResult(null);
+      setTrackSchoolName("");
+      setTrackSheetSchool("");
+      setTrackSheetRows([]);
       setTrackSearchError("");
       setActivePanel("trackAcademic");
       return;
@@ -286,12 +288,9 @@ function Header() {
   };
 
   const clearTrackFilters = () => {
-    setTrackFilters({
-      schoolName: "",
-      programName: "",
-      batchKey: ""
-    });
-    setTrackSearchResult(null);
+    setTrackSchoolName("");
+    setTrackSheetSchool("");
+    setTrackSheetRows([]);
     setTrackSearchError("");
   };
 
@@ -343,52 +342,10 @@ function Header() {
     });
   }, [batches, savedBatchFilters, getSchoolForProgram]);
 
-  const trackFilterOptions = useMemo(() => {
-    const schoolNames = (schools || []).map((item) => item.name).sort((a, b) => a.localeCompare(b));
-
-    const selectedSchool = (schools || []).find((item) => item.name === trackFilters.schoolName);
-    const selectedPrograms = Array.isArray(selectedSchool?.programs) ? selectedSchool.programs : [];
-
-    const selectedProgramBatches = trackFilters.programName
-      ? batches.filter((item) => item.program === trackFilters.programName)
-      : [];
-
-    const batchKeys = Array.from(
-      new Set(selectedProgramBatches.map((item) => `${item.batchStart}-${item.batchEnd}`))
-    ).sort((a, b) => {
-      const [aStart] = a.split("-").map(Number);
-      const [bStart] = b.split("-").map(Number);
-      return bStart - aStart;
-    });
-
-    return {
-      schools: schoolNames,
-      programs: selectedPrograms.sort((a, b) => a.localeCompare(b)),
-      batches: batchKeys
-    };
-  }, [schools, batches, trackFilters.schoolName, trackFilters.programName]);
-
-  const parseBatchKey = (value) => {
-    const [batchStartRaw, batchEndRaw] = String(value || "").split("-");
-    const batchStart = Number(batchStartRaw);
-    const batchEnd = Number(batchEndRaw);
-
-    if (Number.isNaN(batchStart) || Number.isNaN(batchEnd)) {
-      return null;
-    }
-
-    return { batchStart, batchEnd };
-  };
-
-  const toLocalIsoDate = (value) => {
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  const trackSchoolOptions = useMemo(
+    () => (schools || []).map((item) => item.name).sort((a, b) => a.localeCompare(b)),
+    [schools]
+  );
 
   const parseCalendarDate = (value) => {
     const normalized = String(value || "").trim();
@@ -418,361 +375,282 @@ function Header() {
     return `${day}-${month}-${year}`;
   };
 
-  const dayDiff = (startDate, endDate) => {
-    const diffMs = endDate.getTime() - startDate.getTime();
-    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  };
-
   const normalizeValue = (value) =>
     String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
 
-  const isMeaningfulLabel = (value) => {
-    const text = String(value || "").trim();
-    return Boolean(text) && text !== "-";
+  const shiftCalendarDate = (value, daysToAdd) => {
+    const date = parseCalendarDate(value);
+    if (!date) return null;
+
+    const shifted = new Date(date);
+    shifted.setDate(shifted.getDate() + daysToAdd);
+    return shifted;
   };
 
-  const getTrackPhase = (row) => {
-    const weekLabel = String(row?.weekLabel || "").trim();
-    const combinedText = [
-      row?.weekLabel,
-      row?.remarks,
-      row?.selfRegistration,
-      row?.breakColumn,
-      row?.assessmentWeek,
-      row?.holidays,
-      row?.events,
-      row?.studentLedActivities
+  const formatDisplayRange = (startValue, endValue) => {
+    const startDate = parseCalendarDate(startValue);
+    const endDate = parseCalendarDate(endValue);
+
+    if (!startDate && !endDate) {
+      return "-";
+    }
+
+    if (startDate && endDate) {
+      const startLabel = formatDisplayDate(startDate);
+      const endLabel = formatDisplayDate(endDate);
+      return startLabel === endLabel ? startLabel : `${startLabel} - ${endLabel}`;
+    }
+
+    return formatDisplayDate(startDate || endDate);
+  };
+
+  const getTrackTermDates = (term) => {
+    const activityDates = Array.isArray(term?.activities)
+      ? term.activities.flatMap((activity) => [activity?.start, activity?.end])
+      : [];
+
+    const holidayDates = Array.isArray(term?.holidays)
+      ? term.holidays.flatMap((holiday) => [holiday?.start, holiday?.end])
+      : [];
+
+    return [
+      term?.selfStart,
+      term?.selfEnd,
+      term?.termStart,
+      term?.termEnd,
+      term?.assessmentStart,
+      term?.assessmentEnd,
+      term?.breakStart,
+      term?.breakEnd,
+      ...activityDates,
+      ...holidayDates
     ]
-      .map((item) => normalizeValue(item))
-      .join(" ");
-
-    if (row?.selfRegistration || /self\s*registration/.test(combinedText)) {
-      return { phaseLabel: "Self Registration", phaseMessage: "You are in the self registration week." };
-    }
-
-    if (row?.isTermBegin || /term\s*begins?|term\s*start/.test(combinedText)) {
-      return { phaseLabel: "Term Begin", phaseMessage: "The term has started." };
-    }
-
-    if (row?.breakColumn && /results?\s*day/i.test(row.breakColumn)) {
-      return { phaseLabel: "Results Day", phaseMessage: "Today is marked as results day." };
-    }
-
-    if (row?.assessmentWeek || /assessment|exam|test/.test(combinedText)) {
-      return { phaseLabel: "Comprehensive Assessment", phaseMessage: "You are in the comprehensive assessment period." };
-    }
-
-    if (row?.breakColumn || /break/.test(combinedText)) {
-      return { phaseLabel: "Term Break", phaseMessage: "You are in the term break period." };
-    }
-
-    if (isMeaningfulLabel(weekLabel)) {
-      return { phaseLabel: weekLabel, phaseMessage: `You are currently in ${weekLabel}.` };
-    }
-
-    return { phaseLabel: "Current Week", phaseMessage: "You are in the current scheduled week." };
+      .map((dateValue) => parseCalendarDate(dateValue))
+      .filter(Boolean);
   };
 
-  const isWithinRange = (date, start, end) => {
-    if (!start || !end) return false;
-    return date.getTime() >= start.getTime() && date.getTime() <= end.getTime();
-  };
+  const buildTrackSheetSummary = (almanac) => {
+    const yearsData = Array.isArray(almanac?.yearsData) ? almanac.yearsData : [];
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
 
-  const buildFallbackTrackingResult = (almanac, todayDate) => {
-    const terms = (almanac?.yearsData || [])
-      .flatMap((yearItem, yearIndex) =>
-        (yearItem?.terms || []).map((term, termIndex) => ({
-          yearNumber: yearIndex + 1,
-          termNumber: termIndex + 1,
-          selfStart: parseCalendarDate(term?.selfStart),
-          selfEnd: parseCalendarDate(term?.selfEnd),
-          termStart: parseCalendarDate(term?.termStart),
-          termEnd: parseCalendarDate(term?.termEnd),
-          assessmentStart: parseCalendarDate(term?.assessmentStart),
-          assessmentEnd: parseCalendarDate(term?.assessmentEnd),
-          breakStart: parseCalendarDate(term?.breakStart),
-          breakEnd: parseCalendarDate(term?.breakEnd)
-        }))
-      )
-      .filter((term) => term.termStart && term.termEnd)
-      .sort((a, b) => a.termStart.getTime() - b.termStart.getTime());
+    const candidates = yearsData.map((yearData, yearIndex) => {
+      const terms = Array.isArray(yearData?.terms) ? [...yearData.terms] : [];
+      const orderedTerms = terms
+        .filter((term) => term && (term.termStart || term.selfStart))
+        .sort((left, right) => {
+          const leftStart = parseCalendarDate(left.termStart || left.selfStart);
+          const rightStart = parseCalendarDate(right.termStart || right.selfStart);
 
-    if (!terms.length) {
-      return null;
-    }
+          if (!leftStart && !rightStart) return 0;
+          if (!leftStart) return 1;
+          if (!rightStart) return -1;
+          return leftStart.getTime() - rightStart.getTime();
+        });
 
-    const firstTerm = terms[0];
-    const lastTerm = terms.reduce((latest, current) => (
-      !latest || current.termEnd.getTime() > latest.termEnd.getTime() ? current : latest
-    ), null);
-
-    if (todayDate.getTime() < firstTerm.termStart.getTime()) {
-      const daysLeft = Math.max(0, dayDiff(todayDate, firstTerm.termStart));
-      return {
-        primary: "This batch is not started yet.",
-        secondary: `Still there is time to start the batch. It will start on ${formatDisplayDate(toLocalIsoDate(firstTerm.termStart))} and starts in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`,
-        meta: `Term start date: ${formatDisplayDate(toLocalIsoDate(firstTerm.termStart))}`
-      };
-    }
-
-    if (lastTerm && todayDate.getTime() > lastTerm.termEnd.getTime()) {
-      return {
-        primary: "This batch is already completed.",
-        secondary: "",
-        meta: ""
-      };
-    }
-
-    const activeTerm = terms.find((term) => isWithinRange(todayDate, term.termStart, term.termEnd));
-    if (!activeTerm) {
-      const previousTerm = [...terms]
-        .filter((term) => term.termEnd.getTime() < todayDate.getTime())
-        .sort((a, b) => b.termEnd.getTime() - a.termEnd.getTime())[0];
-      const nextTerm = terms.find((term) => term.termStart.getTime() > todayDate.getTime());
-
-      if (previousTerm && nextTerm && previousTerm.yearNumber !== nextTerm.yearNumber) {
-        return {
-          primary: "This year is already completed.",
-          secondary: "",
-          meta: ""
-        };
-      }
-
-      if (!nextTerm) {
+      const yearDates = terms.flatMap((term) => getTrackTermDates(term));
+      if (!yearDates.length) {
         return null;
       }
 
-      const daysToNextTerm = Math.max(0, dayDiff(todayDate, nextTerm.termStart));
-      return {
-        primary: "The current date is between terms.",
-        secondary: `Next term starts on ${formatDisplayDate(toLocalIsoDate(nextTerm.termStart))} (${daysToNextTerm} day${daysToNextTerm === 1 ? "" : "s"} left).`,
-        meta: `Upcoming term: Year ${nextTerm.yearNumber} Term ${nextTerm.termNumber}`
-      };
-    }
+      const yearStart = new Date(Math.min(...yearDates.map((date) => date.getTime())));
+      yearStart.setHours(0, 0, 0, 0);
 
-    if (activeTerm.selfStart && activeTerm.selfEnd && isWithinRange(todayDate, activeTerm.selfStart, activeTerm.selfEnd)) {
-      const daysLeft = Math.max(0, dayDiff(todayDate, activeTerm.selfEnd));
-      return {
-        primary: "You are in the Self Registration week.",
-        secondary: `Term starts on ${formatDisplayDate(toLocalIsoDate(activeTerm.termStart))}. ${daysLeft} day${daysLeft === 1 ? "" : "s"} left in self registration period.`,
-        meta: `Year ${activeTerm.yearNumber} Term ${activeTerm.termNumber}`
-      };
-    }
+      const yearEnd = new Date(Math.max(...yearDates.map((date) => date.getTime())));
+      yearEnd.setHours(23, 59, 59, 999);
 
-    if (activeTerm.assessmentStart && activeTerm.assessmentEnd && isWithinRange(todayDate, activeTerm.assessmentStart, activeTerm.assessmentEnd)) {
-      const daysLeft = Math.max(0, dayDiff(todayDate, activeTerm.assessmentEnd));
-      return {
-        primary: "You are in the Comprehensive Assessment period.",
-        secondary: `${daysLeft} day${daysLeft === 1 ? "" : "s"} left in assessment week.`,
-        meta: `Year ${activeTerm.yearNumber} Term ${activeTerm.termNumber}`
-      };
-    }
-
-    if (activeTerm.breakStart && activeTerm.breakEnd && isWithinRange(todayDate, activeTerm.breakStart, activeTerm.breakEnd)) {
-      const daysLeft = Math.max(0, dayDiff(todayDate, activeTerm.breakEnd));
-      return {
-        primary: "You are in the Term Break period.",
-        secondary: `${daysLeft} day${daysLeft === 1 ? "" : "s"} left to complete break.`,
-        meta: `Year ${activeTerm.yearNumber} Term ${activeTerm.termNumber}`
-      };
-    }
-
-    const weekNumber = Math.floor(Math.max(0, dayDiff(activeTerm.termStart, todayDate)) / 7) + 1;
-    const nextWeekStart = new Date(activeTerm.termStart);
-    nextWeekStart.setDate(nextWeekStart.getDate() + (weekNumber * 7));
-
-    const hasNextWeekInsideTerm = nextWeekStart.getTime() <= activeTerm.termEnd.getTime();
-    const daysToNextWeek = hasNextWeekInsideTerm ? Math.max(0, dayDiff(todayDate, nextWeekStart)) : 0;
-
-    return {
-      primary: `Currently in Week ${weekNumber}.`,
-      secondary: hasNextWeekInsideTerm
-        ? `${daysToNextWeek} day${daysToNextWeek === 1 ? "" : "s"} left to reach Week ${weekNumber + 1} (starts on ${formatDisplayDate(toLocalIsoDate(nextWeekStart))}).`
-        : "This is the final week of the active term.",
-      meta: `Year ${activeTerm.yearNumber} Term ${activeTerm.termNumber} | Term start date: ${formatDisplayDate(toLocalIsoDate(activeTerm.termStart))}`
-    };
-  };
-
-  const handleTrackAcademicSearch = async () => {
-    setTrackSearchError("");
-    setTrackSearchResult(null);
-
-    if (!trackFilters.schoolName || !trackFilters.programName || !trackFilters.batchKey) {
-      setTrackSearchError("Please select School, Programme, and Batch before searching.");
-      return;
-    }
-
-    const parsedBatch = parseBatchKey(trackFilters.batchKey);
-    if (!parsedBatch) {
-      setTrackSearchError("Invalid batch selected.");
-      return;
-    }
-
-    try {
-      setIsTrackSearching(true);
-
-      const matchedAlmanacBatch = batches.find((item) =>
-        normalizeValue(item.program) === normalizeValue(trackFilters.programName)
-        && Number(item.batchStart) === parsedBatch.batchStart
-        && Number(item.batchEnd) === parsedBatch.batchEnd
-      );
-
-      if (matchedAlmanacBatch?._id) {
-        const almanacRes = await axios.get(`http://localhost:5000/api/almanac/${matchedAlmanacBatch._id}`);
-        const fallbackResult = buildFallbackTrackingResult(almanacRes?.data, parseCalendarDate(new Date()));
-
-        if (fallbackResult) {
-          setTrackSearchResult({
-            title: `${trackFilters.programName} (${trackFilters.batchKey}) tracking`,
-            primary: fallbackResult.primary,
-            secondary: fallbackResult.secondary,
-            meta: `School: ${trackFilters.schoolName} | ${fallbackResult.meta}`
-          });
-          return;
+      const activeTerm = orderedTerms.find((term) => {
+        const termStart = parseCalendarDate(term.termStart || term.selfStart || term.assessmentStart || term.breakStart);
+        const termEnd = parseCalendarDate(term.termEnd || term.assessmentEnd || term.breakEnd || term.selfEnd || term.termStart || term.selfStart);
+        if (!termStart || !termEnd) {
+          return false;
         }
-      }
 
-      const savedCalendarsRes = await axios.get("http://localhost:5000/api/almanac/saved-calendars");
-      const savedCalendars = Array.isArray(savedCalendarsRes.data) ? savedCalendarsRes.data : [];
-
-      const matchedCalendars = savedCalendars.filter((item) => {
-        const schoolName = item.schoolName || getSchoolForProgram(item.program);
-        return normalizeSchoolName(schoolName) === normalizeSchoolName(trackFilters.schoolName)
-          && normalizeValue(item.program) === normalizeValue(trackFilters.programName)
-          && Number(item.batchStart) === parsedBatch.batchStart
-          && Number(item.batchEnd) === parsedBatch.batchEnd;
+        const start = new Date(termStart);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(termEnd);
+        end.setHours(23, 59, 59, 999);
+        return currentDate.getTime() >= start.getTime() && currentDate.getTime() <= end.getTime();
       });
 
-      if (!matchedCalendars.length) {
-        setTrackSearchError("No saved academic calendar data found for this selection.");
+      const containsCurrentDate =
+        currentDate.getTime() >= yearStart.getTime() && currentDate.getTime() <= yearEnd.getTime();
+
+      const hasCurrentCalendarYear = yearDates.some((date) => date.getFullYear() === currentCalendarYear);
+
+      const distanceFromCurrentDate = containsCurrentDate
+        ? 0
+        : Math.min(
+          Math.abs(currentDate.getTime() - yearStart.getTime()),
+          Math.abs(currentDate.getTime() - yearEnd.getTime())
+        );
+
+      return {
+        yearData,
+        yearIndex,
+        orderedTerms,
+        activeTerm,
+        containsCurrentDate,
+        hasCurrentCalendarYear,
+        distanceFromCurrentDate
+      };
+    }).filter(Boolean);
+
+    if (!candidates.length) {
+      return [];
+    }
+
+    candidates.sort((left, right) => {
+      if (left.containsCurrentDate !== right.containsCurrentDate) {
+        return left.containsCurrentDate ? -1 : 1;
+      }
+
+      if (left.hasCurrentCalendarYear !== right.hasCurrentCalendarYear) {
+        return left.hasCurrentCalendarYear ? -1 : 1;
+      }
+
+      if (Boolean(left.activeTerm) !== Boolean(right.activeTerm)) {
+        return left.activeTerm ? -1 : 1;
+      }
+
+      return left.distanceFromCurrentDate - right.distanceFromCurrentDate;
+    });
+
+    const selectedYear = candidates[0];
+    const terms = Array.isArray(selectedYear.yearData?.terms) ? [...selectedYear.yearData.terms] : [];
+    const orderedTerms = selectedYear.orderedTerms;
+    const primaryTerm = selectedYear.activeTerm || orderedTerms[0] || {};
+    const selfRegistration = formatDisplayRange(primaryTerm.selfStart, primaryTerm.selfEnd);
+
+    const weekColumns = Array.from({ length: 10 }, (_, index) => {
+      const weekStart = shiftCalendarDate(primaryTerm.termStart || primaryTerm.selfStart, index * 7);
+      if (!weekStart) return "-";
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+
+      const termEnd = parseCalendarDate(primaryTerm.termEnd);
+      if (termEnd && weekStart.getTime() > termEnd.getTime()) {
+        return "-";
+      }
+
+      return formatDisplayRange(weekStart, weekEnd);
+    });
+
+    const weekRanges = Array.from({ length: 10 }, (_, index) => {
+      const weekStart = shiftCalendarDate(primaryTerm.termStart || primaryTerm.selfStart, index * 7);
+      if (!weekStart) return null;
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+
+      const termEnd = parseCalendarDate(primaryTerm.termEnd);
+      if (termEnd && weekStart.getTime() > termEnd.getTime()) {
+        return null;
+      }
+
+      return { start: weekStart, end: weekEnd };
+    });
+
+    const currentWeekIndex = weekRanges.findIndex((range) => (
+      range
+      && currentDate.getTime() >= range.start.getTime()
+      && currentDate.getTime() <= range.end.getTime()
+    ));
+
+    const assessmentTerm = selectedYear.activeTerm
+      || orderedTerms.find((term) => term.assessmentStart || term.assessmentEnd)
+      || primaryTerm;
+    const assessmentWeek = formatDisplayRange(assessmentTerm.assessmentStart, assessmentTerm.assessmentEnd);
+
+    const activeTermNumber = Number(primaryTerm.termNumber);
+    const termLabel = Number.isFinite(activeTermNumber) && activeTermNumber > 0
+      ? `Term ${activeTermNumber}`
+      : `Term ${Math.max(1, orderedTerms.findIndex((term) => term === primaryTerm) + 1)}`;
+
+    return [{
+      key: String(selectedYear.yearData?.yearNumber || selectedYear.yearIndex + 1),
+      yearNumber: Number(selectedYear.yearData?.yearNumber || selectedYear.yearIndex + 1),
+      termLabel,
+      selfRegistration,
+      weekColumns,
+      currentWeekIndex,
+      assessmentWeek
+    }];
+  };
+
+  const loadTrackSheetForSchool = async (schoolName) => {
+    setTrackSearchError("");
+    setTrackSheetRows([]);
+
+    if (!schoolName) {
+      setTrackSheetSchool("");
+      return;
+    }
+
+    setIsTrackLoading(true);
+    try {
+      const matchedBatches = batches.filter((item) => {
+        const itemSchool = getSchoolForProgram(item.program);
+        return normalizeSchoolName(itemSchool) === normalizeSchoolName(schoolName);
+      });
+
+      if (!matchedBatches.length) {
+        setTrackSheetSchool(schoolName);
+        setTrackSearchError("No saved almanac found for this school.");
         return;
       }
 
       const detailResponses = await Promise.all(
-        matchedCalendars
-          .filter((item) => item.calendarId)
-          .map((item) => axios.get(`http://localhost:5000/api/almanac/saved-calendars/${item.calendarId}`))
+        matchedBatches
+          .filter((item) => item._id)
+          .map((item) => axios.get(`http://localhost:5000/api/almanac/${item._id}`))
       );
 
-      const allRows = detailResponses
-        .map((response) => ({
-          yearNumber: Number(response?.data?.yearNumber || 0),
-          rows: Array.isArray(response?.data?.rows) ? response.data.rows : []
-        }))
-        .flatMap((entry) =>
-          entry.rows.map((row) => ({
-            ...row,
-            yearNumber: entry.yearNumber,
-            dateObj: parseCalendarDate(row?.date),
-            isoDate: toLocalIsoDate(parseCalendarDate(row?.date))
-          }))
-        )
-        .filter((row) => row.dateObj && row.isoDate)
-        .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+      const rows = detailResponses
+        .map((response) => response?.data)
+        .filter(Boolean)
+        .flatMap((almanac) => {
+          const summaryRows = buildTrackSheetSummary(almanac);
+          const yearLabels = getYearLabels(almanac.year);
 
-      if (!allRows.length) {
-        if (!matchedAlmanacBatch?._id) {
-          setTrackSearchError("No valid saved rows or almanac ranges found for this selection.");
-          return;
-        }
-
-        const almanacRes = await axios.get(`http://localhost:5000/api/almanac/${matchedAlmanacBatch._id}`);
-        const fallbackResult = buildFallbackTrackingResult(almanacRes?.data, parseCalendarDate(new Date()));
-
-        if (!fallbackResult) {
-          setTrackSearchError("Unable to calculate live tracking from saved almanac ranges.");
-          return;
-        }
-
-        setTrackSearchResult({
-          title: `${trackFilters.programName} (${trackFilters.batchKey}) tracking`,
-          primary: fallbackResult.primary,
-          secondary: fallbackResult.secondary,
-          meta: `School: ${trackFilters.schoolName} | ${fallbackResult.meta}`
+          return summaryRows.map((summary) => ({
+            key: `${almanac._id}-${summary.key}`,
+            batch: `${almanac.batchStart}-${almanac.batchEnd} (${yearLabels[summary.yearNumber - 1] || `Year ${summary.yearNumber}`})`,
+            program: almanac.program || "-",
+            termLabel: summary.termLabel,
+            selfRegistration: summary.selfRegistration,
+            weekColumns: summary.weekColumns,
+            currentWeekIndex: summary.currentWeekIndex,
+            assessmentWeek: summary.assessmentWeek,
+            batchStart: Number(almanac.batchStart || 0),
+            yearNumber: Number(summary.yearNumber || 0)
+          }));
+        })
+        .sort((left, right) => {
+          if (right.batchStart !== left.batchStart) return right.batchStart - left.batchStart;
+          if (right.yearNumber !== left.yearNumber) return right.yearNumber - left.yearNumber;
+          return String(left.program || "").localeCompare(String(right.program || ""));
         });
-        return;
+
+      setTrackSheetSchool(schoolName);
+      setTrackSheetRows(rows);
+
+      if (!rows.length) {
+        setTrackSearchError(`No almanac data found for current year ${currentCalendarYear} in this school.`);
       }
-
-      const todayDate = parseCalendarDate(new Date());
-      const todayIso = toLocalIsoDate(todayDate);
-      const todayIndex = allRows.findIndex((row) => row.isoDate === todayIso);
-      const firstRow = allRows[0];
-      const lastRow = allRows[allRows.length - 1];
-
-      if (todayDate.getTime() < firstRow.dateObj.getTime()) {
-        const daysUntilStart = Math.max(0, dayDiff(todayDate, firstRow.dateObj));
-        setTrackSearchResult({
-          title: `${trackFilters.programName} (${trackFilters.batchKey}) tracking`,
-          primary: `This batch is not started yet.`,
-          secondary: `Still there is time to start the batch. It will start on ${formatDisplayDate(firstRow.isoDate)} and starts in ${daysUntilStart} day${daysUntilStart === 1 ? "" : "s"}.`,
-          meta: `School: ${trackFilters.schoolName}`
-        });
-        return;
-      }
-
-      if (todayDate.getTime() > lastRow.dateObj.getTime()) {
-        setTrackSearchResult({
-          primary: `This batch is already completed.`,
-          secondary: "",
-          meta: ""
-        });
-        return;
-      }
-
-      let currentRow = null;
-      let contextMessage = "";
-
-      if (todayIndex >= 0) {
-        currentRow = allRows[todayIndex];
-        contextMessage = `Today is ${formatDisplayDate(currentRow.isoDate)}.`;
-      } else {
-        const previousRows = allRows.filter((row) => row.dateObj.getTime() < todayDate.getTime());
-        currentRow = previousRows[previousRows.length - 1] || firstRow;
-        contextMessage = `Today (${formatDisplayDate(todayIso)}) is between saved dates. Latest tracked date is ${formatDisplayDate(currentRow.isoDate)}.`;
-      }
-
-      const currentWeekLabel = isMeaningfulLabel(currentRow.weekLabel)
-        ? currentRow.weekLabel
-        : "Current Week";
-      const trackPhase = getTrackPhase(currentRow);
-
-      const nextTermBeginRow = allRows.find((row) =>
-        row.dateObj.getTime() >= todayDate.getTime()
-        && Boolean(row.isTermBegin)
-      );
-
-      const nextWeekRow = allRows.find((row) =>
-        row.dateObj.getTime() > todayDate.getTime()
-        && normalizeValue(row.weekLabel) !== normalizeValue(currentWeekLabel)
-      );
-
-      const currentReferenceDate = todayDate;
-      const daysToNextWeek = nextWeekRow ? Math.max(0, dayDiff(currentReferenceDate, nextWeekRow.dateObj)) : 0;
-
-      const termStartMessage = nextTermBeginRow
-        ? `Term start date: ${formatDisplayDate(nextTermBeginRow.isoDate)}.`
-        : "";
-
-      const nextWeekMessage = nextWeekRow
-        ? `${daysToNextWeek} day${daysToNextWeek === 1 ? "" : "s"} left to reach ${nextWeekRow.weekLabel || "next week"} (starts on ${formatDisplayDate(nextWeekRow.isoDate)}).`
-        : "This appears to be the final recorded week for this batch.";
-
-      const secondaryMessage = termStartMessage
-        ? `${nextWeekMessage} ${termStartMessage}`
-        : nextWeekMessage;
-
-      setTrackSearchResult({
-        title: `${trackFilters.programName} (${trackFilters.batchKey}) tracking`,
-        primary: `${trackFilters.programName} is currently in ${currentWeekLabel}. ${trackPhase.phaseMessage}`,
-        secondary: secondaryMessage,
-        meta: `School: ${trackFilters.schoolName} | ${contextMessage} | Phase: ${trackPhase.phaseLabel}`
-      });
     } catch (error) {
-      console.error("Track academic search error:", error);
-      setTrackSearchError(error?.response?.data?.message || "Unable to track the selected academic calendar.");
+      setTrackSheetSchool(schoolName);
+      setTrackSearchError(error?.response?.data?.message || "Unable to load track almanac sheet.");
     } finally {
-      setIsTrackSearching(false);
+      setIsTrackLoading(false);
     }
+  };
+
+  const handleTrackSchoolChange = async (event) => {
+    const schoolName = event.target.value;
+    setTrackSchoolName(schoolName);
+    await loadTrackSheetForSchool(schoolName);
   };
 
   const handleDeleteSavedAlmanac = async (batchItem) => {
@@ -951,7 +829,8 @@ function Header() {
                 return (
                   <button
                     key={school._id}
-                    className="schoolCard"
+                    className={`schoolCard ${hoveredSchoolId === school._id ? "active" : ""}`}
+                    onMouseEnter={() => setHoveredSchoolId(school._id)}
                     onClick={() => setSelectedSchool(school)}
                     style={{
                       animationDelay: `${index * 70}ms`,
@@ -1112,108 +991,84 @@ function Header() {
           <section className="plainPanel">
             <h2 className="panelTitle">Track Academic</h2>
 
-            {batchFetchError && <p className="panelInfo">{batchFetchError}</p>}
-
-            {!batchFetchError && (
-              <div className="savedBatchFilterBar trackFilterBar">
-                <div className="savedBatchFilterItem">
-                  <label htmlFor="track-school">School</label>
-                  <select
-                    id="track-school"
-                    value={trackFilters.schoolName}
-                    onChange={(event) => {
-                      setTrackFilters({
-                        schoolName: event.target.value,
-                        programName: "",
-                        batchKey: ""
-                      });
-                      setTrackSearchResult(null);
-                      setTrackSearchError("");
-                    }}
-                  >
-                    <option value="">Select School</option>
-                    {trackFilterOptions.schools.map((schoolName) => (
-                      <option key={schoolName} value={schoolName}>
-                        {schoolName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="savedBatchFilterItem">
-                  <label htmlFor="track-program">Programme</label>
-                  <select
-                    id="track-program"
-                    value={trackFilters.programName}
-                    disabled={!trackFilters.schoolName}
-                    onChange={(event) => {
-                      setTrackFilters((current) => ({
-                        ...current,
-                        programName: event.target.value,
-                        batchKey: ""
-                      }));
-                      setTrackSearchResult(null);
-                      setTrackSearchError("");
-                    }}
-                  >
-                    <option value="">Select Programme</option>
-                    {trackFilterOptions.programs.map((programName) => (
-                      <option key={programName} value={programName}>
-                        {programName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="savedBatchFilterItem">
-                  <label htmlFor="track-batch">Batch</label>
-                  <select
-                    id="track-batch"
-                    value={trackFilters.batchKey}
-                    disabled={!trackFilters.programName}
-                    onChange={(event) => {
-                      setTrackFilters((current) => ({
-                        ...current,
-                        batchKey: event.target.value
-                      }));
-                      setTrackSearchResult(null);
-                      setTrackSearchError("");
-                    }}
-                  >
-                    <option value="">Select Batch</option>
-                    {trackFilterOptions.batches.map((batchKey) => (
-                      <option key={batchKey} value={batchKey}>
-                        {batchKey}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  className="formButton primary trackSearchButton"
-                  onClick={handleTrackAcademicSearch}
-                  disabled={isTrackSearching}
+            <div className="savedBatchFilterBar trackFilterBar">
+              <div className="savedBatchFilterItem">
+                <label htmlFor="track-school">School</label>
+                <select
+                  id="track-school"
+                  value={trackSchoolName}
+                  onChange={handleTrackSchoolChange}
+                  disabled={isTrackLoading}
                 >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M10.5 3a7.5 7.5 0 0 1 5.96 12.06l4.24 4.24-1.4 1.4-4.24-4.24A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z" />
-                  </svg>
-                  {isTrackSearching ? "Searching..." : "Search"}
-                </button>
-
-                <button className="formButton" onClick={clearTrackFilters}>Clear Filters</button>
+                  <option value="">Select School</option>
+                  {trackSchoolOptions.map((schoolName) => (
+                    <option key={schoolName} value={schoolName}>
+                      {schoolName}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
+
+              <button className="formButton trackClearFiltersButton" onClick={clearTrackFilters}>
+                Clear Filters
+              </button>
+            </div>
 
             {trackSearchError && <p className="panelInfo">{trackSearchError}</p>}
 
-            {trackSearchResult && (
-              <div className="trackResultCard">
-                {trackSearchResult.title && trackSearchResult.primary !== "This batch is already completed." && (
-                  <h3>{trackSearchResult.title}</h3>
-                )}
-                <p className="trackResultPrimary">{trackSearchResult.primary}</p>
-                {trackSearchResult.secondary && <p>{trackSearchResult.secondary}</p>}
-                {trackSearchResult.meta && <p className="trackResultMeta">{trackSearchResult.meta}</p>}
+            {isTrackLoading && <p className="panelInfo">Loading school sheet...</p>}
+
+            {!isTrackLoading && trackSheetSchool && trackSheetRows.length > 0 && (
+              <div className="trackSheetCard">
+                <h3>{trackSheetSchool}</h3>
+
+                <div className="trackSheetTableWrap">
+                  <table className="trackSheetTable">
+                    <thead>
+                      <tr className="trackSheetWeekHeadingRow">
+                        <th colSpan="4" />
+                        {Array.from({ length: 10 }, (_, index) => (
+                          <th
+                            key={`week-heading-${index + 1}`}
+                            className={index === trackSheetRows[0]?.currentWeekIndex ? "currentWeekHeading" : ""}
+                          >
+                            {index === trackSheetRows[0]?.currentWeekIndex ? "Current Week" : ""}
+                          </th>
+                        ))}
+                        <th />
+                      </tr>
+                      <tr>
+                        <th>Batch</th>
+                        <th>Programme</th>
+                        <th>Current Term</th>
+                        <th>Self Registration</th>
+                        {Array.from({ length: 10 }, (_, index) => (
+                          <th key={`week-head-${index + 1}`}>Week {index + 1}</th>
+                        ))}
+                        <th>Assessment Week</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {trackSheetRows.map((row) => (
+                        <tr key={row.key}>
+                          <td>{row.batch}</td>
+                          <td>{row.program}</td>
+                          <td>{row.termLabel}</td>
+                          <td>{row.selfRegistration}</td>
+                          {row.weekColumns.map((weekDate, index) => (
+                            <td
+                              key={`${row.key}-week-${index + 1}`}
+                              className={index === row.currentWeekIndex ? "currentWeekCell" : ""}
+                            >
+                              {weekDate}
+                            </td>
+                          ))}
+                          <td>{row.assessmentWeek}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </section>

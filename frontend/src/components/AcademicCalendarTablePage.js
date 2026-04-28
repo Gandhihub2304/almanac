@@ -311,6 +311,49 @@ const getDayLabel = (isoDate) => {
 
 const toSafeText = (value) => String(value || "").trim();
 
+const CALENDAR_STATUS_STYLES = {
+  "student-led": { backgroundColor: "#cfe2ff" },
+  event: { backgroundColor: "#d9f6d8" },
+  weekend: { backgroundColor: "#ffffff" },
+  compensatory: { backgroundColor: "#f7ddb8" },
+  "self-registration": { backgroundColor: "#0aac48", color: "#0d0e0d" },
+  "term-begin": { backgroundColor: "#f4a340" },
+  "term-end": { backgroundColor: "#fde968" },
+  "results-day": { backgroundColor: "#a7ddff" },
+  assessment: { backgroundColor: "#f8c5de" },
+  break: { backgroundColor: "#fff6bf" },
+  holiday: { backgroundColor: "#f8caca" },
+  "term-work": { backgroundColor: "#ffffff" }
+};
+
+const getCalendarCellStyle = (status) => CALENDAR_STATUS_STYLES[status] || {};
+
+const getRowStatus = (row = {}) => {
+  if (row.isTermBegin) return "term-begin";
+  if (row.isTermEnd) return "term-end";
+  if (row.isResultsDay) return "results-day";
+  const dayName = String(row.day || "").toLowerCase();
+  if (dayName === "saturday" || dayName === "sunday") return "weekend";
+  return "term-work";
+};
+
+const getColumnStatus = (row = {}, field) => {
+  const value = toSafeText(row[field]);
+
+  if (field === "studentLedActivities" && value) return "student-led";
+  if (field === "compensatoryWorkingDay" && value) return "compensatory";
+  if (field === "assessmentWeek" && value) return "assessment";
+  if (field === "holidays" && value) return "holiday";
+  if (field === "events" && value) return "event";
+  if (field === "selfRegistration" && value) return "self-registration";
+  if (field === "breakColumn") {
+    if (value === "Results Day") return "results-day";
+    if (value) return "break";
+  }
+
+  return "term-work";
+};
+
 const deriveCalendarColumns = (row = {}) => {
   const weekLabel = toSafeText(row.weekLabel);
   const remarks = toSafeText(row.remarks);
@@ -1057,9 +1100,13 @@ function AcademicCalendarTablePage() {
                           </td>
                         )}
 
-                        <td>{toDisplayDate(row.date)}</td>
-                        <td>{row.day}</td>
-                        <td>
+                        <td className="calendarStatusCell" style={getCalendarCellStyle(getRowStatus(row))}>
+                          {toDisplayDate(row.date)}
+                        </td>
+                        <td className="calendarStatusCell" style={getCalendarCellStyle(getRowStatus(row))}>
+                          {row.day}
+                        </td>
+                        <td className="calendarStatusCell" style={getCalendarCellStyle(getColumnStatus(row, "studentLedActivities"))}>
                           <input
                             type="text"
                             className="tableEditInput"
@@ -1067,7 +1114,7 @@ function AcademicCalendarTablePage() {
                             onChange={(event) => handleColumnChange(row.rowIndex, "studentLedActivities", event.target.value)}
                           />
                         </td>
-                        <td>
+                        <td className="calendarStatusCell" style={getCalendarCellStyle(getColumnStatus(row, "compensatoryWorkingDay"))}>
                           <input
                             type="text"
                             className="tableEditInput"
@@ -1075,7 +1122,7 @@ function AcademicCalendarTablePage() {
                             onChange={(event) => handleColumnChange(row.rowIndex, "compensatoryWorkingDay", event.target.value)}
                           />
                         </td>
-                        <td>
+                        <td className="calendarStatusCell" style={getCalendarCellStyle(getColumnStatus(row, "assessmentWeek"))}>
                           <input
                             type="text"
                             className="tableEditInput"
@@ -1083,7 +1130,7 @@ function AcademicCalendarTablePage() {
                             onChange={(event) => handleColumnChange(row.rowIndex, "assessmentWeek", event.target.value)}
                           />
                         </td>
-                        <td>
+                        <td className="calendarStatusCell" style={getCalendarCellStyle(getColumnStatus(row, "holidays"))}>
                           <input
                             type="text"
                             className="tableEditInput"
@@ -1091,7 +1138,7 @@ function AcademicCalendarTablePage() {
                             onChange={(event) => handleColumnChange(row.rowIndex, "holidays", event.target.value)}
                           />
                         </td>
-                        <td>
+                        <td className="calendarStatusCell" style={getCalendarCellStyle(getColumnStatus(row, "events"))}>
                           <input
                             type="text"
                             className="tableEditInput"
@@ -1099,7 +1146,7 @@ function AcademicCalendarTablePage() {
                             onChange={(event) => handleColumnChange(row.rowIndex, "events", event.target.value)}
                           />
                         </td>
-                        <td>
+                        <td className="calendarStatusCell" style={getCalendarCellStyle(getColumnStatus(row, "selfRegistration"))}>
                           <input
                             type="text"
                             className="tableEditInput"
@@ -1107,7 +1154,7 @@ function AcademicCalendarTablePage() {
                             onChange={(event) => handleColumnChange(row.rowIndex, "selfRegistration", event.target.value)}
                           />
                         </td>
-                        <td>
+                        <td className="calendarStatusCell" style={getCalendarCellStyle(getColumnStatus(row, "breakColumn"))}>
                           <input
                             type="text"
                             className="tableEditInput"

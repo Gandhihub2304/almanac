@@ -4,6 +4,8 @@
   width: min(1180px, 100%);
   margin: 0 auto;
   box-shadow: 0 18px 32px rgba(11, 48, 86, 0.12);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .calendarTemplateHead {
@@ -119,6 +121,8 @@
   padding: 4px 0;
   font-size: 0.74rem;
   color: #123a63;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .templateMiniCalendar th {
@@ -139,47 +143,48 @@
 }
 
 .templateMiniCalendar td.status-student-led {
-  background: #d4e8fb;
+  background: #cfe2ff;
 }
 
 .templateMiniCalendar td.status-event {
-  background: #dfeefb;
+  background: #d2f6d1;
 }
 
 .templateMiniCalendar td.status-weekend {
-  background: #eef2f7;
+  background: #ffffff;
 }
 
 .templateMiniCalendar td.status-compensatory {
-  background: #b9d5f2;
+  background: #f7ddb8;
 }
 
 .templateMiniCalendar td.status-self-registration {
-  background: #eef5fb;
+  background:   #0aac48;
+  color: #111211;
 }
 
 .templateMiniCalendar td.status-term-begin {
-  background: #9fc4e4;
+  background: #f4a340;
 }
 
 .templateMiniCalendar td.status-term-end {
-  background: #7aa4d1;
+  background: #fde968;
 }
 
 .templateMiniCalendar td.status-results-day {
-  background: #0f5fa8;
+  background: #a7ddff;
 }
 
 .templateMiniCalendar td.status-assessment {
-  background: #d7e6ff;
+  background: #f8c5de;
 }
 
 .templateMiniCalendar td.status-break {
-  background: #cfe0f5;
+  background: #fff6bf;
 }
 
 .templateMiniCalendar td.status-holiday {
-  background: #bfd3ea;
+  background: #f8caca;
 }
 
 .templateMonthEvents {
@@ -237,50 +242,52 @@
   height: 13px;
   border-radius: 2px;
   border: 1px solid rgba(15, 95, 168, 0.14);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .legendSwatch.status-student-led {
-  background: #d4e8fb;
+  background: #cfe2ff;
 }
 
 .legendSwatch.status-event {
-  background: #dfeefb;
+  background: #d9f6d8;
 }
 
 .legendSwatch.status-weekend {
-  background: #eef2f7;
+  background: #ffffff;
 }
 
 .legendSwatch.status-self-registration {
-  background: #eef5fb;
+  background: #6ec68f;
 }
 
 .legendSwatch.status-term-begin {
-  background: #9fc4e4;
+  background: #f4a340;
 }
 
 .legendSwatch.status-compensatory {
-  background: #b9d5f2;
+  background: #f7ddb8;
 }
 
 .legendSwatch.status-term-end {
-  background: #7aa4d1;
+  background: #fde968;
 }
 
 .legendSwatch.status-results-day {
-  background: #0f5fa8;
+  background: #a7ddff;
 }
 
 .legendSwatch.status-break {
-  background: #cfe0f5;
+  background: #fff6bf;
 }
 
 .legendSwatch.status-assessment {
-  background: #f8c7de;
+  background: #f8c5de;
 }
 
 .legendSwatch.status-holiday {
-  background: #bfd3ea;
+  background: #f8caca;
 }
 
 .calendarTemplateFooterBar {

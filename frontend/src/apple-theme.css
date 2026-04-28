@@ -1,0 +1,462 @@
+/* Global Apple-style premium override for the whole frontend */
+:root {
+  --apple-bg: #f4f6fb;
+  --apple-panel: #ffffff;
+  --apple-card: #f8faff;
+  --apple-border: #dbe4f2;
+  --apple-border-strong: #c9d8ee;
+  --apple-text: #1b2b40;
+  --apple-text-muted: #61738a;
+  --apple-primary: #2f73d9;
+  --apple-primary-strong: #2059b1;
+  --apple-sidebar: #2a2f86;
+  --apple-sidebar-deep: #222775;
+  --apple-shadow: 0 1px 2px rgba(24, 45, 76, 0.06), 0 10px 28px rgba(24, 45, 76, 0.08);
+  --apple-radius: 14px;
+}
+
+body {
+  background: linear-gradient(120deg, #e6e8f2 0%, #e7e9f5 48%, #eef1fb 48%, #eef1fb 100%) !important;
+  color: var(--apple-text) !important;
+}
+
+#root {
+  padding: 22px !important;
+}
+
+/* Shared cards/panels */
+.almanacContainer,
+.academicCalendarShell,
+.landingShell,
+.previewCard,
+.modalCard,
+.notificationCard {
+  background: var(--apple-panel) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 22px 56px rgba(23, 35, 64, 0.18) !important;
+}
+
+/* Header + sidebar shell */
+.header,
+.academicCalendarHeader {
+  background: linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%) !important;
+  border-bottom: 1px solid var(--apple-border) !important;
+  box-shadow: none !important;
+}
+
+.headerTitle,
+.academicCalendarTitle,
+.pageTitle,
+.panelTitle,
+.academicSectionTitle,
+.batchDetailTitle,
+.modalCenterTitle {
+  color: #163f73 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.headerSubTitle,
+.academicCalendarSubtitle,
+.panelInfo,
+.selectorSubText,
+.savedCalendarCard p,
+.schoolCard p,
+.batchCard p,
+.trackResultCard p {
+  color: var(--apple-text-muted) !important;
+}
+
+.sideDrawer {
+  position: absolute !important;
+  left: 18px !important;
+  top: 18px !important;
+  width: 96px !important;
+  min-height: 560px !important;
+  height: calc(100% - 36px) !important;
+  padding: 14px 10px !important;
+  border-radius: 20px !important;
+  border: 0 !important;
+  background: linear-gradient(180deg, var(--apple-sidebar-deep) 0%, var(--apple-sidebar) 100%) !important;
+  box-shadow: 0 18px 34px rgba(18, 24, 79, 0.36) !important;
+  overflow: hidden !important;
+}
+
+.sideDrawer::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 12px;
+  width: 2px;
+  height: calc(100% - 24px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.drawerBrand {
+  width: 100% !important;
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  justify-content: center !important;
+}
+
+.drawerBrandCopy,
+.drawerText,
+.drawerChevron {
+  display: none !important;
+}
+
+.drawerBrandLogo {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 16px rgba(13, 19, 66, 0.34) !important;
+}
+
+.drawerCollapseToggle {
+  display: none !important;
+}
+
+.drawerLink,
+.sideDrawer.collapsed .drawerLink {
+  width: 56px !important;
+  min-height: 52px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  border-radius: 16px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  transform: translateX(0);
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  animation: appleNavIn 0.36s ease both;
+}
+
+.drawerLink:nth-child(3) { animation-delay: 0.03s; }
+.drawerLink:nth-child(4) { animation-delay: 0.06s; }
+.drawerLink:nth-child(5) { animation-delay: 0.09s; }
+.drawerLink:nth-child(6) { animation-delay: 0.12s; }
+.drawerLink:nth-child(7) { animation-delay: 0.15s; }
+
+.drawerIcon {
+  color: rgba(255, 255, 255, 0.94) !important;
+}
+
+.drawerLink:hover {
+  transform: translateY(-1px) scale(1.03) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.drawerLink.active {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 8px 16px rgba(13, 19, 66, 0.28) !important;
+}
+
+.drawerLink.active .drawerIcon {
+  color: var(--apple-sidebar) !important;
+}
+
+.plainPanel {
+  margin-left: 130px !important;
+  margin-top: 4px !important;
+  padding: 16px 22px 26px !important;
+}
+
+/* White-blue card system */
+.schoolCard,
+.batchCard,
+.batchGroupCard,
+.formPanel,
+.savedBatchFilterBar,
+.trackResultCard,
+.calendarSchoolCard,
+.savedCalendarCard,
+.dayWiseCalendarSection,
+.dayWiseHeaderCard,
+.formalCalendarHeading,
+.savedFilterBar,
+.tablePreviewCard,
+.yearSection,
+.previewPaper,
+.calendarTemplateSheet,
+.templateMonthCard,
+.calendarTemplateHead,
+.calendarTemplateLegend,
+.calendarTemplateFooterBar,
+.container,
+.schoolBtn {
+  background: linear-gradient(160deg, #ffffff 0%, #f2f7ff 100%) !important;
+  border: 1px solid var(--apple-border) !important;
+  border-radius: var(--apple-radius) !important;
+  box-shadow: var(--apple-shadow) !important;
+}
+
+.schoolCard:hover,
+.schoolCard.active,
+.batchCard:hover,
+.batchGroupCard:hover,
+.calendarSchoolCard:hover,
+.savedCalendarCard:hover,
+.schoolBtn:hover,
+.schoolBtn.active {
+  border-color: var(--apple-primary-strong) !important;
+  box-shadow: 0 1px 2px rgba(3, 50, 120, 0.06), 0 14px 30px rgba(24, 45, 76, 0.12) !important;
+}
+
+.schoolCard h3,
+.batchCard h3,
+.batchGroupCard h3,
+.calendarSchoolName,
+.savedCalendarCard h3,
+.savedCalendarCard h4,
+.yearTitle,
+.previewStatus,
+.previewSchoolTitle,
+.previewUniversityText,
+.title {
+  color: #183f71 !important;
+}
+
+/* Buttons and controls */
+.formButton,
+.previewBtn,
+.saveBtn,
+.programLink,
+.modalBtn,
+.closeBtn,
+.compactBtn,
+.compactBtnGhost,
+.compactBtnPrimary,
+.compactBtnDanger,
+.calendarBackButton,
+.calendarProgrammePill,
+.savedIconButton,
+.previewTopClose,
+.batchCardDeleteBtn,
+.academicCalendarLaunch,
+.programLinkButton,
+.inlineBtn,
+.iconBtn,
+.selectionCard,
+.yearCard {
+  border-radius: 10px !important;
+}
+
+.formButton,
+.previewBtn,
+.programLink,
+.compactBtn,
+.compactBtnGhost,
+.calendarBackButton,
+.calendarProgrammePill,
+.savedIconButton,
+.previewTopClose,
+.batchCardDeleteBtn,
+.programLinkButton,
+.iconBtn,
+.selectionCard,
+.yearCard,
+.modalCard input,
+.modalCard select,
+.formInput,
+.savedBatchFilterItem select,
+.savedFilterItem select,
+.tableEditInput,
+.almanacContainer input[type="number"],
+.almanacContainer input[type="date"] {
+  background: #ffffff !important;
+  border: 1px solid var(--apple-border) !important;
+  color: var(--apple-text) !important;
+  box-shadow: none !important;
+}
+
+.formButton.primary,
+.saveBtn,
+.programLink.active,
+.modalBtn,
+.closeBtn,
+.compactBtnPrimary,
+.compactBtnDanger,
+.tableActionRow .saveButton,
+.tableActionRow .uploadPdfButton,
+.academicCalendarLaunch,
+.inlineBtn.edit,
+.inlineBtn.delete,
+.inlineBtn.add,
+.selectionCard.active,
+.yearCard.active,
+.notificationCloseBtn--warning,
+.notificationCloseBtn--error,
+.notificationCloseBtn--success {
+  background: linear-gradient(135deg, var(--apple-primary) 0%, var(--apple-primary-strong) 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.formButton:hover,
+.previewBtn:hover,
+.calendarBackButton:hover,
+.calendarProgrammePill:hover,
+.compactBtnGhost:hover,
+.savedIconButton:hover,
+.previewTopClose:hover,
+.batchCardDeleteBtn:hover,
+.programLinkButton:hover,
+.selectionCard:hover,
+.yearCard:hover {
+  background: #eef4ff !important;
+  border-color: var(--apple-border-strong) !important;
+  transform: translateY(-1px);
+}
+
+.formButton.primary:hover,
+.saveBtn:hover,
+.modalBtn:hover,
+.closeBtn:hover,
+.tableActionRow .saveButton:hover,
+.tableActionRow .uploadPdfButton:hover,
+.academicCalendarLaunch:hover,
+.programLink.active:hover {
+  background: linear-gradient(135deg, #2768c5 0%, #1e54a5 100%) !important;
+}
+
+/* Tables */
+.almanacTable,
+.previewTable,
+.dayWiseTable,
+.templateMiniCalendar {
+  border-collapse: collapse !important;
+}
+
+.almanacTable th,
+.previewTable th,
+.dayWiseTable th,
+.templateMiniCalendar th {
+  background: #edf4ff !important;
+  color: #1f4f86 !important;
+  border: 1px solid var(--apple-border) !important;
+  font-weight: 700 !important;
+}
+
+.almanacTable td,
+.previewTable td,
+.dayWiseTable td,
+.templateMiniCalendar td {
+  border: 1px solid var(--apple-border) !important;
+  color: var(--apple-text) !important;
+}
+
+.almanacTable tbody tr:nth-child(even) td,
+.dayWiseTable tbody tr:nth-child(even),
+.yearBand0 td,
+.yearBand0 .previewYearCell,
+.yearBand1 td,
+.yearBand1 .previewYearCell,
+.yearBand2 td,
+.yearBand2 .previewYearCell,
+.yearBand3 td,
+.yearBand3 .previewYearCell,
+.yearBand4 td,
+.yearBand4 .previewYearCell,
+.mergedWeekCell,
+.mergedTermCell {
+  background: #f8fbff !important;
+}
+
+/* Modals */
+.modalOverlay,
+.previewOverlay {
+  background: rgba(15, 24, 46, 0.35) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.notificationIcon {
+  background: linear-gradient(135deg, var(--apple-primary) 0%, var(--apple-primary-strong) 100%) !important;
+  box-shadow: none !important;
+}
+
+.programChip,
+.chip,
+.batchCard span {
+  background: #eaf2ff !important;
+  border: 1px solid #d1e2fb !important;
+  color: #2a5a8f !important;
+}
+
+/* Subtle global animation feel */
+.schoolCard,
+.batchCard,
+.batchGroupCard,
+.calendarSchoolCard,
+.savedCalendarCard,
+.templateMonthCard,
+.yearSection {
+  animation: appleCardIn 0.36s ease both;
+}
+
+@keyframes appleCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes appleNavIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  #root {
+    padding: 10px !important;
+  }
+
+  .landingShell,
+  .academicCalendarShell,
+  .almanacContainer {
+    border-radius: 16px !important;
+  }
+
+  .header,
+  .academicCalendarHeader {
+    padding: 16px !important;
+  }
+
+  .sideDrawer {
+    position: static !important;
+    width: auto !important;
+    min-height: auto !important;
+    height: auto !important;
+    margin: 0 12px 8px !important;
+    padding: 10px !important;
+    border-radius: 14px !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+  }
+
+  .plainPanel {
+    margin-left: 0 !important;
+    padding: 12px !important;
+  }
+}
