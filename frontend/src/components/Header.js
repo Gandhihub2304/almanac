@@ -731,32 +731,50 @@ function Header() {
       );
 
       const workbookRows = [];
+      const columnHeaders = [];
+
+      // Build column headers based on whether "ALL" is selected
+      if (trackSchoolName === "ALL") {
+        columnHeaders.push("School", "Batch", "Programme", "Current Term", "Self Registration");
+      } else {
+        columnHeaders.push("Batch", "Programme", "Current Term", "Self Registration");
+      }
+      
+      // Add Week 1-10
+      for (let i = 1; i <= 10; i += 1) {
+        columnHeaders.push(`Week ${i}`);
+      }
+      columnHeaders.push("Assessment Week");
 
       detailResponses.forEach((resp) => {
         if (resp.status !== "fulfilled" || !resp.value?.data) return;
         const almanac = resp.value.data;
         const schoolForAlmanac = getSchoolForProgram(almanac.program);
         const yearSummaries = buildTrackSheetSummary(almanac);
-        const yearLabels = getYearLabels(almanac.year);
 
         yearSummaries.forEach((summary) => {
           const weekCols = summary.weekColumns || [];
-          const row = {
-            School: schoolForAlmanac,
-            Batch: `${almanac.batchStart}-${almanac.batchEnd}`,
-            Programme: almanac.program || "-",
-            Term: summary.termLabel || "-",
-            "Self Registration": summary.selfRegistration || "-",
-            "Assessment Week": summary.assessmentWeek || "-",
-            Year: summary.yearNumber || "-"
-          };
+          const rowData = [];
 
-          // Add Week 1..Week10 columns
+          // Add columns in exact order matching table display
+          if (trackSchoolName === "ALL") {
+            rowData.push(schoolForAlmanac);
+          }
+          rowData.push(
+            `${almanac.batchStart}-${almanac.batchEnd}`,
+            almanac.program || "-",
+            summary.termLabel || "-",
+            summary.selfRegistration || "-"
+          );
+
+          // Add Week 1-10
           for (let i = 0; i < 10; i += 1) {
-            row[`Week ${i + 1}`] = weekCols[i] || "-";
+            rowData.push(weekCols[i] || "-");
           }
 
-          workbookRows.push(row);
+          rowData.push(summary.assessmentWeek || "-");
+
+          workbookRows.push(rowData);
         });
       });
 
@@ -766,7 +784,8 @@ function Header() {
         return;
       }
 
-      const ws = XLSX.utils.json_to_sheet(workbookRows);
+      // Create sheet with explicit headers and data in correct order
+      const ws = XLSX.utils.aoa_to_sheet([columnHeaders, ...workbookRows]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "TrackAcademic");
 

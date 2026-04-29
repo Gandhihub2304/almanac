@@ -113,9 +113,9 @@
 }
 
 .calendarSchoolCard:hover {
-  transform: translateY(-4px);
-  border-color: #a7c9e5;
-  box-shadow: 0 20px 38px rgba(11, 48, 86, 0.12);
+  transform: translateY(-4px) !important;
+  border-color: #3d86c9 !important;
+  box-shadow: 0 18px 34px rgba(15, 95, 168, 0.16) !important;
 }
 
 .calendarSchoolCard.expanded {

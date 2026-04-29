@@ -312,17 +312,17 @@ const getDayLabel = (isoDate) => {
 const toSafeText = (value) => String(value || "").trim();
 
 const CALENDAR_STATUS_STYLES = {
-  "student-led": { backgroundColor: "#cfe2ff" },
-  event: { backgroundColor: "#d9f6d8" },
+  "student-led": { backgroundColor: "#ffffff" },
+  event: { backgroundColor: "#ffffff" },
   weekend: { backgroundColor: "#ffffff" },
-  compensatory: { backgroundColor: "#f7ddb8" },
-  "self-registration": { backgroundColor: "#0aac48", color: "#0d0e0d" },
-  "term-begin": { backgroundColor: "#f4a340" },
-  "term-end": { backgroundColor: "#fde968" },
-  "results-day": { backgroundColor: "#a7ddff" },
-  assessment: { backgroundColor: "#f8c5de" },
-  break: { backgroundColor: "#fff6bf" },
-  holiday: { backgroundColor: "#f8caca" },
+  compensatory: { backgroundColor: "#ffffff" },
+  "self-registration": { backgroundColor: "#ffffff", color: "#000000" },
+  "term-begin": { backgroundColor: "#ffffff" },
+  "term-end": { backgroundColor: "#ffffff" },
+  "results-day": { backgroundColor: "#ffffff" },
+  assessment: { backgroundColor: "#ffffff" },
+  break: { backgroundColor: "#ffffff" },
+  holiday: { backgroundColor: "#ffffff" },
   "term-work": { backgroundColor: "#ffffff" }
 };
 
@@ -459,7 +459,9 @@ const buildRowsFromTerms = (terms) => {
           const isHoliday = labels.includes("Holiday");
           const isStudentActivity = labels.includes("Student Led Activities");
           const isCompensatoryWorkingDay = labels.some((label) => /compensatory working day/i.test(label));
-          const isResultsDay = Boolean(term.breakStart) && getDayDiff(term.breakStart, dateValue) === 2;
+          const isResultsDay = Boolean(term.breakStart) 
+            ? getDayDiff(term.breakStart, dateValue) === 2
+            : getDayDiff(term.termStart, dateValue) === 2;
 
         let weekLabel = "";
         if (isSelfRegistration) {

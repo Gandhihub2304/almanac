@@ -195,11 +195,12 @@
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.25s ease;
+  display: none;
 }
 
 .academicCalendarLaunch:hover::after,
 .academicCalendarLaunch:focus-visible::after {
-  transform: scaleX(1);
+  transform: scaleX(0);
 }
 
 .academicCalendarLaunch:focus-visible {
@@ -471,8 +472,12 @@
 }
 
 .trackFilterBar {
-  grid-template-columns: minmax(220px, 380px) auto;
+  grid-template-columns: minmax(220px, 380px) 1fr;
   align-items: end;
+}
+
+.trackFilterActions {
+  justify-self: end;
 }
 
 .trackClearFiltersButton {
@@ -483,14 +488,28 @@
   min-height: 34px;
 }
 
-.exportButton {
+.trackFilterActions .exportButton {
   padding: 7px;
   width: 120px;
   font-size: 0.82rem;
   border-radius: 10px;
   min-height: 34px;
   margin-left: 8px;
+  border-color: #2f8f46;
+  background: linear-gradient(180deg, #33ad53 0%, #23853f 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 18px rgba(35, 133, 63, 0.18);
 }
+
+.trackFilterActions .exportButton:hover {
+  border-color: #25743a;
+  background: linear-gradient(180deg, #2a9847 0%, #1f7335 100%);
+  color: #ffffff;
+  box-shadow: 0 12px 20px rgba(35, 133, 63, 0.22);
+}
+
+
+
 
 .trackFilterActions {
   display: flex;
@@ -881,7 +900,11 @@
   color: #0f3d70;
   opacity: 0;
   animation: cardIn 0.4s ease forwards;
-  transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.schoolCard {
+  border: 1px solid rgba(15, 95, 168, 0.22);
 }
 
 .batchCard {
@@ -925,11 +948,17 @@
   pointer-events: none;
 }
 
-.schoolCard:hover,
+
 .batchCard:hover {
-  transform: translateY(-4px);
-  border-color: var(--apple-primary);
-  box-shadow: 0 20px 38px rgba(11, 48, 86, 0.12);
+  transform: translateY(-4px) !important;
+  border-color: #3d86c9 !important;
+  box-shadow: 0 18px 34px rgba(15, 95, 168, 0.16) !important;
+}
+
+.schoolCard:hover {
+  transform: translateY(-4px) !important;
+  border-color: #3d86c9 !important;
+  box-shadow: 0 18px 34px rgba(15, 95, 168, 0.16) !important;
 }
 
 .schoolCard h3,
