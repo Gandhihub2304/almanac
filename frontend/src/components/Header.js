@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ProgramModal from "./ProgramModal";
+import * as XLSX from "xlsx";
 import { getYearLabels } from "../utils/yearLabels";
 import "./Header.css";
 
@@ -590,15 +591,20 @@ function Header() {
 
     setIsTrackLoading(true);
     try {
-      const matchedBatches = batches.filter((item) => {
-        const itemSchool = getSchoolForProgram(item.program);
-        return normalizeSchoolName(itemSchool) === normalizeSchoolName(schoolName);
-      });
+      let matchedBatches = [];
+      if (schoolName === "ALL") {
+        matchedBatches = batches;
+      } else {
+        matchedBatches = batches.filter((item) => {
+          const itemSchool = getSchoolForProgram(item.program);
+          return normalizeSchoolName(itemSchool) === normalizeSchoolName(schoolName);
+        });
 
-      if (!matchedBatches.length) {
-        setTrackSheetSchool(schoolName);
-        setTrackSearchError("No saved almanac found for this school.");
-        return;
+        if (!matchedBatches.length) {
+          setTrackSheetSchool(schoolName);
+          setTrackSearchError("No saved almanac found for this school.");
+          return;
+        }
       }
 
       const detailResponses = await Promise.all(
@@ -613,9 +619,11 @@ function Header() {
         .flatMap((almanac) => {
           const summaryRows = buildTrackSheetSummary(almanac);
           const yearLabels = getYearLabels(almanac.year);
+          const schoolForAlmanac = getSchoolForProgram(almanac.program);
 
           return summaryRows.map((summary) => ({
             key: `${almanac._id}-${summary.key}`,
+            school: schoolForAlmanac,
             batch: `${almanac.batchStart}-${almanac.batchEnd} (${yearLabels[summary.yearNumber - 1] || `Year ${summary.yearNumber}`})`,
             program: almanac.program || "-",
             termLabel: summary.termLabel,
@@ -671,6 +679,104 @@ function Header() {
     } catch (error) {
       console.error("Delete saved almanac error:", error);
       setBatchFetchError(error?.response?.data?.message || "Unable to delete saved almanac.");
+    }
+  };
+
+  const getDurationInDays = (start, end) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return 0;
+    const diff = endDate.getTime() - startDate.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  const getDurationWeeks = (start, end) => {
+    const days = getDurationInDays(start, end);
+    if (!days) return "";
+    const weeks = Math.ceil(days / 7);
+    return `${weeks} week${weeks !== 1 ? "s" : ""}`;
+  };
+
+  const exportTrackExcel = async () => {
+    setTrackSearchError("");
+    setIsTrackLoading(true);
+
+    try {
+      // Determine which batches to include
+      let matchedBatches = [];
+      if (trackSchoolName === "ALL") {
+        matchedBatches = batches.filter(Boolean);
+      } else if (trackSchoolName) {
+        matchedBatches = batches.filter((item) => {
+          const itemSchool = getSchoolForProgram(item.program);
+          return normalizeValue(itemSchool) === normalizeValue(trackSchoolName);
+        });
+      } else {
+        // nothing selected
+        setTrackSearchError("Select a school or choose All to export.");
+        setIsTrackLoading(false);
+        return;
+      }
+
+      if (!matchedBatches.length) {
+        setTrackSearchError("No batches found to export for the selected school(s).");
+        setIsTrackLoading(false);
+        return;
+      }
+
+      const detailResponses = await Promise.allSettled(
+        matchedBatches
+          .filter((item) => item._id)
+          .map((item) => axios.get(`http://localhost:5000/api/almanac/${item._id}`))
+      );
+
+      const workbookRows = [];
+
+      detailResponses.forEach((resp) => {
+        if (resp.status !== "fulfilled" || !resp.value?.data) return;
+        const almanac = resp.value.data;
+        const schoolForAlmanac = getSchoolForProgram(almanac.program);
+        const yearSummaries = buildTrackSheetSummary(almanac);
+        const yearLabels = getYearLabels(almanac.year);
+
+        yearSummaries.forEach((summary) => {
+          const weekCols = summary.weekColumns || [];
+          const row = {
+            School: schoolForAlmanac,
+            Batch: `${almanac.batchStart}-${almanac.batchEnd}`,
+            Programme: almanac.program || "-",
+            Term: summary.termLabel || "-",
+            "Self Registration": summary.selfRegistration || "-",
+            "Assessment Week": summary.assessmentWeek || "-",
+            Year: summary.yearNumber || "-"
+          };
+
+          // Add Week 1..Week10 columns
+          for (let i = 0; i < 10; i += 1) {
+            row[`Week ${i + 1}`] = weekCols[i] || "-";
+          }
+
+          workbookRows.push(row);
+        });
+      });
+
+      if (!workbookRows.length) {
+        setTrackSearchError("No track rows available to export.");
+        setIsTrackLoading(false);
+        return;
+      }
+
+      const ws = XLSX.utils.json_to_sheet(workbookRows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "TrackAcademic");
+
+      const filename = `track-academic-${trackSchoolName === "ALL" ? "all" : trackSchoolName.replace(/\s+/g, "-")}-${new Date().toISOString().slice(0,10)}.xlsx`;
+      XLSX.writeFile(wb, filename);
+    } catch (err) {
+      console.error("Export error:", err);
+      setTrackSearchError("Failed to export Excel.");
+    } finally {
+      setIsTrackLoading(false);
     }
   };
 
@@ -1000,6 +1106,7 @@ function Header() {
                   onChange={handleTrackSchoolChange}
                   disabled={isTrackLoading}
                 >
+                  <option value="ALL">All</option>
                   <option value="">Select School</option>
                   {trackSchoolOptions.map((schoolName) => (
                     <option key={schoolName} value={schoolName}>
@@ -1009,9 +1116,19 @@ function Header() {
                 </select>
               </div>
 
-              <button className="formButton trackClearFiltersButton" onClick={clearTrackFilters}>
-                Clear Filters
-              </button>
+              <div className="trackFilterActions">
+                <button className="formButton trackClearFiltersButton" onClick={clearTrackFilters}>
+                  Clear Filters
+                </button>
+                <button
+                  className="formButton exportButton"
+                  onClick={exportTrackExcel}
+                  disabled={isTrackLoading}
+                  title="Export visible track sheet to Excel"
+                >
+                  Export
+                </button>
+              </div>
             </div>
 
             {trackSearchError && <p className="panelInfo">{trackSearchError}</p>}
@@ -1025,32 +1142,63 @@ function Header() {
                 <div className="trackSheetTableWrap">
                   <table className="trackSheetTable">
                     <thead>
-                      <tr className="trackSheetWeekHeadingRow">
-                        <th colSpan="4" />
-                        {Array.from({ length: 10 }, (_, index) => (
-                          <th
-                            key={`week-heading-${index + 1}`}
-                            className={index === trackSheetRows[0]?.currentWeekIndex ? "currentWeekHeading" : ""}
-                          >
-                            {index === trackSheetRows[0]?.currentWeekIndex ? "Current Week" : ""}
-                          </th>
-                        ))}
-                        <th />
-                      </tr>
-                      <tr>
-                        <th>Batch</th>
-                        <th>Programme</th>
-                        <th>Current Term</th>
-                        <th>Self Registration</th>
-                        {Array.from({ length: 10 }, (_, index) => (
-                          <th key={`week-head-${index + 1}`}>Week {index + 1}</th>
-                        ))}
-                        <th>Assessment Week</th>
-                      </tr>
+                      {trackSchoolName === "ALL" ? (
+                        <>
+                          <tr className="trackSheetWeekHeadingRow">
+                            <th colSpan="5" />
+                            {Array.from({ length: 10 }, (_, index) => (
+                              <th
+                                key={`week-heading-${index + 1}`}
+                                className={index === trackSheetRows[0]?.currentWeekIndex ? "currentWeekHeading" : ""}
+                              >
+                                {index === trackSheetRows[0]?.currentWeekIndex ? "Current Week" : ""}
+                              </th>
+                            ))}
+                            <th />
+                          </tr>
+                          <tr>
+                            <th>School</th>
+                            <th>Batch</th>
+                            <th>Programme</th>
+                            <th>Current Term</th>
+                            <th>Self Registration</th>
+                            {Array.from({ length: 10 }, (_, index) => (
+                              <th key={`week-head-${index + 1}`}>Week {index + 1}</th>
+                            ))}
+                            <th>Assessment Week</th>
+                          </tr>
+                        </>
+                      ) : (
+                        <>
+                          <tr className="trackSheetWeekHeadingRow">
+                            <th colSpan="4" />
+                            {Array.from({ length: 10 }, (_, index) => (
+                              <th
+                                key={`week-heading-${index + 1}`}
+                                className={index === trackSheetRows[0]?.currentWeekIndex ? "currentWeekHeading" : ""}
+                              >
+                                {index === trackSheetRows[0]?.currentWeekIndex ? "Current Week" : ""}
+                              </th>
+                            ))}
+                            <th />
+                          </tr>
+                          <tr>
+                            <th>Batch</th>
+                            <th>Programme</th>
+                            <th>Current Term</th>
+                            <th>Self Registration</th>
+                            {Array.from({ length: 10 }, (_, index) => (
+                              <th key={`week-head-${index + 1}`}>Week {index + 1}</th>
+                            ))}
+                            <th>Assessment Week</th>
+                          </tr>
+                        </>
+                      )}
                     </thead>
                     <tbody>
                       {trackSheetRows.map((row) => (
                         <tr key={row.key}>
+                          {trackSchoolName === "ALL" && <td>{row.school}</td>}
                           <td>{row.batch}</td>
                           <td>{row.program}</td>
                           <td>{row.termLabel}</td>

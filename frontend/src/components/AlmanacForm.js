@@ -219,6 +219,13 @@ function AlmanacForm() {
     return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
   };
 
+  const getDurationWeeks = (start, end) => {
+    const days = getDurationInDays(start, end);
+    if (!days) return "-";
+    const weeks = Math.ceil(days / 7);
+    return `${weeks} week${weeks !== 1 ? "s" : ""}`;
+  };
+
   const getDefaultBreakRange = (referenceEndDate, weekCount = 1) => {
     const breakStartDate = getNextMonday(new Date(referenceEndDate));
     const breakEndDate = addWeeks(breakStartDate, weekCount);
@@ -1556,18 +1563,19 @@ function AlmanacForm() {
                       <th rowSpan="2">Year</th>
                       <th rowSpan="2">Term</th>
                       <th colSpan="2">Self Registration</th>
-                      <th colSpan="2">Term Duration</th>
+                      <th colSpan="3">Term Duration</th>
                       <th rowSpan="2">Student Led Activities</th>
                       <th rowSpan="2">Festival Holidays</th>
                       <th rowSpan="2">Comprehensive Assessment</th>
                       <th rowSpan="2">Break</th>
                     </tr>
-                    <tr>
-                      <th>Start</th>
-                      <th>End</th>
-                      <th>Commencement</th>
-                      <th>Completion</th>
-                    </tr>
+                      <tr>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Commencement</th>
+                        <th>Completion</th>
+                        <th>Duration</th>
+                      </tr>
                   </thead>
 
                   <tbody>
@@ -1589,6 +1597,7 @@ function AlmanacForm() {
                           <td>{toDisplayDate(term.selfEnd)}</td>
                           <td>{toDisplayDate(term.termStart)}</td>
                           <td>{toDisplayDate(term.termEnd)}</td>
+                          <td>{getDurationWeeks(term.termStart, term.termEnd)}</td>
                           <td>{getActivityRange(term)}</td>
                           <td>{getHolidayRange(term.holidays)}</td>
                           <td>{getAssessmentDisplayValue(term, tIndex)}</td>

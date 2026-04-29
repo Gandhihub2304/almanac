@@ -128,6 +128,17 @@ function AlmanacBatchView() {
     return `${toDisplayDate(start)} to ${toDisplayDate(end)}`;
   };
 
+  const getDurationWeeks = (start, end) => {
+    if (!start || !end) return "-";
+    const s = new Date(start);
+    const e = new Date(end);
+    if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e < s) return "-";
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const days = Math.floor((e.getTime() - s.getTime()) / msPerDay) + 1;
+    const weeks = Math.ceil(days / 7);
+    return `${weeks} week${weeks !== 1 ? "s" : ""}`;
+  };
+
   const getHolidayRange = (holidays) => {
     const ranges = (holidays || [])
       .filter((item) => item.start && item.end)
@@ -211,7 +222,7 @@ function AlmanacBatchView() {
                 <th rowSpan="2">Year</th>
                 <th rowSpan="2">Term</th>
                 <th colSpan="2">Self Registration</th>
-                <th colSpan="2">Term Duration</th>
+                <th colSpan="3">Term Duration</th>
                 <th rowSpan="2">Student Led Activities</th>
                 <th rowSpan="2">Festival Holidays</th>
                 <th rowSpan="2">Comprehensive Assessment</th>
@@ -222,6 +233,7 @@ function AlmanacBatchView() {
                 <th>End</th>
                 <th>Commencement</th>
                 <th>Completion</th>
+                <th>Duration</th>
               </tr>
             </thead>
 
@@ -244,6 +256,7 @@ function AlmanacBatchView() {
                     <td>{toDisplayDate(term.selfEnd)}</td>
                     <td>{toDisplayDate(term.termStart)}</td>
                     <td>{toDisplayDate(term.termEnd)}</td>
+                    <td>{getDurationWeeks(term.termStart, term.termEnd)}</td>
                     <td>{getActivityRange(term)}</td>
                     <td>{getHolidayRange(term.holidays)}</td>
                     <td>{getAssessmentRange(term, tIndex)}</td>

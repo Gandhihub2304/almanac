@@ -483,6 +483,21 @@
   min-height: 34px;
 }
 
+.exportButton {
+  padding: 7px;
+  width: 120px;
+  font-size: 0.82rem;
+  border-radius: 10px;
+  min-height: 34px;
+  margin-left: 8px;
+}
+
+.trackFilterActions {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
 .trackSearchButton {
   display: inline-flex;
   align-items: center;
