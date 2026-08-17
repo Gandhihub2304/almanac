@@ -15,7 +15,7 @@ function AddSchoolModal({ close, refresh }) {
 
   const save = async () => {
     if (!name.trim() || programs.length === 0) {
-      alert("Enter school name and add at least one programme");
+      alert("Please enter a school name and add at least one programme.");
       return;
     }
 

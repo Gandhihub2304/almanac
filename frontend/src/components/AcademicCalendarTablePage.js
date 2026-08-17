@@ -629,7 +629,7 @@ function AcademicCalendarTablePage() {
         const yearData = almanac?.yearsData?.[selectedYearNumber - 1];
 
         if (!savedCalendar && !yearData) {
-          setError("Selected year data not found.");
+          setError("Selected year data was not found for this almanac.");
           setLoading(false);
           return;
         }
@@ -695,7 +695,7 @@ function AcademicCalendarTablePage() {
         setEditableRows(savedRows.length ? mergedRows : generatedRows);
       } catch (fetchError) {
         console.error("Failed to load academic calendar table:", fetchError);
-        setError("Unable to load academic calendar details.");
+        setError("Unable to load the academic calendar. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -800,7 +800,7 @@ function AcademicCalendarTablePage() {
       if (!targetAlmanacId) {
         setSaveStatus({
           type: "error",
-          message: "Unable to save table: valid almanac record not found for this programme and batch."
+          message: "Unable to save the table: no matching almanac record was found for this programme and batch."
         });
         setSaving(false);
         return;
@@ -847,17 +847,14 @@ function AcademicCalendarTablePage() {
 
       setSaveStatus({
         type: "success",
-        message: res?.data?.message || "Table saved successfully"
+        message: res?.data?.message || "Day-wise table saved successfully."
       });
     } catch (saveError) {
       console.error("Failed to save day-wise table:", saveError);
       const backendMessage = saveError?.response?.data?.message;
-      const statusText = saveError?.response?.status ? ` (HTTP ${saveError.response.status})` : "";
       setSaveStatus({
         type: "error",
-        message: backendMessage
-          ? `${backendMessage}${statusText}`
-          : (saveError?.message ? `${saveError.message}${statusText}` : `Unable to save table${statusText}`)
+        message: backendMessage || "Failed to save the day-wise table. Please try again."
       });
     } finally {
       setSaving(false);
@@ -978,7 +975,7 @@ function AcademicCalendarTablePage() {
   if (error || !viewData) {
     return (
       <div className="viewPageShell">
-        <h3 className="previewStatus">{error || "Academic calendar not found"}</h3>
+        <h3 className="previewStatus">{error || "Academic calendar not found."}</h3>
         <button className="previewBtn" onClick={() => navigate("/academic-calendar")}>Back</button>
       </div>
     );

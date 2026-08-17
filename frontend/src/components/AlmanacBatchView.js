@@ -104,7 +104,7 @@ function AlmanacBatchView() {
         setAlmanac(almanacRes.data);
         setSchools(schoolsRes.data || []);
       } catch (err) {
-        setError(err?.response?.data?.message || "Failed to load almanac");
+        setError(err?.response?.data?.message || "Failed to load the almanac. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -174,7 +174,7 @@ function AlmanacBatchView() {
   if (error || !almanac) {
     return (
       <div className="viewPageShell">
-        <h3 className="previewStatus">{error || "Almanac not found"}</h3>
+        <h3 className="previewStatus">{error || "Almanac not found."}</h3>
         <button className="previewBtn" onClick={() => navigate("/")}>Go Home</button>
       </div>
     );

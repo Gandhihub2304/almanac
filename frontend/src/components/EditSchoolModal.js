@@ -22,7 +22,7 @@ function EditSchoolModal({ schools, close, refresh }) {
       console.log("Updating ID:", selected?._id);
 
       if (!selected || !selected._id) {
-        alert("ID missing ❌");
+        alert("Unable to update: school ID is missing.");
         return;
       }
 
@@ -41,7 +41,7 @@ function EditSchoolModal({ schools, close, refresh }) {
 
     } catch (error) {
       console.error("Update Error:", error);
-      alert("Update failed ❌");
+      alert("Failed to update the school. Please try again.");
     }
   };
 

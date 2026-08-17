@@ -186,7 +186,7 @@ function Header() {
     } catch (error) {
       console.error("Fetch batches error:", error);
       setBatches([]);
-      setBatchFetchError("Unable to load batches. Restart backend server and try again.");
+      setBatchFetchError("Unable to load saved almanacs. Please check that the server is running and try again.");
     }
   };
 
@@ -677,11 +677,11 @@ function Header() {
       setTrackSheetRows(rows);
 
       if (!rows.length) {
-        setTrackSearchError(`No almanac data found for current year ${currentCalendarYear} in this school.`);
+        setTrackSearchError(`No almanac data found for the current year (${currentCalendarYear}) for this school.`);
       }
     } catch (error) {
       setTrackSheetSchool(schoolName);
-      setTrackSearchError(error?.response?.data?.message || "Unable to load track almanac sheet.");
+      setTrackSearchError(error?.response?.data?.message || "Unable to load the track sheet. Please try again.");
     } finally {
       setIsTrackLoading(false);
     }
@@ -695,7 +695,7 @@ function Header() {
 
   const handleDeleteSavedAlmanac = async (batchItem) => {
     const shouldDelete = window.confirm(
-      `Delete saved almanac for ${batchItem.batchStart}-${batchItem.batchEnd} / ${batchItem.program}?`
+      `Are you sure you want to delete the saved almanac for ${batchItem.program} (${batchItem.batchStart}-${batchItem.batchEnd})?`
     );
 
     if (!shouldDelete) {
@@ -710,7 +710,7 @@ function Header() {
       );
     } catch (error) {
       console.error("Delete saved almanac error:", error);
-      setBatchFetchError(error?.response?.data?.message || "Unable to delete saved almanac.");
+      setBatchFetchError(error?.response?.data?.message || "Failed to delete the saved almanac. Please try again.");
     }
   };
 
@@ -745,7 +745,7 @@ function Header() {
         });
       } else {
         // nothing selected
-        setTrackSearchError("Select a school or choose All to export.");
+        setTrackSearchError("Please select a school or choose All to export.");
         setIsTrackLoading(false);
         return;
       }
@@ -825,7 +825,7 @@ function Header() {
       XLSX.writeFile(wb, filename);
     } catch (err) {
       console.error("Export error:", err);
-      setTrackSearchError("Failed to export Excel.");
+      setTrackSearchError("Failed to export to Excel. Please try again.");
     } finally {
       setIsTrackLoading(false);
     }
@@ -841,7 +841,7 @@ function Header() {
 
   const handleSaveSchool = async () => {
     if (!addSchoolName.trim() || addPrograms.length === 0) {
-      alert("Enter school name and add at least one programme");
+      alert("Please enter a school name and add at least one programme.");
       return;
     }
 
@@ -889,7 +889,7 @@ function Header() {
     }
 
     if (!editSchoolName.trim() || editPrograms.length === 0) {
-      alert("School name and programmes are required");
+      alert("Please enter a school name and add at least one programme.");
       return;
     }
 
@@ -906,7 +906,7 @@ function Header() {
       return;
     }
 
-    const shouldDelete = window.confirm("Delete this school?");
+    const shouldDelete = window.confirm("Are you sure you want to delete this school?");
     if (!shouldDelete) {
       return;
     }
@@ -1120,7 +1120,7 @@ function Header() {
                       className="batchCardBody"
                       onClick={() => {
                         if (!batchItem._id) {
-                          setBatchFetchError("Invalid almanac id for selected card.");
+                          setBatchFetchError("Invalid almanac ID for the selected batch.");
                           return;
                         }
 

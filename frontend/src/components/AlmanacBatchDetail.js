@@ -114,10 +114,10 @@ function AlmanacBatchDetail() {
         if (batchPrograms.length > 0) {
           setSelectedProgram(batchPrograms[0]);
         } else {
-          setError("No programs found for this batch");
+          setError("No programmes found for this batch.");
         }
       } catch (err) {
-        setError(err?.response?.data?.message || "Failed to load batch programs");
+        setError(err?.response?.data?.message || "Failed to load the batch programmes. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -199,13 +199,13 @@ function AlmanacBatchDetail() {
   };
 
   if (loading) {
-    return <h3 className="previewStatus">Loading batch programs...</h3>;
+    return <h3 className="previewStatus">Loading batch programmes...</h3>;
   }
 
   if (error || programs.length === 0) {
     return (
       <div className="viewPageShell">
-        <h3 className="previewStatus">{error || "No programs found"}</h3>
+        <h3 className="previewStatus">{error || "No programmes found for this batch."}</h3>
         <button className="previewBtn" onClick={() => navigate("/")}>
           Go Home
         </button>

@@ -192,7 +192,7 @@ function AcademicCalendarPage() {
       });
     } catch (error) {
       console.error("Open saved calendar error:", error);
-      setCalendarError(error?.response?.data?.message || "Unable to open saved calendar.");
+      setCalendarError(error?.response?.data?.message || "Unable to open the saved calendar. Please try again.");
     }
   };
 
@@ -281,7 +281,7 @@ function AcademicCalendarPage() {
         );
         rows = Array.isArray(savedResponse?.data?.rows) ? savedResponse.data.rows : [];
       } else {
-        setCalendarError("Unable to download: missing calendar identifiers.");
+        setCalendarError("Unable to download this calendar: required information is missing.");
         return;
       }
 
@@ -342,7 +342,7 @@ function AcademicCalendarPage() {
       html2pdf().set(opt).from(element).save();
     } catch (downloadError) {
       console.error("Download calendar PDF error:", downloadError);
-      setCalendarError("Unable to download calendar PDF.");
+      setCalendarError("Failed to download the calendar PDF. Please try again.");
     } finally {
       setDownloadTemplatePayload(null);
       setDownloadingId("");
@@ -362,7 +362,7 @@ function AcademicCalendarPage() {
       } else if (item?.almanacId && item?.yearNumber) {
         await axios.delete(`http://localhost:5000/api/almanac/${item.almanacId}/year/${item.yearNumber}/day-wise-table`);
       } else {
-        setCalendarError("Unable to delete this calendar due to missing identifiers.");
+        setCalendarError("Unable to delete this calendar: required information is missing.");
         return;
       }
 
@@ -379,7 +379,7 @@ function AcademicCalendarPage() {
       );
     } catch (deleteError) {
       console.error("Delete saved calendar error:", deleteError);
-      setCalendarError(deleteError?.response?.data?.message || "Unable to delete saved calendar.");
+      setCalendarError(deleteError?.response?.data?.message || "Failed to delete the saved calendar. Please try again.");
     }
   };
 
@@ -415,7 +415,7 @@ function AcademicCalendarPage() {
     }
 
     if (!selectedBatch._id) {
-      setCalendarError("Invalid almanac id for selected batch.");
+      setCalendarError("Invalid almanac ID for the selected batch.");
       return;
     }
 
@@ -442,7 +442,7 @@ function AcademicCalendarPage() {
       });
     } catch (error) {
       console.error("Failed to load selected almanac:", error);
-      setCalendarError("Unable to load selected almanac details.");
+      setCalendarError("Unable to load the selected almanac details. Please try again.");
     }
   };
 

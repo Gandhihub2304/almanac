@@ -224,7 +224,7 @@ exports.saveAlmanac = async (req, res) => {
     const { program, year, batchStart, batchEnd, yearsData } = req.body;
 
     if (!program || !year || !batchStart || !batchEnd || !Array.isArray(yearsData)) {
-      return res.status(400).json({ message: "Missing required almanac fields" });
+      return res.status(400).json({ message: "Please fill in all required fields (programme, year, batch start, and batch end) before saving." });
     }
 
     const parsedYear = Number(year);
@@ -232,15 +232,15 @@ exports.saveAlmanac = async (req, res) => {
     const parsedBatchEnd = Number(batchEnd);
 
     if (Number.isNaN(parsedYear) || Number.isNaN(parsedBatchStart) || Number.isNaN(parsedBatchEnd)) {
-      return res.status(400).json({ message: "Year and batch values must be numbers" });
+      return res.status(400).json({ message: "Year, batch start, and batch end must be valid numbers." });
     }
 
     if (parsedBatchEnd < parsedBatchStart) {
-      return res.status(400).json({ message: "Batch end cannot be smaller than batch start" });
+      return res.status(400).json({ message: "Batch end year cannot be earlier than the batch start year." });
     }
 
     if (yearsData.length !== parsedYear) {
-      return res.status(400).json({ message: "Years data does not match selected year count" });
+      return res.status(400).json({ message: "The number of years provided does not match the selected duration." });
     }
 
     const breakRuleMessage = validateBreakRules(yearsData, parsedYear);
@@ -259,8 +259,8 @@ exports.saveAlmanac = async (req, res) => {
 
     // Check if batch already exists - prevent duplicates
     if (existing) {
-      return res.status(409).json({ 
-        message: `This batch is already created for ${program} (${parsedBatchStart}-${parsedBatchEnd}). Please edit the existing batch or create a new batch.`
+      return res.status(409).json({
+        message: `An almanac already exists for ${program} (${parsedBatchStart}-${parsedBatchEnd}). Please edit the existing batch or choose a different batch.`
       });
     }
 
@@ -273,7 +273,7 @@ exports.saveAlmanac = async (req, res) => {
     });
 
     res.json({
-      message: "Almanac saved for this batch ✅",
+      message: "Almanac saved successfully.",
       almanac: savedAlmanac
     });
 
@@ -281,10 +281,10 @@ exports.saveAlmanac = async (req, res) => {
     console.error("BACKEND ERROR:", error);
     if (error?.code === 11000) {
       return res.status(409).json({
-        message: "Duplicate almanac detected for this selection. Please open the existing batch and edit it."
+        message: "An almanac already exists for this selection. Please open the existing batch to edit it."
       });
     }
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to save the almanac. Please try again." });
   }
 };
 
@@ -307,7 +307,7 @@ exports.getAlmanacBatches = async (req, res) => {
     res.json(batches);
   } catch (error) {
     console.error("BATCH LIST ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to load saved almanacs. Please try again." });
   }
 };
 
@@ -323,17 +323,17 @@ exports.getAlmanacById = async (req, res) => {
     });
 
     if (!id) {
-      return res.status(400).json({ message: "Almanac id is required" });
+      return res.status(400).json({ message: "Almanac ID is required." });
     }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid almanac id format" });
+      return res.status(400).json({ message: "Invalid almanac ID format." });
     }
 
     const almanac = await Almanac.findById(id).lean();
 
     if (!almanac) {
-      return res.status(404).json({ message: "Almanac not found" });
+      return res.status(404).json({ message: "Almanac not found." });
     }
 
     res.json(almanac);
@@ -343,7 +343,7 @@ exports.getAlmanacById = async (req, res) => {
       message: error.message,
       stack: error.stack
     });
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to load the almanac. Please try again." });
   }
 };
 
@@ -362,11 +362,11 @@ exports.saveDayWiseTable = async (req, res) => {
 
     const parsedYearNumber = Number(yearNumber);
     if (Number.isNaN(parsedYearNumber) || parsedYearNumber <= 0) {
-      return res.status(400).json({ message: "Invalid year number" });
+      return res.status(400).json({ message: "Please provide a valid year number." });
     }
 
     if (!Array.isArray(rows)) {
-      return res.status(400).json({ message: "Rows must be an array" });
+      return res.status(400).json({ message: "Invalid table data. Please try again." });
     }
 
     const sanitizedRows = rows.map((item) => ({
@@ -411,14 +411,14 @@ exports.saveDayWiseTable = async (req, res) => {
     );
 
     res.json({
-      message: "Day-wise table saved for selected batch and year",
+      message: "Day-wise table saved successfully.",
       almanacId: id,
       yearNumber: parsedYearNumber,
       totalRows: sanitizedRows.length
     });
   } catch (error) {
     console.error("SAVE DAY-WISE TABLE ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to save the day-wise table. Please try again." });
   }
 };
 
@@ -428,23 +428,23 @@ exports.deleteSavedCalendar = async (req, res) => {
     const parsedYearNumber = Number(yearNumber);
 
     if (Number.isNaN(parsedYearNumber) || parsedYearNumber <= 0) {
-      return res.status(400).json({ message: "Invalid year number" });
+      return res.status(400).json({ message: "Please provide a valid year number." });
     }
 
     const deleted = await Calendar.findOneAndDelete({ almanacId: id, yearNumber: parsedYearNumber });
 
     if (!deleted) {
-      return res.status(404).json({ message: "Saved calendar not found" });
+      return res.status(404).json({ message: "Saved calendar not found." });
     }
 
     res.json({
-      message: "Saved calendar deleted successfully",
+      message: "Saved calendar deleted successfully.",
       almanacId: id,
       yearNumber: parsedYearNumber
     });
   } catch (error) {
     console.error("DELETE SAVED CALENDAR ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to delete the saved calendar. Please try again." });
   }
 };
 
@@ -455,7 +455,7 @@ exports.deleteAlmanacBatchRange = async (req, res) => {
     const parsedBatchEnd = Number(batchEnd);
 
     if (Number.isNaN(parsedBatchStart) || Number.isNaN(parsedBatchEnd)) {
-      return res.status(400).json({ message: "Batch values must be numbers" });
+      return res.status(400).json({ message: "Batch start and batch end must be valid numbers." });
     }
 
     const result = await Almanac.deleteMany({
@@ -469,7 +469,7 @@ exports.deleteAlmanacBatchRange = async (req, res) => {
     });
 
     res.json({
-      message: "Saved almanac batch deleted successfully",
+      message: "Saved almanac batch deleted successfully.",
       deletedCount: result.deletedCount || 0,
       deletedCalendarCount: deletedCalendars.deletedCount || 0,
       batchStart: parsedBatchStart,
@@ -477,7 +477,7 @@ exports.deleteAlmanacBatchRange = async (req, res) => {
     });
   } catch (error) {
     console.error("DELETE BATCH RANGE ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to delete the almanac batch. Please try again." });
   }
 };
 
@@ -486,7 +486,7 @@ exports.deleteAlmanacById = async (req, res) => {
     const deleted = await Almanac.findByIdAndDelete(req.params.id);
 
     if (!deleted) {
-      return res.status(404).json({ message: "Almanac not found" });
+      return res.status(404).json({ message: "Almanac not found." });
     }
 
     const deletedCalendars = await Calendar.deleteMany({
@@ -494,13 +494,13 @@ exports.deleteAlmanacById = async (req, res) => {
     });
 
     res.json({
-      message: "Saved almanac deleted successfully",
+      message: "Saved almanac deleted successfully.",
       almanacId: req.params.id,
       deletedCalendarCount: deletedCalendars.deletedCount || 0
     });
   } catch (error) {
     console.error("DELETE ALMANAC ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to delete the almanac. Please try again." });
   }
 };
 
@@ -510,13 +510,13 @@ exports.getSavedCalendarByAlmanacYear = async (req, res) => {
     const parsedYearNumber = Number(yearNumber);
 
     if (Number.isNaN(parsedYearNumber) || parsedYearNumber <= 0) {
-      return res.status(400).json({ message: "Invalid year number" });
+      return res.status(400).json({ message: "Please provide a valid year number." });
     }
 
     const savedCalendar = await Calendar.findOne({ almanacId: id, yearNumber: parsedYearNumber }).lean();
 
     if (!savedCalendar) {
-      return res.status(404).json({ message: "Saved calendar not found" });
+      return res.status(404).json({ message: "Saved calendar not found." });
     }
 
     res.json({
@@ -525,7 +525,7 @@ exports.getSavedCalendarByAlmanacYear = async (req, res) => {
     });
   } catch (error) {
     console.error("GET SAVED CALENDAR ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to load the saved calendar. Please try again." });
   }
 };
 
@@ -576,7 +576,7 @@ exports.getSavedCalendars = async (req, res) => {
     res.json(savedCalendars);
   } catch (error) {
     console.error("SAVED CALENDARS ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to load saved calendars. Please try again." });
   }
 };
 
@@ -585,21 +585,21 @@ exports.deleteSavedCalendarById = async (req, res) => {
     const { calendarId } = req.params;
 
     if (!calendarId || !mongoose.Types.ObjectId.isValid(calendarId)) {
-      return res.status(400).json({ message: "Invalid calendar id format" });
+      return res.status(400).json({ message: "Invalid calendar ID format." });
     }
 
     const deleted = await Calendar.findByIdAndDelete(calendarId);
     if (!deleted) {
-      return res.status(404).json({ message: "Saved calendar not found" });
+      return res.status(404).json({ message: "Saved calendar not found." });
     }
 
     res.json({
-      message: "Saved calendar deleted successfully",
+      message: "Saved calendar deleted successfully.",
       calendarId
     });
   } catch (error) {
     console.error("DELETE SAVED CALENDAR BY ID ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to delete the saved calendar. Please try again." });
   }
 };
 
@@ -608,12 +608,12 @@ exports.getSavedCalendarById = async (req, res) => {
     const { calendarId } = req.params;
 
     if (!calendarId || !mongoose.Types.ObjectId.isValid(calendarId)) {
-      return res.status(400).json({ message: "Invalid calendar id format" });
+      return res.status(400).json({ message: "Invalid calendar ID format." });
     }
 
     const calendar = await Calendar.findById(calendarId).lean();
     if (!calendar) {
-      return res.status(404).json({ message: "Saved calendar not found" });
+      return res.status(404).json({ message: "Saved calendar not found." });
     }
 
     res.json({
@@ -622,7 +622,7 @@ exports.getSavedCalendarById = async (req, res) => {
     });
   } catch (error) {
     console.error("GET SAVED CALENDAR BY ID ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to load the saved calendar. Please try again." });
   }
 };
 
@@ -632,11 +632,11 @@ exports.updateAlmanacById = async (req, res) => {
     const { program, year, batchStart, batchEnd, yearsData } = req.body;
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid almanac id format" });
+      return res.status(400).json({ message: "Invalid almanac ID format." });
     }
 
     if (!program || !year || !batchStart || !batchEnd || !Array.isArray(yearsData)) {
-      return res.status(400).json({ message: "Missing required almanac fields" });
+      return res.status(400).json({ message: "Please fill in all required fields (programme, year, batch start, and batch end) before updating." });
     }
 
     const parsedYear = Number(year);
@@ -644,15 +644,15 @@ exports.updateAlmanacById = async (req, res) => {
     const parsedBatchEnd = Number(batchEnd);
 
     if (Number.isNaN(parsedYear) || Number.isNaN(parsedBatchStart) || Number.isNaN(parsedBatchEnd)) {
-      return res.status(400).json({ message: "Year and batch values must be numbers" });
+      return res.status(400).json({ message: "Year, batch start, and batch end must be valid numbers." });
     }
 
     if (parsedBatchEnd < parsedBatchStart) {
-      return res.status(400).json({ message: "Batch end cannot be smaller than batch start" });
+      return res.status(400).json({ message: "Batch end year cannot be earlier than the batch start year." });
     }
 
     if (yearsData.length !== parsedYear) {
-      return res.status(400).json({ message: "Years data does not match selected year count" });
+      return res.status(400).json({ message: "The number of years provided does not match the selected duration." });
     }
 
     const breakRuleMessage = validateBreakRules(yearsData, parsedYear);
@@ -662,7 +662,7 @@ exports.updateAlmanacById = async (req, res) => {
 
     const existing = await Almanac.findById(id);
     if (!existing) {
-      return res.status(404).json({ message: "Almanac not found" });
+      return res.status(404).json({ message: "Almanac not found." });
     }
 
     const duplicate = await Almanac.findOne({
@@ -688,11 +688,11 @@ exports.updateAlmanacById = async (req, res) => {
     const updatedAlmanac = await existing.save();
 
     res.json({
-      message: "Almanac is updated successfully",
+      message: "Almanac updated successfully.",
       almanac: updatedAlmanac
     });
   } catch (error) {
     console.error("UPDATE ALMANAC ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to update the almanac. Please try again." });
   }
 };

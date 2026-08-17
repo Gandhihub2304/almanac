@@ -9,7 +9,7 @@ function YearModal({ program, closeProgramModal }) {
 
   const handle = () => {
     if (!year) {
-      alert("Please select duration ❌");
+      alert("Please select a duration.");
       return;
     }
 

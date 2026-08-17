@@ -32,7 +32,7 @@ function AlmanacForm() {
     setShowWarning(true);
   };
 
-  const invalidDateMessage = "❌ Select the date within term duration";
+  const invalidDateMessage = "Please select a date within the term duration.";
 
   // 🔥 CREATE TERM
   const createTerm = (termNumber) => ({
@@ -383,7 +383,7 @@ function AlmanacForm() {
         duration <= 0 ||
         duration > 21
       ) {
-        showWarningModal(`Invalid break in Year ${yearIndex + 1} Term ${termIndex + 1}. Auto break applied.`);
+        showWarningModal(`The break entered for Year ${yearIndex + 1} Term ${termIndex + 1} is invalid, so an automatic break has been applied.`);
         term.breakMode = "auto";
       }
     }
@@ -533,18 +533,18 @@ function AlmanacForm() {
   // ✅ SELF START (Year 1 Term 1 drives the full timeline)
   const handleSelfStart = (y, t, value) => {
     if (!(y === 0 && t === 0)) {
-      showWarningModal("Only Year 1 Term 1 self registration is editable. Other terms are auto-generated.");
+      showWarningModal("Only the Year 1 Term 1 self-registration date can be edited. All other terms are generated automatically.");
       return;
     }
 
     if (!batchStart || !batchEnd) {
-      showWarningModal("❌ Please set Batch Start and End first");
+      showWarningModal("Please set the batch start and end years first.");
       return;
     }
 
     // Validate batch year is valid (4-digit format yyyy)
     if (!/^\d{4}$/.test(batchStart)) {
-      showWarningModal("❌ Please select valid batch year");
+      showWarningModal("Please select a valid batch start year.");
       return;
     }
 
@@ -567,12 +567,12 @@ function AlmanacForm() {
     }
 
     if (!isDateWithinBatchRange(value)) {
-      showWarningModal(`❌ Date must be between ${batchStart} and ${batchEnd}`);
+      showWarningModal(`Date must be between ${batchStart} and ${batchEnd}.`);
       return;
     }
 
     if (!isMonday(value)) {
-      showWarningModal("❌ Only Monday allowed");
+      showWarningModal("Self registration must start on a Monday.");
       return;
     }
 
@@ -585,17 +585,17 @@ function AlmanacForm() {
   // ✅ ACTIVITY
   const handleActivity = (y, t, activityIndex, value) => {
     if (!batchStart || !batchEnd) {
-      showWarningModal("❌ Please set Batch Start and End first");
+      showWarningModal("Please set the batch start and end years first.");
       return;
     }
 
     if (!isDateWithinBatchRange(value)) {
-      showWarningModal(`❌ Date must be between ${batchStart} and ${batchEnd}`);
+      showWarningModal(`Date must be between ${batchStart} and ${batchEnd}.`);
       return;
     }
 
     if (!isMonday(value)) {
-      showWarningModal("❌ Activity must start Monday");
+      showWarningModal("Student-led activity must start on a Monday.");
       return;
     }
 
@@ -633,7 +633,7 @@ function AlmanacForm() {
     );
 
     if (hasHolidayOverlap) {
-      showWarningModal("❌ This week is already assigned");
+      showWarningModal("This week has already been assigned to another activity or holiday.");
       return;
     }
 
@@ -643,7 +643,7 @@ function AlmanacForm() {
     });
 
     if (duplicateActivityWeek) {
-      showWarningModal("❌ This week is already assigned");
+      showWarningModal("This week has already been assigned to another activity or holiday.");
       return;
     }
 
@@ -678,17 +678,17 @@ function AlmanacForm() {
   // ✅ HOLIDAY
   const handleHoliday = (y, t, h, value) => {
     if (!batchStart || !batchEnd) {
-      showWarningModal("❌ Please set Batch Start and End first");
+      showWarningModal("Please set the batch start and end years first.");
       return;
     }
 
     if (!isDateWithinBatchRange(value)) {
-      showWarningModal(`❌ Date must be between ${batchStart} and ${batchEnd}`);
+      showWarningModal(`Date must be between ${batchStart} and ${batchEnd}.`);
       return;
     }
 
     if (!isMonday(value)) {
-      showWarningModal("❌ Holiday must start Monday");
+      showWarningModal("Holiday must start on a Monday.");
       return;
     }
 
@@ -726,7 +726,7 @@ function AlmanacForm() {
     ));
 
     if (hasActivityOverlap) {
-      showWarningModal("❌ This week is already assigned");
+      showWarningModal("This week has already been assigned to another activity or holiday.");
       return;
     }
 
@@ -736,7 +736,7 @@ function AlmanacForm() {
     });
 
     if (duplicateHolidayWeek) {
-      showWarningModal("❌ This week is already assigned");
+      showWarningModal("This week has already been assigned to another activity or holiday.");
       return;
     }
 
@@ -786,7 +786,7 @@ function AlmanacForm() {
     }
 
     if (!batchStart || !batchEnd) {
-      showWarningModal("❌ Please set Batch Start and End first");
+      showWarningModal("Please set the batch start and end years first.");
       return;
     }
 
@@ -803,12 +803,12 @@ function AlmanacForm() {
     }
 
     if (!isDateWithinBatchRange(value)) {
-      showWarningModal(`❌ Date must be between ${batchStart} and ${batchEnd}`);
+      showWarningModal(`Date must be between ${batchStart} and ${batchEnd}.`);
       return;
     }
 
     if (!term.termStart || value < term.termStart) {
-      showWarningModal("❌ Term completion cannot be before commencement");
+      showWarningModal("Term completion date cannot be earlier than the commencement date.");
       return;
     }
 
@@ -819,7 +819,7 @@ function AlmanacForm() {
     const baseWeeks = manualDurationWeeks - activityCount - holidayCount;
 
     if (baseWeeks <= 0) {
-      showWarningModal("❌ Term duration is too short for selected activity/holiday weeks");
+      showWarningModal("Term duration is too short for the selected activity and holiday weeks.");
       return;
     }
 
@@ -837,7 +837,7 @@ function AlmanacForm() {
     }
 
     if (!batchStart || !batchEnd) {
-      showWarningModal("❌ Please set Batch Start and End first");
+      showWarningModal("Please set the batch start and end years first.");
       return;
     }
 
@@ -853,17 +853,17 @@ function AlmanacForm() {
     }
 
     if (!isDateWithinBatchRange(value)) {
-      showWarningModal(`❌ Date must be between ${batchStart} and ${batchEnd}`);
+      showWarningModal(`Date must be between ${batchStart} and ${batchEnd}.`);
       return;
     }
 
     if (field === "breakStart" && !isMonday(value)) {
-      showWarningModal("❌ Break must start on Monday");
+      showWarningModal("Break must start on a Monday.");
       return;
     }
 
     if (field === "breakEnd" && !isSunday(value)) {
-      showWarningModal("❌ Break must end on Sunday");
+      showWarningModal("Break must end on a Sunday.");
       return;
     }
 
@@ -886,12 +886,12 @@ function AlmanacForm() {
 
       const duration = getDurationInDays(term.breakStart, term.breakEnd);
       if (duration <= 0) {
-        showWarningModal("❌ Break end cannot be before break start");
+        showWarningModal("Break end date cannot be earlier than the break start date.");
         return;
       }
 
       if (duration > 21) {
-        showWarningModal("⚠️ Break cannot be more than 3 weeks");
+        showWarningModal("Break cannot be longer than 3 weeks.");
         return;
       }
     }
@@ -906,7 +906,7 @@ function AlmanacForm() {
     }
 
     if (!batchStart || !batchEnd) {
-      showWarningModal("❌ Please set Batch Start and End first");
+      showWarningModal("Please set the batch start and end years first.");
       return;
     }
 
@@ -921,7 +921,7 @@ function AlmanacForm() {
     }
 
     if (!isDateWithinBatchRange(value)) {
-      showWarningModal(`❌ Date must be between ${batchStart} and ${batchEnd}`);
+      showWarningModal(`Date must be between ${batchStart} and ${batchEnd}.`);
       return;
     }
 
@@ -932,7 +932,7 @@ function AlmanacForm() {
 
     if (field === "termStart") {
       if (!isMonday(value)) {
-        showWarningModal("❌ Term 4 must start on Monday");
+        showWarningModal("Term 4 must start on a Monday.");
         return;
       }
 
@@ -943,7 +943,7 @@ function AlmanacForm() {
     }
 
     if (field === "termEnd" && !isSunday(value)) {
-      showWarningModal("❌ Term 4 must end on Sunday");
+      showWarningModal("Term 4 must end on a Sunday.");
       return;
     }
 
@@ -954,12 +954,12 @@ function AlmanacForm() {
       const duration = getDurationInDays(term.termStart, term.termEnd);
 
       if (duration <= 0) {
-        showWarningModal("❌ Term end cannot be before term start");
+        showWarningModal("Term end date cannot be earlier than the term start date.");
         return;
       }
 
       if (duration > 70) {
-        showWarningModal("⚠️ Term 4 duration cannot be more than 10 weeks");
+        showWarningModal("Term 4 duration cannot be longer than 10 weeks.");
         return;
       }
     }
@@ -970,7 +970,7 @@ function AlmanacForm() {
 
   const validateBreakRules = () => {
     if (!yearsData[0]?.terms?.[0]?.selfStart) {
-      showWarningModal("Set Year 1 Term 1 self registration first");
+      showWarningModal("Please set the Year 1 Term 1 self-registration date first.");
       return false;
     }
 
@@ -997,7 +997,7 @@ function AlmanacForm() {
 
           if (isFourthTerm) {
             if (!isMonday(current.termStart) || !isSunday(current.termEnd)) {
-              showWarningModal("❌ Term 4 duration must start on Monday and end on Sunday");
+              showWarningModal("Term 4 duration must start on a Monday and end on a Sunday.");
               return false;
             }
 
@@ -1008,7 +1008,7 @@ function AlmanacForm() {
 
             const termDuration = getDurationInDays(current.termStart, current.termEnd);
             if (termDuration <= 0 || termDuration > 70) {
-              showWarningModal("❌ Term 4 duration must be between 1 day and 10 weeks");
+              showWarningModal("Term 4 duration must be between 1 day and 10 weeks.");
               return false;
             }
           }
@@ -1074,7 +1074,7 @@ function AlmanacForm() {
 
         if (isNoBreakTerm(t)) {
           if (current.breakStart || current.breakEnd || current.breakMode !== "none") {
-            showWarningModal(`Year ${y + 1} Term 3 must not have break`);
+            showWarningModal(`Year ${y + 1} Term 3 cannot have a break.`);
             return false;
           }
         }
@@ -1132,7 +1132,7 @@ function AlmanacForm() {
   // 💾 SAVE WITH BATCH
   const handleSave = async () => {
     if (!batchStart || !batchEnd) {
-      showWarningModal("Enter Batch Start and End ❌");
+      showWarningModal("Please enter both batch start and end years.");
       return;
     }
 
@@ -1140,13 +1140,13 @@ function AlmanacForm() {
     const parsedBatchEnd = Number(batchEnd);
 
     if (Number.isNaN(parsedBatchStart) || Number.isNaN(parsedBatchEnd)) {
-      showWarningModal("Batch values must be numbers ❌");
+      showWarningModal("Batch start and end must be valid numbers.");
       return;
     }
 
-  
+
     if (parsedBatchEnd < parsedBatchStart) {
-      showWarningModal("Batch End cannot be less than Batch Start ❌");
+      showWarningModal("Batch end year cannot be earlier than the batch start year.");
       return;
     }
 
@@ -1164,22 +1164,22 @@ function AlmanacForm() {
         yearsData: normalizedYearsData
       });
 
-      showWarningModal(`${response.data.message} ✅`);
+      showWarningModal(response?.data?.message || "Almanac saved successfully.");
     } catch (error) {
       console.error(error);
       const backendMessage = error?.response?.data?.message;
-      showWarningModal(backendMessage ? `Save Failed ❌\n${backendMessage}` : "Save Failed ❌");
+      showWarningModal(backendMessage || "Failed to save the almanac. Please try again.");
     }
   };
 
   const handleUpdate = async () => {
     if (!existingAlmanacId) {
-      showWarningModal("No existing almanac found for selected batch to update ❌");
+      showWarningModal("No existing almanac found for the selected batch. Please save it first before updating.");
       return;
     }
 
     if (!batchStart || !batchEnd) {
-      showWarningModal("Enter Batch Start and End ❌");
+      showWarningModal("Please enter both batch start and end years.");
       return;
     }
 
@@ -1187,12 +1187,12 @@ function AlmanacForm() {
     const parsedBatchEnd = Number(batchEnd);
 
     if (Number.isNaN(parsedBatchStart) || Number.isNaN(parsedBatchEnd)) {
-      showWarningModal("Batch values must be numbers ❌");
+      showWarningModal("Batch start and end must be valid numbers.");
       return;
     }
 
     if (parsedBatchEnd < parsedBatchStart) {
-      showWarningModal("Batch End cannot be less than Batch Start ❌");
+      showWarningModal("Batch end year cannot be earlier than the batch start year.");
       return;
     }
 
@@ -1210,11 +1210,11 @@ function AlmanacForm() {
         yearsData: normalizedYearsData
       });
 
-      showWarningModal(response?.data?.message || "Almanac is updated successfully");
+      showWarningModal(response?.data?.message || "Almanac updated successfully.");
     } catch (error) {
       console.error(error);
       const backendMessage = error?.response?.data?.message;
-      showWarningModal(backendMessage ? `Update Failed ❌\n${backendMessage}` : "Update Failed ❌");
+      showWarningModal(backendMessage || "Failed to update the almanac. Please try again.");
     }
   };
 
@@ -1252,7 +1252,7 @@ function AlmanacForm() {
   const romanTerms = ["I", "II", "III", "IV"];
 
   if (!year) {
-    return <h2 style={{ textAlign: "center" }}>No Year Selected ❌</h2>;
+    return <h2 style={{ textAlign: "center" }}>No year selected. Please choose a programme and duration first.</h2>;
   }
 
   return (

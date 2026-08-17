@@ -3,18 +3,17 @@ import "./Modal.css";
 const getVariant = (message) => {
   const normalized = (message || "").toLowerCase();
 
-  if (message?.includes("✅") || normalized.includes("saved successfully") || normalized.includes("successfully saved")) {
-    return "success";
-  }
-
   if (
-    message?.includes("❌")
-    || normalized.includes("failed")
+    normalized.includes("failed")
     || normalized.includes("error")
     || normalized.includes("unable")
     || normalized.includes("invalid")
   ) {
     return "error";
+  }
+
+  if (normalized.includes("successfully")) {
+    return "success";
   }
 
   return "warning";

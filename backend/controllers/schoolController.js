@@ -13,7 +13,7 @@ exports.addSchool = async (req, res) => {
     res.status(201).json(school);
   } catch (error) {
     console.error("CREATE ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to add the school. Please try again." });
   }
 };
 
@@ -34,7 +34,7 @@ exports.getSchools = async (req, res) => {
     );
   } catch (error) {
     console.error("READ ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to load schools. Please try again." });
   }
 };
 
@@ -56,14 +56,14 @@ exports.updateSchool = async (req, res) => {
     );
 
     if (!updated) {
-      return res.status(404).json({ message: "School not found ❌" });
+      return res.status(404).json({ message: "School not found." });
     }
 
     res.json(updated);
 
   } catch (error) {
     console.error("UPDATE ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to update the school. Please try again." });
   }
 };
 
@@ -71,9 +71,9 @@ exports.updateSchool = async (req, res) => {
 exports.deleteSchool = async (req, res) => {
   try {
     await School.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted successfully ✅" });
+    res.json({ message: "School deleted successfully." });
   } catch (error) {
     console.error("DELETE ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Failed to delete the school. Please try again." });
   }
 };
