@@ -14,13 +14,13 @@ import "./Almanac.css";
 function AlmanacForm() {
 
   const location = useLocation();
-  const { program, year } = location.state || {};
+  const { program, year, batchStart: initialBatchStart, batchEnd: initialBatchEnd } = location.state || {};
 
   const yearNames = getYearLabels(Number(year));
 
   // 🔥 NEW: BATCH STATES
-  const [batchStart, setBatchStart] = useState("");
-  const [batchEnd, setBatchEnd] = useState("");
+  const [batchStart, setBatchStart] = useState(initialBatchStart ? String(initialBatchStart) : "");
+  const [batchEnd, setBatchEnd] = useState(initialBatchEnd ? String(initialBatchEnd) : "");
   const [showPreview, setShowPreview] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
   const [showWarning, setShowWarning] = useState(false);

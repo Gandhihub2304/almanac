@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
+import ExcelJS from "exceljs";
 import { getYearLabels } from "../utils/yearLabels";
 import { getYearBandColor } from "../utils/yearBandColors";
 import "./Almanac.css";
@@ -12,6 +14,11 @@ function AlmanacBatchView() {
   const [error, setError] = useState("");
   const [almanac, setAlmanac] = useState(null);
   const [schools, setSchools] = useState([]);
+  const [downloading, setDownloading] = useState("");
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+  const paperRef = useRef(null);
+  const downloadMenuRef = useRef(null);
 
   const yearNames = getYearLabels(almanac?.yearsData?.length).map((item) => item.toUpperCase());
   const romanTerms = ["I", "II", "III", "IV"];
@@ -113,6 +120,21 @@ function AlmanacBatchView() {
     fetchAlmanac();
   }, [id]);
 
+  useEffect(() => {
+    if (!showDownloadMenu) {
+      return undefined;
+    }
+
+    const handleOutsideClick = (event) => {
+      if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
+        setShowDownloadMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [showDownloadMenu]);
+
   const toDisplayDate = (value) => {
     if (!value) return "-";
     const date = new Date(value);
@@ -167,6 +189,246 @@ function AlmanacBatchView() {
     return toRange(term.assessmentStart, term.assessmentEnd);
   };
 
+  const toArgb = (color) => {
+    const hexMatch = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color || "");
+    if (hexMatch) {
+      let hex = hexMatch[1];
+      if (hex.length === 3) {
+        hex = hex.split("").map((char) => char + char).join("");
+      }
+      return `FF${hex.toUpperCase()}`;
+    }
+
+    const rgbMatch = /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i.exec(color || "");
+    if (rgbMatch) {
+      const toHex = (value) => Number(value).toString(16).padStart(2, "0").toUpperCase();
+      return `FF${toHex(rgbMatch[1])}${toHex(rgbMatch[2])}${toHex(rgbMatch[3])}`;
+    }
+
+    return "FFFFFFFF";
+  };
+
+  const handleEdit = () => {
+    if (!almanac) return;
+
+    navigate("/almanac", {
+      state: {
+        program: almanac.program,
+        year: almanac.year,
+        batchStart: almanac.batchStart,
+        batchEnd: almanac.batchEnd
+      }
+    });
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!almanac || !paperRef.current) return;
+
+    setShowDownloadMenu(false);
+    setDownloadError("");
+    setDownloading("pdf");
+
+    try {
+      const opt = {
+        margin: [6, 6, 6, 6],
+        filename: `almanac-${almanac.batchStart}-${almanac.batchEnd}-${almanac.program}.pdf`,
+        image: { type: "png", quality: 1 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          letterRendering: true
+        },
+        jsPDF: { orientation: "landscape", unit: "mm", format: "a4" }
+      };
+
+      await html2pdf().set(opt).from(paperRef.current).save();
+    } catch (downloadPdfError) {
+      console.error("Download almanac PDF error:", downloadPdfError);
+      setDownloadError("Failed to download the almanac PDF. Please try again.");
+    } finally {
+      setDownloading("");
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    if (!almanac) return;
+
+    setShowDownloadMenu(false);
+    setDownloadError("");
+    setDownloading("excel");
+
+    try {
+      const yearsData = almanac.yearsData || [];
+      const schoolNameForExcel = getSchoolForProgram(almanac.program);
+      const brandColorValue = getSchoolBrandColor(schoolNameForExcel);
+      const brandTextColorValue = getContrastTextColor(brandColorValue);
+      const batchLabel = `${almanac.batchStart}-${almanac.batchEnd}`;
+      const programDisplayName = getProgramDisplayName(almanac.program);
+      const bannerTitleForExcel = `${batchLabel} Batch ${isPostgraduateProgram(almanac.program) ? "Postgraduate" : "Undergraduate"} ${programDisplayName} Programme Almanac`;
+      const yearLabelsForExcel = getYearLabels(yearsData.length).map((item) => item.toUpperCase());
+
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Almanac", {
+        pageSetup: { orientation: "landscape", fitToPage: true }
+      });
+
+      const columnCount = 11;
+      sheet.columns = [
+        { width: 12 }, { width: 8 }, { width: 13 }, { width: 13 },
+        { width: 15 }, { width: 15 }, { width: 11 }, { width: 22 },
+        { width: 22 }, { width: 24 }, { width: 20 }
+      ];
+
+      const centerAlign = { vertical: "middle", horizontal: "center", wrapText: true };
+      const thinBorder = { style: "thin", color: { argb: "FFD6E4F0" } };
+      const cellBorder = { top: thinBorder, left: thinBorder, bottom: thinBorder, right: thinBorder };
+      const brandFill = { type: "pattern", pattern: "solid", fgColor: { argb: toArgb(brandColorValue) } };
+      const brandFont = { bold: true, size: 12, color: { argb: toArgb(brandTextColorValue) } };
+      const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE3EBF3" } };
+      const headerFont = { bold: true, color: { argb: "FF123A63" } };
+
+      sheet.mergeCells(1, 1, 1, columnCount);
+      const schoolCell = sheet.getCell(1, 1);
+      schoolCell.value = (schoolNameForExcel || "School").toUpperCase();
+      schoolCell.alignment = centerAlign;
+      schoolCell.font = { bold: true, size: 13, color: { argb: toArgb(brandColorValue) } };
+      sheet.getRow(1).height = 22;
+
+      sheet.mergeCells(2, 1, 2, columnCount);
+      const bannerCell = sheet.getCell(2, 1);
+      bannerCell.value = bannerTitleForExcel;
+      bannerCell.alignment = centerAlign;
+      bannerCell.font = brandFont;
+      bannerCell.fill = brandFill;
+      sheet.getRow(2).height = 20;
+
+      const headerRow1 = 3;
+      const headerRow2 = 4;
+
+      const setHeaderCell = (row, col, text) => {
+        const cell = sheet.getCell(row, col);
+        cell.value = text;
+        cell.alignment = centerAlign;
+        cell.font = headerFont;
+        cell.fill = headerFill;
+        cell.border = cellBorder;
+        return cell;
+      };
+
+      sheet.mergeCells(headerRow1, 1, headerRow2, 1);
+      setHeaderCell(headerRow1, 1, "Year");
+      sheet.mergeCells(headerRow1, 2, headerRow2, 2);
+      setHeaderCell(headerRow1, 2, "Term");
+      sheet.mergeCells(headerRow1, 3, headerRow1, 4);
+      setHeaderCell(headerRow1, 3, "Self Registration");
+      setHeaderCell(headerRow2, 3, "Start");
+      setHeaderCell(headerRow2, 4, "End");
+      sheet.mergeCells(headerRow1, 5, headerRow1, 7);
+      setHeaderCell(headerRow1, 5, "Term Duration");
+      setHeaderCell(headerRow2, 5, "Commencement");
+      setHeaderCell(headerRow2, 6, "Completion");
+      setHeaderCell(headerRow2, 7, "Duration");
+      sheet.mergeCells(headerRow1, 8, headerRow2, 8);
+      setHeaderCell(headerRow1, 8, "Student Led Activities");
+      sheet.mergeCells(headerRow1, 9, headerRow2, 9);
+      setHeaderCell(headerRow1, 9, "Festival Holidays");
+      sheet.mergeCells(headerRow1, 10, headerRow2, 10);
+      setHeaderCell(headerRow1, 10, "Comprehensive Assessment");
+      sheet.mergeCells(headerRow1, 11, headerRow2, 11);
+      setHeaderCell(headerRow1, 11, "Break");
+
+      let currentRow = headerRow2 + 1;
+
+      yearsData.forEach((yearItem, yIndex) => {
+        const terms = yearItem.terms || [];
+        const yearStartRow = currentRow;
+        const yearFill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: toArgb(getYearBandColor(yearsData.length, yIndex)) }
+        };
+
+        terms.forEach((term, tIndex) => {
+          const row = sheet.getRow(currentRow);
+          const rowValues = [
+            tIndex === 0 ? (yearLabelsForExcel[yIndex] || `YEAR ${yIndex + 1}`) : "",
+            romanTerms[tIndex] || term.termNumber,
+            toDisplayDate(term.selfStart),
+            toDisplayDate(term.selfEnd),
+            toDisplayDate(term.termStart),
+            toDisplayDate(term.termEnd),
+            getDurationWeeks(term.termStart, term.termEnd),
+            getActivityRange(term),
+            getHolidayRange(term.holidays),
+            getAssessmentRange(term, tIndex),
+            toRange(term.breakStart, term.breakEnd)
+          ];
+
+          rowValues.forEach((value, colIndex) => {
+            const cell = row.getCell(colIndex + 1);
+            cell.value = value;
+            cell.alignment = centerAlign;
+            cell.fill = yearFill;
+            cell.border = cellBorder;
+            if (colIndex === 0) {
+              cell.font = { bold: true, color: { argb: "FF0F3D70" } };
+            }
+          });
+
+          currentRow += 1;
+        });
+
+        if (terms.length > 1) {
+          sheet.mergeCells(yearStartRow, 1, currentRow - 1, 1);
+        }
+      });
+
+      const signoffRow = currentRow;
+      const midColumn = Math.ceil(columnCount / 2);
+      sheet.mergeCells(signoffRow, 1, signoffRow, midColumn);
+      sheet.mergeCells(signoffRow, midColumn + 1, signoffRow, columnCount);
+
+      const deanCell = sheet.getCell(signoffRow, 1);
+      deanCell.value = "Dean";
+      deanCell.font = { bold: true, color: { argb: "FF1E2E3F" } };
+      deanCell.alignment = { vertical: "middle", horizontal: "left" };
+
+      const directorCell = sheet.getCell(signoffRow, midColumn + 1);
+      directorCell.value = "Director Academics and Planning";
+      directorCell.font = { bold: true, color: { argb: "FF1E2E3F" } };
+      directorCell.alignment = { vertical: "middle", horizontal: "right" };
+      sheet.getRow(signoffRow).height = 20;
+
+      const footerRow = signoffRow + 1;
+      sheet.mergeCells(footerRow, 1, footerRow, columnCount);
+      const footerCell = sheet.getCell(footerRow, 1);
+      footerCell.value = "Uppal, Hyderabad - 500098. Telangana, aurora.edu.in";
+      footerCell.alignment = centerAlign;
+      footerCell.font = { bold: true, size: 10, color: { argb: toArgb(brandTextColorValue) } };
+      footerCell.fill = brandFill;
+      sheet.getRow(footerRow).height = 18;
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `almanac-${almanac.batchStart}-${almanac.batchEnd}-${almanac.program}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (downloadExcelError) {
+      console.error("Download almanac Excel error:", downloadExcelError);
+      setDownloadError("Failed to download the almanac Excel file. Please try again.");
+    } finally {
+      setDownloading("");
+    }
+  };
+
   if (loading) {
     return <h3 className="previewStatus">Loading almanac...</h3>;
   }
@@ -191,11 +453,36 @@ function AlmanacBatchView() {
     <div className="viewPageShell">
       <div className="viewActions">
         <button className="previewBtn" onClick={() => navigate("/")}>Back</button>
-        <button className="saveBtn" onClick={() => window.print()}>Print</button>
+        <button className="saveBtn" onClick={handleEdit}>Edit</button>
+
+        <div className="downloadMenuWrap" ref={downloadMenuRef}>
+          <button
+            type="button"
+            className="saveBtn"
+            onClick={() => setShowDownloadMenu((current) => !current)}
+            disabled={Boolean(downloading)}
+          >
+            {downloading ? "Downloading..." : "Download"}
+          </button>
+
+          {showDownloadMenu && (
+            <div className="downloadMenu">
+              <button type="button" onClick={handleDownloadPdf} disabled={Boolean(downloading)}>
+                Download as PDF
+              </button>
+              <button type="button" onClick={handleDownloadExcel} disabled={Boolean(downloading)}>
+                Download as Excel
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {downloadError && <p className="downloadErrorText">{downloadError}</p>}
 
       <div
         className="previewPaper batchViewPaper"
+        ref={paperRef}
         style={{
           "--preview-brand-color": brandColor,
           "--preview-brand-text": brandTextColor
