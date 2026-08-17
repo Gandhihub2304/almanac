@@ -405,6 +405,59 @@ function Header() {
     return formatDisplayDate(startDate || endDate);
   };
 
+  const isDateRangeOverlap = (leftStart, leftEnd, rightStart, rightEnd) => (
+    leftStart.getTime() <= rightEnd.getTime() && leftEnd.getTime() >= rightStart.getTime()
+  );
+
+  const getTermExclusionRanges = (term) => {
+    const ranges = [];
+    const addRange = (item) => {
+      const start = parseCalendarDate(item?.start);
+      const end = parseCalendarDate(item?.end);
+      if (start && end) {
+        ranges.push({ start, end });
+      }
+    };
+
+    if (Array.isArray(term?.activities)) {
+      term.activities.forEach(addRange);
+    }
+
+    if (Array.isArray(term?.holidays)) {
+      term.holidays.forEach(addRange);
+    }
+
+    return ranges;
+  };
+
+  const getTermWeekRanges = (term, weekCount = 10) => {
+    const termStart = parseCalendarDate(term?.termStart || term?.selfStart);
+    const termEnd = parseCalendarDate(term?.termEnd);
+    if (!termStart || !termEnd) return [];
+
+    const exclusionRanges = getTermExclusionRanges(term);
+    const weekRanges = [];
+    const currentStart = new Date(termStart);
+
+    while (weekRanges.length < weekCount && currentStart.getTime() <= termEnd.getTime()) {
+      const weekEnd = new Date(currentStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const clippedWeekEnd = weekEnd.getTime() > termEnd.getTime() ? termEnd : weekEnd;
+
+      const intersectsExclusion = exclusionRanges.some((range) => (
+        isDateRangeOverlap(currentStart, clippedWeekEnd, range.start, range.end)
+      ));
+
+      if (!intersectsExclusion) {
+        weekRanges.push({ start: new Date(currentStart), end: clippedWeekEnd });
+      }
+
+      currentStart.setDate(currentStart.getDate() + 7);
+    }
+
+    return weekRanges;
+  };
+
   const getTrackTermDates = (term) => {
     const activityDates = Array.isArray(term?.activities)
       ? term.activities.flatMap((activity) => [activity?.start, activity?.end])
@@ -523,35 +576,14 @@ function Header() {
     const primaryTerm = selectedYear.activeTerm || orderedTerms[0] || {};
     const selfRegistration = formatDisplayRange(primaryTerm.selfStart, primaryTerm.selfEnd);
 
+    const trackedWeekRanges = getTermWeekRanges(primaryTerm, 10);
+
     const weekColumns = Array.from({ length: 10 }, (_, index) => {
-      const weekStart = shiftCalendarDate(primaryTerm.termStart || primaryTerm.selfStart, index * 7);
-      if (!weekStart) return "-";
-
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-
-      const termEnd = parseCalendarDate(primaryTerm.termEnd);
-      if (termEnd && weekStart.getTime() > termEnd.getTime()) {
-        return "-";
-      }
-
-      return formatDisplayRange(weekStart, weekEnd);
+      const week = trackedWeekRanges[index];
+      return week ? formatDisplayRange(week.start, week.end) : "-";
     });
 
-    const weekRanges = Array.from({ length: 10 }, (_, index) => {
-      const weekStart = shiftCalendarDate(primaryTerm.termStart || primaryTerm.selfStart, index * 7);
-      if (!weekStart) return null;
-
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-
-      const termEnd = parseCalendarDate(primaryTerm.termEnd);
-      if (termEnd && weekStart.getTime() > termEnd.getTime()) {
-        return null;
-      }
-
-      return { start: weekStart, end: weekEnd };
-    });
+    const weekRanges = trackedWeekRanges;
 
     const currentWeekIndex = weekRanges.findIndex((range) => (
       range

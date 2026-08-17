@@ -8,7 +8,6 @@ import {
   addWeeks
 } from "../utils/dateUtils";
 import { getYearLabels } from "../utils/yearLabels";
-import { getYearBandColor } from "../utils/yearBandColors";
 import WarningModal from "./WarningModal";
 import "./Almanac.css";
 
@@ -184,18 +183,6 @@ function AlmanacForm() {
     return activities;
   };
 
-  const getFilledWeekCount = (entries) => (
-    Array.isArray(entries)
-      ? entries.filter((entry) => entry?.start).length
-      : 0
-  );
-
-  const getFourthTermMaxDurationDays = (term) => {
-    const activityCount = getFilledWeekCount(getActivities(term));
-    const holidayCount = getFilledWeekCount(term.holidays || []);
-    return 70 + ((activityCount + holidayCount) * 7);
-  };
-
   const toIso = (dateValue) => new Date(dateValue).toISOString().split("T")[0];
 
   const getWeekEndFromStart = (weekStart) => {
@@ -217,13 +204,6 @@ function AlmanacForm() {
     }
     const diff = endDate.getTime() - startDate.getTime();
     return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-  };
-
-  const getDurationWeeks = (start, end) => {
-    const days = getDurationInDays(start, end);
-    if (!days) return "-";
-    const weeks = Math.ceil(days / 7);
-    return `${weeks} week${weeks !== 1 ? "s" : ""}`;
   };
 
   const getDefaultBreakRange = (referenceEndDate, weekCount = 1) => {
@@ -325,37 +305,14 @@ function AlmanacForm() {
 
       const hasManualDuration = term.termDurationMode === "manual";
       if (hasManualDuration) {
-        if (term.termEndManual) {
-          const parsedBaseWeeks = Number(term.termDurationBaseWeeks);
-          const isValidManualBase = Number.isFinite(parsedBaseWeeks)
-            && parsedBaseWeeks > 0
-            && parsedBaseWeeks <= 10;
-
-          if (!isValidManualBase) {
-            term.termDurationMode = "auto";
-            term.termEndManual = false;
-            term.termDurationBaseWeeks = 10;
-            term.termStart = minFourthTermStart || term.termStart;
-            term.termEnd = defaultTermEnd;
-          } else {
-            term.termStart = minFourthTermStart || term.termStart;
-            term.termEnd = defaultTermEnd;
-          }
-
-          term.assessmentStart = "";
-          term.assessmentEnd = "";
-          return;
-        }
-
         const hasBothDates = Boolean(term.termStart && term.termEnd);
         if (hasBothDates) {
           const duration = getDurationInDays(term.termStart, term.termEnd);
-          const maxFourthTermDuration = getFourthTermMaxDurationDays(term);
           const isValidManualRange = (!minFourthTermStart || term.termStart >= minFourthTermStart)
             && isMonday(term.termStart)
             && isSunday(term.termEnd)
             && duration > 0
-            && duration <= maxFourthTermDuration;
+            && duration <= 70;
 
           if (!isValidManualRange) {
             term.termDurationMode = "auto";
@@ -364,14 +321,10 @@ function AlmanacForm() {
           }
         } else {
           term.termDurationMode = "auto";
-          term.termEndManual = false;
-          term.termDurationBaseWeeks = 10;
           term.termEnd = defaultTermEnd;
         }
       } else {
         term.termDurationMode = "auto";
-        term.termEndManual = false;
-        term.termDurationBaseWeeks = 10;
         term.termEnd = defaultTermEnd;
       }
 
@@ -482,7 +435,14 @@ function AlmanacForm() {
         if (term.selfStart) {
           term.selfEnd = getWeekEndFromStart(term.selfStart);
           const generatedTermStart = toIso(getNextMonday(new Date(term.selfEnd)));
-          term.termStart = generatedTermStart;
+          const keepManualTermDuration = t === 3
+            && term.termDurationMode === "manual"
+            && term.termStart
+            && term.termEnd;
+
+          if (!keepManualTermDuration) {
+            term.termStart = generatedTermStart;
+          }
         } else {
           term.selfEnd = "";
           term.termStart = "";
@@ -945,10 +905,6 @@ function AlmanacForm() {
       return;
     }
 
-    if (field !== "termEnd") {
-      return;
-    }
-
     if (!batchStart || !batchEnd) {
       showWarningModal("❌ Please set Batch Start and End first");
       return;
@@ -958,8 +914,6 @@ function AlmanacForm() {
       const updated = cloneYearsData(yearsData);
       const term = updated[y].terms[t];
       term.termDurationMode = "auto";
-      term.termEndManual = false;
-      term.termDurationBaseWeeks = 10;
       term.termStart = term.selfEnd ? toIso(getNextMonday(new Date(term.selfEnd))) : "";
       regenerateTimeline(updated);
       setYearsData(updated);
@@ -974,7 +928,21 @@ function AlmanacForm() {
     const updated = cloneYearsData(yearsData);
     const term = updated[y].terms[t];
 
-    if (!isSunday(value)) {
+    const minFourthTermStart = term.selfEnd ? toIso(getNextMonday(new Date(term.selfEnd))) : "";
+
+    if (field === "termStart") {
+      if (!isMonday(value)) {
+        showWarningModal("❌ Term 4 must start on Monday");
+        return;
+      }
+
+      if (minFourthTermStart && value < minFourthTermStart) {
+        showWarningModal(invalidDateMessage);
+        return;
+      }
+    }
+
+    if (field === "termEnd" && !isSunday(value)) {
       showWarningModal("❌ Term 4 must end on Sunday");
       return;
     }
@@ -984,29 +952,16 @@ function AlmanacForm() {
 
     if (term.termStart && term.termEnd) {
       const duration = getDurationInDays(term.termStart, term.termEnd);
-      const maxFourthTermDuration = getFourthTermMaxDurationDays(term);
-      const durationInWeeks = Math.ceil(duration / 7);
-      const activityCount = getFilledWeekCount(getActivities(term));
-      const holidayCount = getFilledWeekCount(term.holidays || []);
-      const baseWeeks = durationInWeeks - activityCount - holidayCount;
 
       if (duration <= 0) {
         showWarningModal("❌ Term end cannot be before term start");
         return;
       }
 
-      if (duration > maxFourthTermDuration) {
-        showWarningModal("⚠️ Term 4 duration cannot exceed 10 weeks plus selected activity/holiday weeks");
+      if (duration > 70) {
+        showWarningModal("⚠️ Term 4 duration cannot be more than 10 weeks");
         return;
       }
-
-      if (baseWeeks <= 0 || baseWeeks > 10) {
-        showWarningModal("❌ Term 4 base duration must be between 1 and 10 weeks");
-        return;
-      }
-
-      term.termEndManual = true;
-      term.termDurationBaseWeeks = baseWeeks;
     }
 
     regenerateTimeline(updated);
@@ -1052,9 +1007,8 @@ function AlmanacForm() {
             }
 
             const termDuration = getDurationInDays(current.termStart, current.termEnd);
-            const maxFourthTermDuration = getFourthTermMaxDurationDays(current);
-            if (termDuration <= 0 || termDuration > maxFourthTermDuration) {
-              showWarningModal("❌ Term 4 duration must be within 10 weeks plus selected activity/holiday weeks");
+            if (termDuration <= 0 || termDuration > 70) {
+              showWarningModal("❌ Term 4 duration must be between 1 day and 10 weeks");
               return false;
             }
           }
@@ -1375,8 +1329,8 @@ function AlmanacForm() {
                           <input
                             type="date"
                             value={t.termStart}
-                            readOnly
-                            title="Term 4 start is auto-calculated"
+                            onChange={(e) => handleTermDurationDate(yIndex, tIndex, "termStart", e.target.value)}
+                            title="Select Term 4 start date"
                           />
                           <input
                             type="date"
@@ -1563,29 +1517,24 @@ function AlmanacForm() {
                       <th rowSpan="2">Year</th>
                       <th rowSpan="2">Term</th>
                       <th colSpan="2">Self Registration</th>
-                      <th colSpan="3">Term Duration</th>
+                      <th colSpan="2">Term Duration</th>
                       <th rowSpan="2">Student Led Activities</th>
                       <th rowSpan="2">Festival Holidays</th>
                       <th rowSpan="2">Comprehensive Assessment</th>
                       <th rowSpan="2">Break</th>
                     </tr>
-                      <tr>
-                        <th>Start</th>
-                        <th>End</th>
-                        <th>Commencement</th>
-                        <th>Completion</th>
-                        <th>Duration</th>
-                      </tr>
+                    <tr>
+                      <th>Start</th>
+                      <th>End</th>
+                      <th>Commencement</th>
+                      <th>Completion</th>
+                    </tr>
                   </thead>
 
                   <tbody>
                     {yearsData.map((yearItem, yIndex) => (
                       yearItem.terms.map((term, tIndex) => (
-                        <tr
-                          className="yearBand"
-                          key={`${yIndex}-${tIndex}`}
-                          style={{ "--year-band-bg": getYearBandColor(yearsData.length, yIndex) }}
-                        >
+                        <tr className={`yearBand yearBand${yIndex}`} key={`${yIndex}-${tIndex}`}>
                           {tIndex === 0 && (
                             <td className="previewYearCell" rowSpan={yearItem.terms.length}>
                               {yearNames[yIndex] || `Year ${yIndex + 1}`}
@@ -1597,7 +1546,6 @@ function AlmanacForm() {
                           <td>{toDisplayDate(term.selfEnd)}</td>
                           <td>{toDisplayDate(term.termStart)}</td>
                           <td>{toDisplayDate(term.termEnd)}</td>
-                          <td>{getDurationWeeks(term.termStart, term.termEnd)}</td>
                           <td>{getActivityRange(term)}</td>
                           <td>{getHolidayRange(term.holidays)}</td>
                           <td>{getAssessmentDisplayValue(term, tIndex)}</td>
